@@ -149,6 +149,7 @@ public class PeakOpsUI : MonoBehaviour
         shadowImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 10;
 
 
+
         var chatLogHolderObj = CreateUIGameObject("ChatLog", baseTransform);
         var chatLogHolderTransform = chatLogHolderObj.AddComponent<RectTransform>();
         chatLogHolderTransform.anchorMin = Vector2.zero;
@@ -156,6 +157,13 @@ public class PeakOpsUI : MonoBehaviour
         chatLogHolderTransform.offsetMin = new Vector2(0, fontSize * 2);
         chatLogHolderTransform.offsetMax = Vector2.zero;
         chatLogHolderObj.AddComponent<RectMask2D>();
+
+        // 添加 ScrollRect 组件
+        var scrollRect = chatLogHolderObj.AddComponent<ScrollRect>();
+        scrollRect.horizontal = false;
+        scrollRect.vertical = true;
+        scrollRect.movementType = ScrollRect.MovementType.Clamped;
+        scrollRect.scrollSensitivity = fontSize * 1.2f;
 
         // 聊天内容容器
         var chatLogContentObj = CreateUIGameObject("Content", chatLogHolderTransform);
@@ -170,12 +178,16 @@ public class PeakOpsUI : MonoBehaviour
         contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
+        // 设置 ScrollRect 的 content 和 viewport
+        scrollRect.content = chatLogViewportTransform;
+        scrollRect.viewport = chatLogHolderTransform;
+
 
         // 聊天输入框
         var peakInputGo = GameObject.Instantiate(
             typeof(PeakTextInput).GetProperty("TextInputPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null) as GameObject,
             baseTransform, false);
-            
+
         var peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
         peakInput.SetPlaceholder($"Press {chatKeyText} to chat | 按 {chatKeyText}");
         var textComp = peakInput.InputField.textComponent;
@@ -313,6 +325,16 @@ public class PeakOpsUI : MonoBehaviour
     {
         if (isBlockingInput)
             framesSinceInputBlocked = -1;
+            // 输入时监听鼠标滚轮，上下滚动一格
+            if (inputField.isFocused)
+            {
+                float scroll = Input.GetAxis("Mouse ScrollWheel");
+                if (scroll > 0.01f)
+                    ScrollUpOne();
+                else if (scroll < -0.01f)
+                    ScrollDownOne();
+            }
+
         else
             framesSinceInputBlocked = Mathf.Min(framesSinceInputBlocked + 1, 50);
 
@@ -384,5 +406,39 @@ public class PeakOpsUI : MonoBehaviour
             ResetTimers();
         }
     }
+
+    /// <summary>
+    /// 聊天内容向上滚动一格（单条消息）
+    /// </summary>
+    public void ScrollUpOne()
+    {
+        if (chatLogViewportTransform != null)
+        {
+            var scrollRect = chatLogViewportTransform.GetComponentInParent<ScrollRect>();
+            if (scrollRect != null && chatLogViewportTransform.childCount > 1)
+            {
+                float step = 1f / (chatLogViewportTransform.childCount - 1);
+                scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition + step);
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// 聊天内容向下滚动一格（单条消息）
+    /// </summary>
+    public void ScrollDownOne()
+    {
+        if (chatLogViewportTransform != null)
+        {
+            var scrollRect = chatLogViewportTransform.GetComponentInParent<ScrollRect>();
+            if (scrollRect != null && chatLogViewportTransform.childCount > 1)
+            {
+                float step = 1f / (chatLogViewportTransform.childCount - 1);
+                scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition - step);
+            }
+        }
+    }
+
 
 }
