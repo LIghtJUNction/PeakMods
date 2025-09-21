@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>PeakChatOps.API</PackageId>
+    <Version>1.0.2</Version>
+    <Authors>LIghtJUNction</Authors>
+    <Company>LIghtJUNction</Company>
+    <Description>PeakChatOps 通用命令API，支持插件互通和动态命令注册。</Description>
+    <PackageTags>chat;command;api;plugin;PeakChatOps</PackageTags>
+    <RepositoryUrl>https://github.com/LIghtJUNction/PeakMods</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LIghtJUNction/PeakMods</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

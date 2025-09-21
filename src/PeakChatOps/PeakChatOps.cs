@@ -32,7 +32,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     public static ConfigEntry<float> BgOpacity = null!;
     public static ConfigEntry<bool> FrameVisible = null!;
     public static ConfigEntry<bool> HideInputField = null!;
-
+    public static ConfigEntry<string> CmdPrefix = null!;
     private void Awake()
     {
         // Plugin startup logic
@@ -97,15 +97,29 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
                               "How long before the chat hides completely (a negative number means never)"
                           );
 
+        CmdPrefix = Config.Bind<string>(
+                              "Commands",
+                              "CommandPrefix",
+                              "/",
+                              "The prefix that starts a command"
+                          );
+
 
         harmony = new Harmony("com.lightjunction.peakchatops");
+
 
         harmony.PatchAll(typeof(StaminaBarPatch));
         harmony.PatchAll(typeof(GUIManagerPatch));
         harmony.PatchAll(typeof(InputBlockingPatches));
 
-        // 初始化聊天系统
-        InitializeChatSystem();
+        // 聊天系统初始化：自动挂载 ChatSystem
+        if (GameObject.Find("ChatSystem") == null)
+        {
+            var chatSystemObj = new GameObject("ChatSystem");
+            chatSystemObj.AddComponent<ChatSystem>();
+            GameObject.DontDestroyOnLoad(chatSystemObj);
+            Logger.LogInfo("[PeakChatOps] ChatSystem GameObject created and initialized.");
+        }
     }
 
     private void OnDestroy()
@@ -115,23 +129,17 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         if (GUIManagerPatch.ChatOpsCanvas != null)
             GameObject.Destroy(GUIManagerPatch.ChatOpsCanvas);
 
-        StaminaBarPatch.CleanupObjects();
+        // 销毁 ChatSystem GameObject
+        var chatSystemObj = GameObject.Find("ChatSystem");
+        if (chatSystemObj != null)
+            GameObject.Destroy(chatSystemObj);
 
-        // 清理聊天系统
-        ChatSystem.Instance.Clear();
+        StaminaBarPatch.CleanupObjects();
 
         harmony.UnpatchSelf();
     }
 
-    private void InitializeChatSystem()
-    {
-        Logger.LogInfo("Initializing Chat System...");
 
-        // 注册基础消息处理器
-        ChatSystem.Instance.RegisterHandler(new BasicMessageHandler());
-
-        Logger.LogInfo("Chat System initialized successfully!");
-    }
 }
 
 public static class ProceduralImageExtensions {

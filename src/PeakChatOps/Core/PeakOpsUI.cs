@@ -9,6 +9,7 @@ using PEAKLib.UI;
 using PEAKLib.UI.Elements;
 using PeakChatOps.Patches;
 using System.Linq;
+
 namespace PeakChatOps.Core;
 
 public class PeakOpsUI : MonoBehaviour
@@ -155,7 +156,7 @@ public class PeakOpsUI : MonoBehaviour
         chatLogHolderTransform.offsetMin = new Vector2(0, fontSize * 2);
         chatLogHolderTransform.offsetMax = Vector2.zero;
         chatLogHolderObj.AddComponent<RectMask2D>();
-    
+
         // 聊天内容容器
         var chatLogContentObj = CreateUIGameObject("Content", chatLogHolderTransform);
         chatLogViewportTransform = chatLogContentObj.AddComponent<RectTransform>();
@@ -174,12 +175,13 @@ public class PeakOpsUI : MonoBehaviour
         var peakInputGo = GameObject.Instantiate(
             typeof(PeakTextInput).GetProperty("TextInputPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null) as GameObject,
             baseTransform, false);
+            
         var peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
         peakInput.SetPlaceholder($"Press {chatKeyText} to chat | 按 {chatKeyText}");
         var textComp = peakInput.InputField.textComponent;
         textComp.fontSize = fontSize;
         textComp.color = Utilities.GetContrastingColor(offWhite, 0.8f);
-        var darumaFont = Resources.FindObjectsOfTypeAll<TMPro.TMP_FontAsset>()
+        var darumaFont = Resources.FindObjectsOfTypeAll<TMP_FontAsset>()
             .FirstOrDefault(f => f.faceInfo.familyName == "Daruma Drop One");
         if (darumaFont != null) textComp.font = darumaFont;
         inputField = peakInput.InputField;
@@ -208,7 +210,7 @@ public class PeakOpsUI : MonoBehaviour
         {
             inputField.text = "";
             inputField.textComponent.text = "";
-            ChatSystem.Instance.ProcessMessage(e);
+            ChatSystem.Instance?.SendChatMessage(e);
         });
 
         inputField.onEndEdit.AddListener((e) =>
@@ -359,7 +361,6 @@ public class PeakOpsUI : MonoBehaviour
         }
 
     }
-
 
     public void AddMessage(string message)
     {
