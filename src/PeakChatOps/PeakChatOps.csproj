@@ -18,6 +18,8 @@
     <PackageReference Include="PEAKModding.PEAKLib.Items" Version="1.5.3" />
     <PackageReference Include="PEAKModding.PEAKLib.Stats" Version="1.2.0" />
     <PackageReference Include="PEAKModding.PEAKLib.UI" Version="1.5.0" />
+    <PackageReference Include="Snosz-PhotonCustomPropsUtils" Version="1.1.0" Private="False" />
+    <PackageReference Include="Cysharp-UniTask" Version="2.5.0" Private="False" />
   </ItemGroup>
 
   <!--

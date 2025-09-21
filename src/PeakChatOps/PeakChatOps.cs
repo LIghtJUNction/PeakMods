@@ -1,318 +1,171 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using BepInEx;
-using BepInEx.Bootstrap;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using MonoDetour;
-using PEAKLib.Core;
-
-using PEAKLib.UI;
-using PEAKLib.UI.Elements;
-using pworld.Scripts.Extensions;
-using TMPro;
+using HarmonyLib;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using Zorro.UI;
-using Language = LocalizedText.Language;
+using PeakChatOps.Core;
+using PEAKLib.Core;
+using PEAKLib.UI;
+using UnityEngine.UI.ProceduralImage;
+using MonoDetour;
+using PeakChatOps.Patches;
 
-namespace PEAKLib.ModConfig;
+namespace PeakChatOps;
 
-/// <summary>
-/// BepInEx plugin of PEAKLib.ModPlugin.
-/// Depend on this with <c>[BepInDependency(ModConfigPlugin.Id)]</c>.
-/// </summary>
 [BepInAutoPlugin]
+[BepInDependency("com.snosz.photoncustompropsutils", BepInDependency.DependencyFlags.HardDependency)]
 [BepInDependency(CorePlugin.Id)]
 [BepInDependency(UIPlugin.Id)]
-public partial class ModConfigPlugin : BaseUnityPlugin
+partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
-    internal static ManualLogSource Log { get; } = BepInEx.Logging.Logger.CreateLogSource(Name);
-    private static List<ConfigEntryBase> EntriesProcessed = [];
-    internal static ModConfigPlugin instance = null!;
+    internal static new ManualLogSource Logger = null!;
+
+    Harmony harmony = null!;
+
+    public static ConfigEntry<float> configFontSize = null!;
+    public static ConfigEntry<string> configChatSize = null!;
+    public static ConfigEntry<float> configMessageFadeDelay = null!;
+    public static ConfigEntry<float> configFadeDelay = null!;
+    public static ConfigEntry<float> configHideDelay = null!;
+    public static ConfigEntry<KeyCode> configKey = null!;
+    public static ConfigEntry<UIAlignment> configPos = null!;
+    public static ConfigEntry<bool> configRichTextEnabled = null!;
+    public static ConfigEntry<bool> configIMGUI = null!;
+    public static ConfigEntry<float> configBgOpacity = null!;
+    public static ConfigEntry<bool> configFrameVisible = null!;
+    public static ConfigEntry<bool> configHideInputField = null!;
 
     private void Awake()
     {
-        instance = this;
-        MonoDetourManager.InvokeHookInitializers(typeof(ModConfigPlugin).Assembly);
-        Log.LogInfo($"Plugin {Name} is loaded!");
+        // Plugin startup logic
+        Logger = base.Logger;
+        MonoDetourManager.InvokeHookInitializers(typeof(PeakChatOpsPlugin).Assembly);
+        Logger.LogInfo($"PeakChatOps is loaded!");
+
+        configKey = Config.Bind<KeyCode>(
+                                "Display",
+                                "ChatKey",
+                                KeyCode.Y,
+                                "The key that activates typing in chat"
+                            );
+
+        configIMGUI = Config.Bind<bool>(
+                                "Display",
+                                "UseIMGUI",
+                                false,
+                                "Use IMGUI for the text field (use if you're having problems with typing)"
+            );
+
+        configPos = Config.Bind<UIAlignment>(
+                                "Display",
+                                "ChatPosition",
+                                UIAlignment.TopLeft,
+                                "The position of the text chat"
+                            );
+
+        configChatSize = Config.Bind<string>(
+                                "Display",
+                                "ChatSize",
+                                "500:300",
+                                "The size of the text chat (formatted X:Y)"
+                            );
+
+        configFontSize = Config.Bind<float>(
+                                "Display",
+                                "ChatFontSize",
+                                20f,
+                                "Size of the chat's text"
+                            );
+
+        configBgOpacity = Config.Bind<float>(
+                                "Display",
+                                "ChatBackgroundOpacity",
+                                0.3f,
+                                "Opacity of the chat's background/shadow"
+                            );
+
+        configFrameVisible = Config.Bind<bool>(
+                                "Display",
+                                "ChatFrameVisible",
+                                true,
+                                "Whether the frame of the chat box is visible"
+                            );
+
+        configHideInputField = Config.Bind<bool>(
+                                "Display",
+                                "HideInputFieldWhenChatHidden",
+                                true,
+                                "Whether to hide the input field when chat is hidden (frees up space for other UI)"
+                            );
+
+        configRichTextEnabled = Config.Bind<bool>(
+                                "Display",
+                                "ChatRichText",
+                                true,
+                                "Whether rich text tags get parsed in messages (e.g. <b> for bold text)"
+                            );
+
+        configFadeDelay = Config.Bind<float>(
+                                "Display",
+                                "ChatFadeDelay",
+                                15f,
+                                "How long before the chat fades out (a negative number means never)"
+                            );
+
+
+        configHideDelay = Config.Bind<float>(
+                                "Display",
+                                "ChatHideDelay",
+                                40f,
+                                "How long before the chat hides completely (a negative number means never)"
+                            );
+
+        configMessageFadeDelay = Config.Bind<float>(
+                                    "Display",
+                                    "ChatMessageHideDelay",
+                                    40f,
+                                    "How long before a chat message disappears (a negative number means never)"
+                                );
+
+        harmony = new Harmony("com.lightjunction.peakchatops");
+        harmony.PatchAll(typeof(GameUtilsPatch));
+        harmony.PatchAll(typeof(StaminaBarPatch));
+        harmony.PatchAll(typeof(GUIManagerPatch));
+        harmony.PatchAll(typeof(InputBlockingPatches));
+
+        // 初始化聊天系统
+        InitializeChatSystem();
     }
 
-    private void Start()
+    private void OnDestroy()
     {
-        LoadModSettings();
+        if (TextChatDisplay.instance != null)
+            GameObject.Destroy(TextChatDisplay.instance.gameObject);
+        if (GUIManagerPatch.textChatCanvas != null)
+            GameObject.Destroy(GUIManagerPatch.textChatCanvas);
 
-        void builderDelegate(Transform parent)
-        {
-            var mainMenuHandler = parent.GetComponentInParent<MainMenuPageHandler>();
-            var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>();
+        StaminaBarPatch.CleanupObjects();
 
-            if (mainMenuHandler == null && pauseMenuHandler == null)
-                throw new Exception("Failed to get a UIPageHandler");
+        // 清理聊天系统
+        ChatSystem.Instance.Clear();
 
-            var parentPage = mainMenuHandler?.GetPage<MainMenuSettingsPage>() ?? pauseMenuHandler?.GetPage<PauseMenuSettingsMenuPage>();
-
-            if (parentPage == null)
-                throw new Exception("Failed to get the parent page");
-
-            var modSettingsPage = MenuAPI.CreateChildPage("ModSettings", parentPage);
-
-            if (mainMenuHandler != null) // we are on main menu, create a background
-                modSettingsPage.CreateBackground(new Color(0, 0, 0, 0.8667f));
-
-            modSettingsPage.SetOnOpen(() =>
-            {
-                //Double check if any config items have been created since initializatio
-                ProcessModEntries();
-            });
-
-            var modSettingsLocalization = MenuAPI.CreateLocalization("MOD SETTINGS")
-                .AddLocalization("MOD SETTINGS", Language.English)
-                .AddLocalization("PARAMÈTRES DU MOD", Language.French)
-                .AddLocalization("IMPOSTAZIONI MOD", Language.Italian)
-                .AddLocalization("MOD-EINSTELLUNGEN", Language.German)
-                .AddLocalization("AJUSTES DEL MOD", Language.SpanishSpain)
-                .AddLocalization("CONFIGURACIONES DEL MOD", Language.SpanishLatam)
-                .AddLocalization("CONFIGURAÇÕES DE MOD", Language.BRPortuguese)
-                .AddLocalization("НАСТРОЙКИ МОДА", Language.Russian)
-                .AddLocalization("НАЛАШТУВАННЯ МОДА", Language.Ukrainian)
-                .AddLocalization("模组设置", Language.SimplifiedChinese)
-                .AddLocalization("模組設定", Language.TraditionalChinese)
-                .AddLocalization("MOD設定", Language.Japanese)
-                .AddLocalization("모드 설정", Language.Korean)
-                .AddLocalization("USTAWIENIA MODÓW", Language.Polish);
-
-            var headerContainer = new GameObject("Header")
-                .ParentTo(modSettingsPage)
-                .AddComponent<PeakElement>()
-                .SetAnchorMinMax(new Vector2(0, 1))
-                .SetPosition(new Vector2(40, -40))
-                .SetPivot(new Vector2(0, 1))
-                .SetSize(new Vector2(360, 100));
-
-            var newText = MenuAPI.CreateText("Mod Settings", "HeaderText")
-                .SetFontSize(48)
-                .ParentTo(headerContainer)
-                .ExpandToParent()
-                .SetLocalizationIndex(modSettingsLocalization);
-
-            newText.Text.fontSizeMax = 48;
-            newText.Text.fontSizeMin = 24;
-            newText.Text.enableAutoSizing = true;
-            newText.Text.alignment = TextAlignmentOptions.Center;
-
-            var backButton = MenuAPI.CreateMenuButton("Back")
-                .SetLocalizationIndex("BACK") // Peak already have a "BACK" official translation, so let's just use it
-                .SetColor(new Color(1, 0.5f, 0.2f))
-                .ParentTo(modSettingsPage)
-                .SetPosition(new Vector2(225, -180))
-                .SetWidth(200);
-
-
-            modSettingsPage.SetBackButton(backButton.GetComponent<Button>()); // sadly backButton.Button doesn't work cause Awake have not being called yet
-
-            MenuAPI.CreateText("Search")
-                .ParentTo(modSettingsPage)
-                .SetPosition(new Vector2(90, -210));
-
-            var content = new GameObject("Content")
-                .AddComponent<PeakElement>()
-                .ParentTo(modSettingsPage)
-                .SetPivot(new Vector2(0, 1))
-                .SetAnchorMin(new Vector2(0, 1))
-                .SetAnchorMax(new Vector2(0, 1))
-                .SetPosition(new Vector2(428, -70))
-                .SetSize(new Vector2(1360, 980));
-
-            var settingsMenu = content.gameObject.AddComponent<ModdedSettingsMenu>();
-
-
-            var textInput = MenuAPI.CreateTextInput("SearchInput")
-                .ParentTo(modSettingsPage)
-                .SetSize(new Vector2(300, 70))
-                .SetPosition(new Vector2(230, -300))
-                .SetPlaceholder("Search here")
-                .OnValueChanged(settingsMenu.SetSearch);
-
-            var horizontalTabs = new GameObject("TABS")
-                .ParentTo(content)
-                .AddComponent<PeakHorizontalTabs>();
-
-            var moddedSettingsTABS = horizontalTabs.gameObject.AddComponent<ModdedSettingsTABS>();
-            moddedSettingsTABS.SettingsMenu = settingsMenu;
-
-            var tabContent = MenuAPI.CreateScrollableContent("TabContent")
-                .ParentTo(content)
-                .ExpandToParent()
-                .SetOffsetMax(new Vector2(0, -60f));
-
-            settingsMenu.Content = tabContent.Content;
-            settingsMenu.Tabs = moddedSettingsTABS;
-
-            foreach (var (modName, configEntryBases) in GetModConfigEntries())
-            {
-                var tabButton = horizontalTabs.AddTab(modName);
-                var moddedButton = tabButton.AddComponent<ModdedTABSButton>();
-                moddedButton.category = modName;
-                moddedButton.text = tabButton.GetComponentInChildren<TextMeshProUGUI>();
-                moddedButton.SelectedGraphic = tabButton.transform.Find("Selected").gameObject;
-            }
-
-            var modSettingsButton = MenuAPI.CreatePauseMenuButton("MOD SETTINGS")
-                .SetLocalizationIndex(modSettingsLocalization)
-                .SetColor(new Color(0.15f, 0.75f, 0.85f))
-                .ParentTo(parent)
-                .OnClick(() =>
-                {
-                    var handler = mainMenuHandler as UIPageHandler ?? pauseMenuHandler;
-
-                    handler?.TransistionToPage(modSettingsPage, new SetActivePageTransistion());
-                });
-
-            modSettingsButton?.SetPosition(new Vector2(171, -230))
-                .SetWidth(220);
-
-
-            modSettingsPage.gameObject.SetActive(false);
-        }
-
-        MenuAPI.AddToSettingsMenu(builderDelegate);
+        harmony.UnpatchSelf();
     }
 
-    private static bool modSettingsLoaded = false;
-    private static void LoadModSettings()
+    private void InitializeChatSystem()
     {
-        if (modSettingsLoaded) return;
+        Logger.LogInfo("Initializing Chat System...");
 
-        EntriesProcessed = [];
-        modSettingsLoaded = true;
+        // 注册基础消息处理器
+        ChatSystem.Instance.RegisterHandler(new BasicMessageHandler());
 
-        ProcessModEntries();
+        Logger.LogInfo("Chat System initialized successfully!");
     }
+}
 
-    //Processes Bepinex config items to Settings entries
-    //Called during mod initialization AND whenever the mod settings page is opened
-    private static void ProcessModEntries()
-    {
-        foreach (var (modName, configEntryBases) in GetModConfigEntries())
-        {
-            foreach (var configEntry in configEntryBases)
-            {
-                try
-                {
-                    //track mod entries we have processed to not duplicate setting entries
-                    if (EntriesProcessed.Contains(configEntry))
-                        continue;
-                    else
-                        EntriesProcessed.Add(configEntry);
-
-                    if (configEntry.SettingType == typeof(bool))
-                    {
-                        var defaultValue = configEntry.DefaultValue is bool dValue && dValue;
-                        var currentValue = configEntry.BoxedValue is bool bValue && bValue;
-
-                        SettingsHandlerUtility.AddBoolToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
-                    }
-                    else if (configEntry.SettingType == typeof(float))
-                    {
-                        var defaultValue = configEntry.DefaultValue is float cValue ? cValue : 0f;
-                        var currentValue = configEntry.BoxedValue is float bValue ? bValue : 0f;
-
-                        float minValue = 0f;
-                        float maxValue = 1000f;
-
-                        if (configEntry.Description.AcceptableValues is AcceptableValueRange<float> range)
-                        {
-                            minValue = range.MinValue;
-                            maxValue = range.MaxValue;
-                        }
-
-                        SettingsHandlerUtility.AddFloatToTab(configEntry.Definition.Key, defaultValue, modName, minValue, maxValue, currentValue, newVal => configEntry.BoxedValue = newVal);
-                    }
-
-                    else if (configEntry.SettingType == typeof(int))
-                    {
-                        var defaultValue = configEntry.DefaultValue is int cValue ? cValue : 0;
-                        var currentValue = configEntry.BoxedValue is int bValue ? bValue : 0;
-                        SettingsHandlerUtility.AddIntToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
-                    }
-                    else if (configEntry.SettingType == typeof(string))
-                    {
-                        var defaultValue = configEntry.DefaultValue is string cValue ? cValue : "";
-                        var currentValue = configEntry.BoxedValue is string bValue ? bValue : "";
-                        SettingsHandlerUtility.AddStringToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
-                    }
-                    else if (configEntry.SettingType == typeof(KeyCode))
-                    {
-                        var defaultValue = configEntry.DefaultValue is KeyCode cValue ? cValue : KeyCode.None;
-                        var currentValue = configEntry.BoxedValue is KeyCode bValue ? bValue : KeyCode.None;
-
-                        SettingsHandlerUtility.AddKeybindToTab(configEntry.Definition.Key, defaultValue, modName, currentValue, newVal => configEntry.BoxedValue = newVal);
-                    }
-                    else if (configEntry.SettingType.IsEnum)
-                    {
-                        var defaultValue = configEntry.DefaultValue is object cValue ? cValue : Enum.ToObject(configEntry.SettingType, 0);
-                        var currentValue = configEntry.BoxedValue is object bValue ? bValue : Enum.ToObject(configEntry.SettingType, 0);
-
-                        var defaultValueName = Enum.GetName(configEntry.SettingType, defaultValue);
-                        var currentValueName = Enum.GetName(configEntry.SettingType, currentValue);
-                        var options = new List<string>(Enum.GetNames(configEntry.SettingType));
-
-                        SettingsHandlerUtility.AddEnumToTab(configEntry.Definition.Key, options, modName, currentValueName, newVal =>
-                        {
-                            if (Enum.TryParse(configEntry.SettingType, newVal, out var value))
-                                configEntry.BoxedValue = value;
-                        });
-                    }
-                    else // Warn about missing SettingTypes
-                        Log.LogWarning($"Missing SettingType: [Mod: {modName}] {configEntry.Definition.Key} (Type: {configEntry.SettingType})");
-                }
-
-                catch (Exception e)
-                {
-                    Log.LogError(e);
-                }
-            }
-        }
-
-    }
-
-    // From https://github.com/IsThatTheRealNick/REPOConfig/blob/main/REPOConfig/ConfigMenu.cs#L453
-    private static Dictionary<string, ConfigEntryBase[]> GetModConfigEntries()
-    {
-        var configs = new Dictionary<string, ConfigEntryBase[]>();
-
-        foreach (var plugin in Chainloader.PluginInfos.Values.OrderBy(p => p.Metadata.Name))
-        {
-            var configEntries = new List<ConfigEntryBase>();
-
-            foreach (var configEntryBase in plugin.Instance.Config.Select(configEntry => configEntry.Value))
-            {
-                var tags = configEntryBase.Description?.Tags;
-
-                if (tags != null && tags.Contains("Hidden")) continue;
-
-                configEntries.Add(configEntryBase);
-            }
-
-            if (configEntries.Count > 0)
-                configs.TryAdd(FixNaming(plugin.Metadata.Name), [.. configEntries]);
-        }
-
-        return configs;
-    }
-
-    private static string FixNaming(string input)
-    {
-        input = Regex.Replace(input, "([a-z])([A-Z])", "$1 $2");
-        input = Regex.Replace(input, "([A-Z])([A-Z][a-z])", "$1 $2");
-        input = Regex.Replace(input, @"\s+", " ");
-        input = Regex.Replace(input, @"([A-Z]\.)\s([A-Z]\.)", "$1$2");
-
-        return input.Trim();
+public static class ProceduralImageExtensions {
+    public static T SetModifierType<T>(this ProceduralImage image) where T : ProceduralImageModifier {
+        image.ModifierType = typeof(T);
+        return image.gameObject.GetComponent<T>() ?? image.gameObject.AddComponent<T>();
     }
 }
