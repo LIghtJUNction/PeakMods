@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{ADD7E1B6-820C-40DA-8A68-9639C4208189}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeakMods", "src\PeakMods\PeakMods.csproj", "{D7686B56-BD9D-4F26-85B2-27652F6C544C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PeakChatOps", "src\PeakChatOps\PeakChatOps.csproj", "{D7686B56-BD9D-4F26-85B2-27652F6C544C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

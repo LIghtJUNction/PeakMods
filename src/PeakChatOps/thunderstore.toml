@@ -6,25 +6,27 @@ repository = "https://thunderstore.io"
 
 [package]
 namespace = "LightPeak"
-name = "PeakMods"
-description = "TODO: Fill in short mod description."
-websiteUrl = "" # TODO: Add a link to your mod repository here (optional)
+name = "PeakChatOps"
+description = "A Minecraft-style chat command system for PEAK. Supports commands like /help, /whoami and more!"
+websiteUrl = "https://github.com/LIghtJUNction/PeakMods"
 containsNsfwContent = false
 
 [package.dependencies]
 BepInEx-BepInExPack_PEAK = "5.4.2403"
+PEAKModding-PEAKLib_Core = "1.5.1"
+PEAKModding-PEAKLib_UI = "1.5.0"
 
 [build]
-icon = "../../icon.png"
-readme = "../../README.md"
+icon = "./icon.png"
+readme = "./README.md"
 outdir = "../../artifacts/thunderstore/"
 
 [[build.copy]]
-source = "../../artifacts/bin/PeakMods/release/com.github.LIghtJUNction.PeakMods.dll"
+source = "../../artifacts/bin/PeakChatOps/release/com.github.LIghtJUNction.PeakChatOps.dll"
 target = "plugins/"
 
 [[build.copy]]
-source = "../../CHANGELOG.md"
+source = "./CHANGELOG.md"
 target = "/"
 
 [[build.copy]]
