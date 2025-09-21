@@ -22,18 +22,16 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
     Harmony harmony = null!;
 
-    public static ConfigEntry<float> configFontSize = null!;
-    public static ConfigEntry<string> configChatSize = null!;
-    public static ConfigEntry<float> configMessageFadeDelay = null!;
-    public static ConfigEntry<float> configFadeDelay = null!;
-    public static ConfigEntry<float> configHideDelay = null!;
-    public static ConfigEntry<KeyCode> configKey = null!;
-    public static ConfigEntry<UIAlignment> configPos = null!;
-    public static ConfigEntry<bool> configRichTextEnabled = null!;
-    public static ConfigEntry<bool> configIMGUI = null!;
-    public static ConfigEntry<float> configBgOpacity = null!;
-    public static ConfigEntry<bool> configFrameVisible = null!;
-    public static ConfigEntry<bool> configHideInputField = null!;
+    public static ConfigEntry<float> FontSize = null!;
+    public static ConfigEntry<string> ChatSize = null!;
+    public static ConfigEntry<float> MessageFadeDelay = null!;
+    public static ConfigEntry<float> FadeDelay = null!;
+    public static ConfigEntry<float> HideDelay = null!;
+    public static ConfigEntry<KeyCode> Key = null!;
+    public static ConfigEntry<UIAlignment> Pos = null!;
+    public static ConfigEntry<float> BgOpacity = null!;
+    public static ConfigEntry<bool> FrameVisible = null!;
+    public static ConfigEntry<bool> HideInputField = null!;
 
     private void Awake()
     {
@@ -42,93 +40,66 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         MonoDetourManager.InvokeHookInitializers(typeof(PeakChatOpsPlugin).Assembly);
         Logger.LogInfo($"PeakChatOps is loaded!");
 
-        configKey = Config.Bind<KeyCode>(
+        Key = Config.Bind<KeyCode>(
                                 "Display",
                                 "ChatKey",
                                 KeyCode.Y,
                                 "The key that activates typing in chat"
                             );
 
-        configIMGUI = Config.Bind<bool>(
-                                "Display",
-                                "UseIMGUI",
-                                false,
-                                "Use IMGUI for the text field (use if you're having problems with typing)"
-            );
-
-        configPos = Config.Bind<UIAlignment>(
+        Pos = Config.Bind<UIAlignment>(
                                 "Display",
                                 "ChatPosition",
                                 UIAlignment.TopLeft,
                                 "The position of the text chat"
                             );
 
-        configChatSize = Config.Bind<string>(
+        ChatSize = Config.Bind<string>(
                                 "Display",
                                 "ChatSize",
                                 "500:300",
                                 "The size of the text chat (formatted X:Y)"
                             );
 
-        configFontSize = Config.Bind<float>(
+        FontSize = Config.Bind<float>(
                                 "Display",
                                 "ChatFontSize",
                                 20f,
                                 "Size of the chat's text"
                             );
 
-        configBgOpacity = Config.Bind<float>(
-                                "Display",
-                                "ChatBackgroundOpacity",
-                                0.3f,
-                                "Opacity of the chat's background/shadow"
-                            );
+        BgOpacity = Config.Bind<float>(
+                              "Display",
+                              "ChatBackgroundOpacity",
+                              0.3f,
+                              "Opacity of the chat's background/shadow"
+                          );
 
-        configFrameVisible = Config.Bind<bool>(
-                                "Display",
-                                "ChatFrameVisible",
-                                true,
-                                "Whether the frame of the chat box is visible"
-                            );
-
-        configHideInputField = Config.Bind<bool>(
-                                "Display",
-                                "HideInputFieldWhenChatHidden",
-                                true,
-                                "Whether to hide the input field when chat is hidden (frees up space for other UI)"
-                            );
-
-        configRichTextEnabled = Config.Bind<bool>(
-                                "Display",
-                                "ChatRichText",
-                                true,
-                                "Whether rich text tags get parsed in messages (e.g. <b> for bold text)"
-                            );
-
-        configFadeDelay = Config.Bind<float>(
-                                "Display",
-                                "ChatFadeDelay",
-                                15f,
-                                "How long before the chat fades out (a negative number means never)"
-                            );
+        FrameVisible = Config.Bind<bool>(
+                              "Display",
+                              "ChatFrameVisible",
+                              true,
+                              "Whether the frame of the chat box is visible"
+                          );
 
 
-        configHideDelay = Config.Bind<float>(
-                                "Display",
-                                "ChatHideDelay",
-                                40f,
-                                "How long before the chat hides completely (a negative number means never)"
-                            );
+        FadeDelay = Config.Bind<float>(
+                              "Display",
+                              "ChatFadeDelay",
+                              15f,
+                              "How long before the chat fades out (a negative number means never)"
+                          );
 
-        configMessageFadeDelay = Config.Bind<float>(
-                                    "Display",
-                                    "ChatMessageHideDelay",
-                                    40f,
-                                    "How long before a chat message disappears (a negative number means never)"
-                                );
+        HideDelay = Config.Bind<float>(
+                              "Display",
+                              "ChatHideDelay",
+                              40f,
+                              "How long before the chat hides completely (a negative number means never)"
+                          );
+
 
         harmony = new Harmony("com.lightjunction.peakchatops");
-        harmony.PatchAll(typeof(GameUtilsPatch));
+
         harmony.PatchAll(typeof(StaminaBarPatch));
         harmony.PatchAll(typeof(GUIManagerPatch));
         harmony.PatchAll(typeof(InputBlockingPatches));
@@ -139,10 +110,10 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
     private void OnDestroy()
     {
-        if (TextChatDisplay.instance != null)
-            GameObject.Destroy(TextChatDisplay.instance.gameObject);
-        if (GUIManagerPatch.textChatCanvas != null)
-            GameObject.Destroy(GUIManagerPatch.textChatCanvas);
+        if (PeakOpsUI.instance != null)
+            GameObject.Destroy(PeakOpsUI.instance.gameObject);
+        if (GUIManagerPatch.ChatOpsCanvas != null)
+            GameObject.Destroy(GUIManagerPatch.ChatOpsCanvas);
 
         StaminaBarPatch.CleanupObjects();
 

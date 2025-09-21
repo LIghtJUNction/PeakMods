@@ -13,7 +13,7 @@ public static class InputBlockingPatches {
     [HarmonyPatch(typeof(GUIManager),nameof(GUIManager.UpdateWindowStatus))]
     [HarmonyPostfix]
     public static void UpdateWindowStatusPatch() {
-        bool shouldBlockInput = TextChatDisplay.instance?.isBlockingInput == true;
+    bool shouldBlockInput = PeakChatOps.Core.PeakOpsUI.instance?.isBlockingInput == true;
         
         if (shouldBlockInput) {
             windowBlockingInput?.Invoke(GUIManager.instance,[ true ]);

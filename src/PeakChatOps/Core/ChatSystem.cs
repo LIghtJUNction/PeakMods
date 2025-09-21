@@ -74,10 +74,10 @@ namespace PeakChatOps.Core
             bool isDead = bool.TryParse(data[3]?.ToString(), out var d) && d;
             
             // 显示消息
-            if (TextChatDisplay.instance != null)
+            if (PeakOpsUI.instance != null)
             {
                 var formattedMessage = $"[{nickname}]: {message}";
-                TextChatDisplay.instance.AddMessage(formattedMessage);
+                PeakOpsUI.instance.AddMessage(formattedMessage);
             }
         }
         
@@ -94,10 +94,10 @@ namespace PeakChatOps.Core
             string timestamp = data[2]?.ToString() ?? "";
             
             // 显示私聊消息
-            if (TextChatDisplay.instance != null)
+            if (PeakOpsUI.instance != null)
             {
                 var whisperMessage = $"🔒 私聊来自 {senderName}: {message}";
-                TextChatDisplay.instance.AddMessage(whisperMessage);
+                PeakOpsUI.instance.AddMessage(whisperMessage);
             }
         }
         
@@ -205,19 +205,17 @@ namespace PeakChatOps.Core
         /// </summary>
         private void ShowLocalMessage(MessagePacket packet)
         {
-            if (TextChatDisplay.instance == null) return;
-            
+            if (PeakOpsUI.instance == null) return;
             if (packet.Type == MessageType.System || packet.Type == MessageType.Error)
             {
-                TextChatDisplay.instance.AddSystemMessage(packet.Content, !packet.IsPrivate);
+                PeakOpsUI.instance.AddMessage(packet.Content);
             }
             else
             {
-                // 使用简单的消息格式
                 var message = string.IsNullOrEmpty(packet.SenderName) || packet.SenderName == "SYSTEM" 
                     ? packet.Content 
                     : $"[{packet.SenderName}]: {packet.Content}";
-                TextChatDisplay.instance.AddMessage(message);
+                PeakOpsUI.instance.AddMessage(message);
             }
         }
         
@@ -287,9 +285,9 @@ namespace PeakChatOps.Core
                     
                     // 在本地也显示发送的私聊
                     var whisperMessage = $"🔒 私聊发给 {targetPlayer.NickName}: {message}";
-                    if (TextChatDisplay.instance != null)
+                    if (PeakOpsUI.instance != null)
                     {
-                        TextChatDisplay.instance.AddMessage(whisperMessage);
+                        PeakOpsUI.instance.AddMessage(whisperMessage);
                     }
                 }
                 else
