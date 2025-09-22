@@ -5,17 +5,14 @@ using PeakChatOps.API;
 
 namespace PeakChatOps.API.Commands;
 
-public class HelpCommand : ICmdProvider
+public class HelpCommand : PCmd
 {
-    public static void Register()
+    public HelpCommand()
     {
-        CmdX.Register(new Cmd
-        {
-            Name = "help",
-            Description = "显示所有可用命令及说明",
-            HelpInfo = "用法: /help\n列出所有命令和用法说明。",
-            Handler = args => Help()
-        });
+        Name = "help";
+        Description = "显示所有可用命令及说明";
+        HelpInfo = "用法: /help\n列出所有命令和用法说明。";
+        Handler = args => Help();
     }
 
     public static string Help()

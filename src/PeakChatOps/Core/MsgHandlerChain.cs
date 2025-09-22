@@ -12,7 +12,7 @@ public static class MsgHandlerChain
     #region 下行消息处理
     static MsgHandlerChain()
     {
-        CmdX.EnsureRegistered();
+        CmdxCommand.LoadPCmd();
         CmdX.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
     }
     // 处理下行消息的链
@@ -58,12 +58,27 @@ public static class MsgHandlerChain
             // 指令消息
             IncomingMessageChain(new MessageData("CMD", payload[1]?.ToString() ?? "", "local", Character.localCharacter.data.dead));
             // 系统响应
-            
-            string result = CmdX.exec(payload[1]?.ToString() ?? $"{PeakChatOpsPlugin.CmdPrefix.Value}help");
-
+            string input = payload[1]?.ToString() ?? $"{PeakChatOpsPlugin.CmdPrefix.Value}help";
+            string result;
+            if (input.StartsWith(CmdX.Prefix))
+            {
+                var cmdName = input.Substring(CmdX.Prefix.Length).Split(' ')[0];
+                var cmd = CmdxCommand.GetCommand(cmdName);
+                if (cmd != null)
+                {
+                    var args = input.Substring(CmdX.Prefix.Length + cmdName.Length).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    result = cmd.Handler(args);
+                }
+                else
+                {
+                    result = $"未知命令: {cmdName}，输入{CmdX.Prefix}help 查看所有命令。";
+                }
+            }
+            else
+            {
+                result = "无效命令格式。";
+            }
             IncomingMessageChain(new MessageData("system", result, "system", false));
-
-
             return; // 指令消息不发送到网络
         }
 
