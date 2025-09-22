@@ -1,7 +1,9 @@
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
+using System; // for StringSplitOptions
 using PeakChatOps.Commands;
+
 namespace PeakChatOps.Core;
 
 public static class MsgHandlerChain

@@ -28,6 +28,10 @@ source = "../../artifacts/bin/PeakChatOps/release/com.github.LIghtJUNction.PeakC
 target = "plugins/"
 
 [[build.copy]]
+source = "../../artifacts/bin/PeakChatOps.API/release/PeakChatOps.API.dll"
+target = "plugins/"
+
+[[build.copy]]
 source = "./CHANGELOG.md"
 target = "/"
 

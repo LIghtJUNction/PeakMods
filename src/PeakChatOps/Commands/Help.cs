@@ -17,11 +17,9 @@ public class HelpCommand : PCmd
 
     public static string Help()
     {
-        var cmdsField = typeof(CmdX).GetField("_cmds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        var dict = cmdsField?.GetValue(null) as IDictionary<string, Cmd>;
-        if (dict == null || dict.Count == 0) return "无可用命令。";
+        if (Cmdx._PCmdDict.Count == 0) return "无可用命令。";
         var lines = new List<string>();
-        foreach (var cmd in dict.Values)
+        foreach (var cmd in Cmdx._PCmdDict.Values)
             lines.Add($"/{cmd.Name} - {cmd.Description}{(string.IsNullOrWhiteSpace(cmd.HelpInfo) ? "" : "\n  " + cmd.HelpInfo)}");
         return string.Join("\n", lines);
     }

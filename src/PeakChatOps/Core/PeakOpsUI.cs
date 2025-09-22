@@ -104,6 +104,54 @@ public class PeakOpsUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 刷新聊天框UI，使配置变更即时生效（如字体、大小、透明度等）
+    /// </summary>
+    public void RefreshUI()
+    {
+        getConfig();
+        // 聊天框尺寸
+        if (baseTransform != null)
+        {
+            baseTransform.sizeDelta = boxSize;
+        }
+        // 聊天内容字体
+        if (chatLogViewportTransform != null)
+        {
+            foreach (Transform child in chatLogViewportTransform)
+            {
+                var text = child.GetComponent<PeakText>();
+                if (text != null)
+                {
+                    text.SetFontSize(fontSize);
+                    text.SetColor(offWhite);
+                }
+            }
+        }
+        // 输入框字体
+        if (inputField != null && inputField.textComponent != null)
+        {
+            inputField.textComponent.fontSize = fontSize;
+            inputField.textComponent.color = Utilities.GetContrastingColor(offWhite, 0.8f);
+        }
+        // 背景透明度
+        var shadow = baseTransform.Find("Shadow");
+        if (shadow != null)
+        {
+            var img = shadow.GetComponent<ProceduralImage>();
+            if (img != null)
+                img.color = new Color(0, 0, 0, PeakChatOpsPlugin.BgOpacity.Value);
+        }
+        // 边框可见性
+        var border = baseTransform.Find("Border");
+        if (border != null)
+        {
+            border.gameObject.SetActive(PeakChatOpsPlugin.FrameVisible.Value);
+        }
+        // 位置刷新
+        UpdatePosition();
+    }
+
     void ResetTimers()
     {
         fadeTimer = fadeOutDelay;
@@ -242,11 +290,12 @@ public class PeakOpsUI : MonoBehaviour
             borderImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 5;
         }
     }
-    void UpdatePosition(bool isBottomLeft = false)
-    {
-        // 选择对齐方式：如果参数为true则强制左下，否则用配置
-        var alignment = isBottomLeft ? UIAlignment.BottomLeft : PeakChatOpsPlugin.Pos.Value;
 
+
+    void UpdatePosition()
+    {
+        // 直接读取配置判断
+        var alignment = PeakChatOpsPlugin.Pos.Value;
         // 根据对齐方式设置聊天框的锚点、pivot和位置
         switch (alignment)
         {
@@ -370,8 +419,7 @@ public class PeakOpsUI : MonoBehaviour
             ResetTimers();
 
 
-        if (PeakChatOpsPlugin.Pos.Value == UIAlignment.BottomLeft)
-            UpdatePosition(true);
+        UpdatePosition();
 
         fade = Mathf.Clamp(fadeTimer <= 0 ? fade - (Time.deltaTime / fadeOutTime) : fade + (Time.deltaTime / fadeInTime), 0, 1);
         hide = Mathf.Clamp(hideTimer <= 0 ? hide + (Time.deltaTime / hideTime) : hide - (Time.deltaTime / fadeInTime), 0, 1);
