@@ -45,6 +45,12 @@ Source: https://github.com/LIghtJUNction/PeakMods
 ## Development & Extension
 - To add a new command: Inherit from `PCmd`, implement the Handler, and put it in an extension DLL for auto loading
 
+
+## build
+
+> dotnet build -c Release -target:PackTS -v d
+
+
 ## Credits (in no particular order)
 - [PeakTextChat](https://github.com/borealityy/PeakTextChat) (Inspiration)
 - [BepInEx](https://github.com/BepInEx/BepInEx) (Framework)
