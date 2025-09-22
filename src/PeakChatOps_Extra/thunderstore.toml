@@ -1,0 +1,44 @@
+[config]
+schemaVersion = "0.0.1"
+
+[general]
+repository = "https://thunderstore.io"
+
+[package]
+namespace = "LightPeak"
+name = "PeakChatOps.Extra"
+description = "An extra module for PeakChatOps, providing additional features and enhancements."
+websiteUrl = "https://github.com/LIghtJUNction/PeakMods"
+containsNsfwContent = false
+
+[package.dependencies]
+LightPeak-PeakChatOps = "1.0.0"
+
+[build]
+icon = "./icon.png"
+readme = "./README.md"
+outdir = "../../artifacts/thunderstore/"
+
+[[build.copy]]
+source = "../../artifacts/bin/PeakChatOps/release/com.github.LIghtJUNction.PeakChatOps.dll"
+target = "plugins/"
+
+[[build.copy]]
+source = "./CHANGELOG.md"
+target = "/"
+
+[[build.copy]]
+source = "../../LICENSE"
+target = "/"
+
+# The following config options only apply when using TCLI to publish to Thunderstore directly:
+
+[publish]
+# See communities at:
+# https://thunderstore.io/api/experimental/community/
+communities = [ "peak", ]
+
+[publish.categories]
+# See categories at:
+# https://thunderstore.io/api/experimental/community/peak/category/
+peak = [ "mods", ]
