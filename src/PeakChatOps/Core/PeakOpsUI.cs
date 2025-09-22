@@ -14,6 +14,8 @@ namespace PeakChatOps.Core;
 
 public class PeakOpsUI : MonoBehaviour
 {
+    // ...existing code...
+    private PeakTextInput peakInput; // 聊天输入框逻辑组件
     int maxMessages = 100; // 聊天记录最大条数
     Vector2 boxSize = new Vector2(500, 300); // 聊天框的宽高
     float fadeInTime = 0.03f; // 聊天框淡入动画时间
@@ -236,8 +238,10 @@ public class PeakOpsUI : MonoBehaviour
             typeof(PeakTextInput).GetProperty("TextInputPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null) as GameObject,
             baseTransform, false);
 
-        var peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
+        peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
         peakInput.SetPlaceholder($"Press {chatKeyText} to chat | 按 {chatKeyText}");
+
+
         var textComp = peakInput.InputField.textComponent;
         textComp.fontSize = fontSize;
         textComp.color = Utilities.GetContrastingColor(offWhite, 0.8f);
@@ -290,7 +294,16 @@ public class PeakOpsUI : MonoBehaviour
             borderImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 5;
         }
     }
+    
+    /// <summary>
+    /// 动态设置输入框的占位符文本
+    /// </summary>
+    public void SetInputPlaceholder(string text)
+    {
+        if (peakInput != null)
+            peakInput.SetPlaceholder(text);
 
+    }
 
     void UpdatePosition()
     {
