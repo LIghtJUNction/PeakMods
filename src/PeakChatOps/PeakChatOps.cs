@@ -7,7 +7,7 @@ using PeakChatOps.Core;
 using PEAKLib.Core;
 using PEAKLib.UI;
 using UnityEngine.UI.ProceduralImage;
-using MonoDetour;
+
 using PeakChatOps.Patches;
 
 namespace PeakChatOps;
@@ -37,7 +37,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     {
         // Plugin startup logic
         Logger = base.Logger;
-        MonoDetourManager.InvokeHookInitializers(typeof(PeakChatOpsPlugin).Assembly);
+
         Logger.LogInfo($"PeakChatOps is loaded!");
 
         Key = Config.Bind<KeyCode>(

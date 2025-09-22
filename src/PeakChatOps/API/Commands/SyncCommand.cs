@@ -5,7 +5,7 @@ namespace PeakChatOps.API.Commands;
 
 public class SyncCommand : ICmdProvider
 {
-  public void Register()
+  public static void Register()
   {
     CmdX.Register(new Cmd()
     {

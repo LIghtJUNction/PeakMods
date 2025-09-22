@@ -7,7 +7,7 @@ namespace PeakChatOps.API.Commands;
 
 public class ExitCommand : ICmdProvider
 {
-  public void Register()
+  public static void Register()
   {
     CmdX.Register(new Cmd()
     {

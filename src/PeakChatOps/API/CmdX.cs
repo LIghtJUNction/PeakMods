@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using PeakChatOps.API.Commands;
 using WebSocketSharp;
 #nullable enable
 namespace PeakChatOps.API;
@@ -23,26 +24,10 @@ public static class CmdX
 
   public static void EnsureRegistered()
   {
-    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-    {
-      foreach (Type type in assembly.GetTypes())
-      {
-        if (typeof (ICmdProvider).IsAssignableFrom(type))
-        {
-          if (!type.IsAbstract)
-          {
-            try
-            {
-              if (Activator.CreateInstance(type) is ICmdProvider instance)
-                instance.Register();
-            }
-            catch
-            {
-            }
-          }
-        }
-      }
-    }
+    EchoCommand.Register();
+    HelpCommand.Register();
+    ExitCommand.Register();
+    SyncCommand.Register();
   }
 
   public static void Register(Cmd cmd)
@@ -71,5 +56,16 @@ public static class CmdX
 // 命令自动注册接口
 public interface ICmdProvider
 {
-    void Register();
+  static void Register()
+  {
+    // 默认实现 - EchoCommand
+    CmdX.Register(new Cmd()
+    {
+      Name = "echo",
+      Description = "回显输入内容",
+      HelpInfo = "用法: /echo <内容>\n将你输入的内容原样返回。",
+      Handler = (Func<string[], string>) (args => EchoCommand.Echo(args))
+    });
+  }
+  
 }
