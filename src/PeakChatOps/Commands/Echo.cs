@@ -1,7 +1,7 @@
 using System;
-
+using PeakChatOps.API;
 #nullable enable
-namespace PeakChatOps.API.Commands;
+namespace PeakChatOps.Commands;
 
 public class EchoCommand : PCmd
 {

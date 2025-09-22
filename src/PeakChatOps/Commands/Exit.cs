@@ -1,9 +1,9 @@
 
 using System;
 using UnityEngine.SceneManagement;
-
+using PeakChatOps.API;
 #nullable enable
-namespace PeakChatOps.API.Commands;
+namespace PeakChatOps.Commands;
 
 public class ExitCommand : PCmd
 {

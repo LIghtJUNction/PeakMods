@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using PeakChatOps.API;
 
-namespace PeakChatOps.API.Commands;
+namespace PeakChatOps.Commands;
 
 public class HelpCommand : PCmd
 {

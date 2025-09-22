@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using BepInEx;
-
+using PeakChatOps.API;
 #nullable enable
-namespace PeakChatOps.API.Commands;
+namespace PeakChatOps.Commands;
 
 public class Cmdx : PCmd
 {
     // 用于高效查找命令
     public static Dictionary<string, PCmd> _PCmdDict = new Dictionary<string, PCmd>(StringComparer.OrdinalIgnoreCase);
-    
+    public static string Prefix = "/";
+
     public Cmdx()
     {
         Name = "cmdx";

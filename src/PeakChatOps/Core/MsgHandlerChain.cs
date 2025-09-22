@@ -1,10 +1,7 @@
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
-using UnityEngine.Rendering.Universal;
-using PeakChatOps.API;
-using UnityEngine;
-
+using PeakChatOps.Commands;
 namespace PeakChatOps.Core;
 
 public static class MsgHandlerChain
@@ -12,8 +9,8 @@ public static class MsgHandlerChain
     #region 下行消息处理
     static MsgHandlerChain()
     {
-        CmdxCommand.LoadPCmd();
-        CmdX.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+        Cmdx.LoadPCmd();
+        Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
     }
     // 处理下行消息的链
     public static void IncomingMessageChain(MessageData msg)
@@ -60,18 +57,18 @@ public static class MsgHandlerChain
             // 系统响应
             string input = payload[1]?.ToString() ?? $"{PeakChatOpsPlugin.CmdPrefix.Value}help";
             string result;
-            if (input.StartsWith(CmdX.Prefix))
+            if (input.StartsWith(Cmdx.Prefix))
             {
-                var cmdName = input.Substring(CmdX.Prefix.Length).Split(' ')[0];
-                var cmd = CmdxCommand.GetCommand(cmdName);
+                var cmdName = input.Substring(Cmdx.Prefix.Length).Split(' ')[0];
+                var cmd = Cmdx.GetCommand(cmdName);
                 if (cmd != null)
                 {
-                    var args = input.Substring(CmdX.Prefix.Length + cmdName.Length).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var args = input.Substring(Cmdx.Prefix.Length + cmdName.Length).Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     result = cmd.Handler(args);
                 }
                 else
                 {
-                    result = $"未知命令: {cmdName}，输入{CmdX.Prefix}help 查看所有命令。";
+                    result = $"未知命令: {cmdName}，输入{Cmdx.Prefix}help 查看所有命令。";
                 }
             }
             else
