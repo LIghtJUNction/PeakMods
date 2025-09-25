@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using System;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -20,7 +21,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger = null!;
 
-    Harmony harmony = null!;
+    public static Harmony harmony = null!;
 
     public static ConfigEntry<float> FontSize = null!;
     public static ConfigEntry<string> ChatSize = null!;
@@ -33,6 +34,10 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     public static ConfigEntry<bool> FrameVisible = null!;
     public static ConfigEntry<bool> HideInputField = null!;
     public static ConfigEntry<string> CmdPrefix = null!;
+    public static ConfigEntry<string> DeathMessage = null!;
+    public static ConfigEntry<string> ReviveMessage = null!;
+
+    public static ConfigEntry<string> PassOutMessage = null!;
     private void Awake()
     {
         // Plugin startup logic
@@ -40,77 +45,19 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
         Logger.LogInfo($"PeakChatOps is loaded!");
 
-        Key = Config.Bind<KeyCode>(
-                                "Display",
-                                "ChatKey",
-                                KeyCode.Y,
-                                "The key that activates typing in chat"
-                            );
-
-        Pos = Config.Bind<UIAlignment>(
-                                "Display",
-                                "ChatPosition",
-                                UIAlignment.TopLeft,
-                                "The position of the text chat"
-                            );
-
-        ChatSize = Config.Bind<string>(
-                                "Display",
-                                "ChatSize",
-                                "500:300",
-                                "The size of the text chat (formatted X:Y)"
-                            );
-
-        FontSize = Config.Bind<float>(
-                                "Display",
-                                "ChatFontSize",
-                                20f,
-                                "Size of the chat's text"
-                            );
-
-        BgOpacity = Config.Bind<float>(
-                              "Display",
-                              "ChatBackgroundOpacity",
-                              0.3f,
-                              "Opacity of the chat's background/shadow"
-                          );
-
-        FrameVisible = Config.Bind<bool>(
-                              "Display",
-                              "ChatFrameVisible",
-                              true,
-                              "Whether the frame of the chat box is visible"
-                          );
-
-
-        FadeDelay = Config.Bind<float>(
-                              "Display",
-                              "ChatFadeDelay",
-                              15f,
-                              "How long before the chat fades out (a negative number means never)"
-                          );
-
-        HideDelay = Config.Bind<float>(
-                              "Display",
-                              "ChatHideDelay",
-                              40f,
-                              "How long before the chat hides completely (a negative number means never)"
-                          );
-
-        CmdPrefix = Config.Bind<string>(
-                              "Commands",
-                              "CommandPrefix",
-                              "/",
-                              "The prefix that starts a command"
-                          );
-
+        PConfig.InitConfig(
+            Config, // 这里的 Config 是 BaseUnityPlugin 的属性，类型为 ConfigFile
+            out Key, out Pos, out ChatSize, out FontSize, out BgOpacity, out FrameVisible,
+            out FadeDelay, out HideDelay, out CmdPrefix,
+            out DeathMessage, out ReviveMessage, out PassOutMessage
+        );
 
         harmony = new Harmony("com.lightjunction.peakchatops");
 
-
-        harmony.PatchAll(typeof(StaminaBarPatch));
         harmony.PatchAll(typeof(GUIManagerPatch));
+        harmony.PatchAll(typeof(StaminaBarPatch));
         harmony.PatchAll(typeof(InputBlockingPatches));
+        harmony.PatchAll(typeof(CharacterStatsPatches));
 
         // 聊天系统初始化：自动挂载 ChatSystem
         if (GameObject.Find("ChatSystem") == null)
@@ -119,6 +66,16 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             chatSystemObj.AddComponent<ChatSystem>();
             GameObject.DontDestroyOnLoad(chatSystemObj);
             Logger.LogInfo("[PeakChatOps] ChatSystem GameObject created and initialized.");
+        }
+        // Ensure message handler chain is initialized (subscribe buses, start runners)
+        try
+        {
+            CentralCmdRouter.EnsureInitialized();
+            Logger.LogDebug("[PeakChatOps] CentralCmdRouter.EnsureInitialized called");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"[PeakChatOps] Error ensuring MsgHandlerChain initialization: {ex.Message}");
         }
     }
 

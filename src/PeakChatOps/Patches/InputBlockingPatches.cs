@@ -43,8 +43,6 @@ public static class InputBlockingPatches {
             // 只阻塞交互动作，保持其他功能正常
             __instance.input.interactIsPressed = false;
             
-            // 添加调试日志
-            PeakChatOpsPlugin.Logger.LogDebug("Chat input active - blocking character interaction");
         }
         return true;
     }
@@ -52,7 +50,7 @@ public static class InputBlockingPatches {
     /// <summary>
     /// 阻塞键盘输入以防止与聊天输入冲突
     /// </summary>
-    [HarmonyPatch(typeof(UnityEngine.Input), "inputString", MethodType.Getter)]
+    [HarmonyPatch(typeof(Input), "inputString", MethodType.Getter)]
     [HarmonyPrefix]
     public static bool InputStringPatch(ref string __result) {
         if (GUIManager.instance?.windowBlockingInput == true) {

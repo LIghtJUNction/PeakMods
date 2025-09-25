@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using ExitGames.Client.Photon;
 using Photon.Pun;
-using Photon.Realtime;
+using PeakChatOps.API;
+using System;
 
 namespace PeakChatOps.Core;
 
@@ -32,90 +31,111 @@ public class MessageData
 /// </summary>
 public class ChatSystem : MonoBehaviour
 {
-
     public static ChatSystem Instance;
-    private const byte ChatEventCode = 81;
+    // Chat event code moved to API: EventCodes.ChatEventCode
+
+    // 事件处理字典
+    private readonly Dictionary<byte, Action<EventData>> eventHandlers = new();
 
     private void Start()
     {
-    PeakChatOpsPlugin.Logger.LogDebug("[ChatSystem.Start] Called, registering EventReceived");
-    Instance = this;
-    PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
+        DevLog.UI("[ChatSystem.Start] Called, registering EventReceived");
+        Instance = this;
+    // 注册事件处理器
+    eventHandlers[EventCodes.ChatEventCode] = HandleChatEvent;
+        PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
     }
 
     private void OnDestroy()
     {
-    PeakChatOpsPlugin.Logger.LogDebug("[ChatSystem.OnDestroy] Unregistering EventReceived");
-    PhotonNetwork.NetworkingClient.EventReceived -= OnEvent;
+    DevLog.UI("[ChatSystem.OnDestroy] Unregistering EventReceived");
+        PhotonNetwork.NetworkingClient.EventReceived -= OnEvent;
     }
 
     public void OnEvent(EventData photonEvent)
     {
-    PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
-        if (photonEvent.Code == ChatEventCode)
+    DevLog.UI($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
+        if (eventHandlers.TryGetValue(photonEvent.Code, out var handler))
         {
-            var data = (object[])photonEvent.CustomData;
-            if (data.Length < 4) return;
-            var msg = new MessageData(
-                data[0]?.ToString() ?? null,
-                data[1]?.ToString() ?? null,
-                data[2]?.ToString() ?? null,
-                bool.TryParse(data[3]?.ToString(), out var d) && d,
-                (data.Length > 4 && data[4] is Dictionary<string, object> dict) ? dict : null
-            );
-            ReceiveChatMessage(msg);
+            handler(photonEvent);
         }
+        else
+        {
+            DevLog.UI($"事件[ChatSystem.OnEvent]：未注册的事件类型");
+        }
+    }
+
+    private void HandleChatEvent(EventData photonEvent)
+    {
+        var data = (object[])photonEvent.CustomData;
+        if (data.Length < 4) return;
+        var msg = new MessageData(
+            data[0]?.ToString() ?? null,
+            data[1]?.ToString() ?? null,
+            data[2]?.ToString() ?? null,
+            bool.TryParse(data[3]?.ToString(), out var d) && d,
+            (data.Length > 4 && data[4] is Dictionary<string, object> dict) ? dict : null
+        );
+        ReceiveChatMessage(msg);
     }
 
     public void ReceiveChatMessage(MessageData msg)
     {
-        if (PeakOpsUI.instance != null)
-        {
-            // 这里可插入消息处理器链
-            MsgHandlerChain.IncomingMessageChain(msg);
-            // PeakOpsUI.instance.AddMessage($"[{msg.UserId}]: {msg.Message}{extraInfo}");
-        }
+        var evt = new ChatMessageEvent(
+            msg.Nickname,
+            msg.Message,
+            msg.UserId,
+            msg.IsDead,
+            msg.Extra
+        );
+    _ = EventBusRegistry.ChatMessageBus.Publish("sander://other", evt);
     }
 
     public void SendChatMessage(string message)
     {
-        SendChatMessage(message, null);
+        SendChatMessage(message, new Dictionary<string, object>());
     }
 
     // 新增重载，支持扩展字典
+    // local player send message // cmd
     public void SendChatMessage(string message, Dictionary<string, object> extra)
     {
-        if (!string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(message)) return;
+        DevLog.UI($"[ChatSystem.SendChatMessage] called, message={message}");
+        string prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+        // 初始值
+        bool isDead = false;
+        // 检查是否为命令
+        if (!string.IsNullOrEmpty(prefix) && message.StartsWith(prefix))
         {
-            PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem.SendChatMessage] called, message={message}");
-            bool isDead = false;
             if (Character.localCharacter?.data != null)
             {
                 isDead = Character.localCharacter.data.dead;
             }
-            object[] payload;
-            if (extra != null && extra.Count > 0)
+            // 解析命令（去掉前缀）
+            var withoutPrefix = message.Substring(prefix.Length).Trim();
+            var parts = withoutPrefix.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var command = parts.Length > 0 ? parts[0] : string.Empty;
+            var args = parts.Length > 1 ? parts[1..] : new string[0];
+            var cmdEvt = new CmdMessageEvent(command, args, PhotonNetwork.LocalPlayer.UserId);
+            _ = EventBusRegistry.CmdMessageBus.Publish("cmd://", cmdEvt); // 路由
+            return;
+        }
+        // 普通消息：准备发送给其他玩家
+        {
+            if (Character.localCharacter?.data != null)
             {
-                payload = new object[] {
-                    PhotonNetwork.LocalPlayer.NickName,
-                    message,
-                    PhotonNetwork.LocalPlayer.UserId,
-                    isDead,
-                    extra
-                };
+                isDead = Character.localCharacter.data.dead;
             }
-            else
-            {
-                payload = new object[] {
-                    PhotonNetwork.LocalPlayer.NickName,
-                    message,
-                    PhotonNetwork.LocalPlayer.UserId,
-                    isDead
-                };
-            }
-            PeakChatOpsPlugin.Logger.LogDebug("[ChatSystem.SendChatMessage] Calling MsgHandlerChain.OutgoingMessageChain");
-            // 上行消息处理链
-            MsgHandlerChain.OutgoingMessageChain(ChatEventCode, payload);
+
+            var evt = new ChatMessageEvent(
+                PhotonNetwork.LocalPlayer.NickName,
+                message,
+                PhotonNetwork.LocalPlayer.UserId,
+                isDead,
+                extra
+            );
+            _ = EventBusRegistry.ChatMessageBus.Publish("sander://self", evt);
         }
     }
 }

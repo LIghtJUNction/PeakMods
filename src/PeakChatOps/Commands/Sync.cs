@@ -1,28 +1,36 @@
 using System;
 using PeakChatOps.API;
 using PeakChatOps.Core;
+using Cysharp.Threading.Tasks;
 #nullable enable
 namespace PeakChatOps.Commands;
 
-public class SyncCommand : PCmd
+[PCOCommand("sync", "同步状态", "用法: /sync")]
+public class SyncCommand
 {
     public SyncCommand()
     {
-        Name = "sync";
-        Description = "同步状态";
-        HelpInfo = "用法: /sync";
-        Handler = args => Sync();
+        EventBusRegistry.CmdMessageBus.Subscribe("cmd://sync", Handle);
     }
 
-    public static string Sync()
+    public static async UniTask Handle(CmdMessageEvent evt)
     {
-        // 重新加载命令
-        Cmdx.LoadPCmd();
-        Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
-        // 刷新配置 更新UI
-        PeakOpsUI.instance.RefreshUI();
-        
-        return "同步完成";
+        try
+        {
+            // 重新加载命令
+            Cmdx.LoadPCmd();
+            Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+            // 刷新配置 更新UI
+            PeakOpsUI.instance.RefreshUI();
+            var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "同步完成", stderr: null, success: true);
+            await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
+        }
+        catch (Exception ex)
+        {
+            var errEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: null, stderr: ex.Message, success: false);
+            await EventBusRegistry.CmdExecResultBus.Publish("cmd://", errEvt);
+        }
+        await UniTask.CompletedTask;
     }
 }
 

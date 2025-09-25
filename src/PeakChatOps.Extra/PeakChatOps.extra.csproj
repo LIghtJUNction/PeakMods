@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PeakChatOps.API" Version="1.1.5" />
+    <ProjectReference Include="..\PeakChatOps.API\PeakChatOps.API.csproj" />
   </ItemGroup>
 
   <!--

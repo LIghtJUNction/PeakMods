@@ -8,14 +8,21 @@
     <!-- This is the display name of your mod. Example: BepInEx Template -->
     <AssemblyTitle>PeakChatOps</AssemblyTitle>
     <!-- This is the version number of your mod. -->
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <!-- Disable nullable reference type warnings for now -->
     <Nullable>disable</Nullable>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DefineConstants>DEBUG;TRACE;DEBUGUI</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="PeakChatOps.API" Version="1.1.5" />
+    <ProjectReference Include="..\PeakChatOps.API\PeakChatOps.API.csproj" />
     <PackageReference Include="PEAKModding.PEAKLib.Core" Version="1.5.1" />
     <PackageReference Include="PEAKModding.PEAKLib.UI" Version="1.5.0" />
     <PackageReference Include="Snosz-PhotonCustomPropsUtils" Version="1.1.0" Private="False" />

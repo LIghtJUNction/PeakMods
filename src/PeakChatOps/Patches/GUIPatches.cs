@@ -45,7 +45,7 @@ public static class GUIManagerPatch
     [HarmonyPostfix]
     public static void StartPostfix(GUIManager __instance)
     {
-        PeakChatOpsPlugin.Logger.LogInfo("GUIManager.Start patch executed - creating chat interface");
+        DevLog.UI("GUIManager.Start patch executed - creating chat interface");
 
         var transform = __instance.transform;
         var ChatOpsCanvasObj = new GameObject("ChatOpsCanvas");
@@ -63,13 +63,19 @@ public static class GUIManagerPatch
         ChatOpsCanvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
 
         // 添加 GraphicRaycaster 以支持输入交互
-        var graphicRaycaster = ChatOpsCanvasObj.GetComponent<GraphicRaycaster>() ?? ChatOpsCanvasObj.AddComponent<GraphicRaycaster>();
+        if (ChatOpsCanvasObj.GetComponent<GraphicRaycaster>() == null)
+        {
+            ChatOpsCanvasObj.AddComponent<GraphicRaycaster>();
+        }
 
         var ChatOpsObj = new GameObject("ChatOps");
         ChatOpsObj.transform.SetParent(ChatOpsCanvas.transform, false);
         ChatOpsObj.AddComponent<PeakOpsUI>();
 
-        PeakChatOpsPlugin.Logger.LogInfo($"Chat interface created successfully - Canvas mode: {ChatOpsCanvas.renderMode}, sorting order: {ChatOpsCanvas.sortingOrder}");
+        DevLog.UI($"Chat interface created successfully - Canvas mode: {ChatOpsCanvas.renderMode}, sorting order: {ChatOpsCanvas.sortingOrder}");
+
+        
+
     }
 
     [HarmonyPatch("LateUpdate")]
