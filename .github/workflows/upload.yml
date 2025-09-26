@@ -1,0 +1,50 @@
+name: Publish PeakChatOps to Thunderstore
+on: 
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout PeakMods repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Sync version to .csproj
+        working-directory: ./src/PeakChatOps
+        run:
+          TAG_VERSION=${{ github.ref_name }}
+          CLEAN_VERSION=${TAG_VERSION#v}
+          sed -i "s|<Version>.*</Version>|<Version>$CLEAN_VERSION</Version>|" PeakChatOps.csproj
+          cat PeakChatOps.csproj | grep "<Version>"
+
+      # 关键修正：明确基于 thunderstore.yaml 配置打包，确保路径匹配
+      - name: Build & Package PeakChatOps (PackTS)
+        working-directory: ./src/PeakChatOps
+        run: dotnet build PeakChatOps.csproj -c Release -target:PackTS -v d
+        env:
+          # 显式指定 TCLI 读取 thunderstore.yaml（默认也会读，但加此配置更稳妥）
+          TCLI_CONFIG: ./thunderstore.yaml
+
+      - name: Install Thunderstore CLI
+        run: dotnet tool install --global Thunderstore.CLI
+
+      # 上传文件来源修正：TCLI 读取 thunderstore.yaml 中 outdir 配置的路径
+      - name: Publish to Thunderstore
+        working-directory: ./src/PeakChatOps
+        env:
+          THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
+          TCLI_CONFIG: ./thunderstore.yaml  # 确保加载正确的配置文件
+        run:
+          ls ../../artifacts/thunderstore/
+          tcli publish --token $THUNDERSTORE_TOKEN --version ${{ github.ref_name }}
