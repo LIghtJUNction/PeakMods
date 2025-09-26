@@ -1,7 +1,7 @@
 # PeakChatOps
 [![GitHub](https://img.shields.io/badge/GitHub-BetterPingDistance-brightgreen?style=for-the-badge&logo=GitHub)](https://github.com/LIghtJUNction/PeakMods)
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/LucydDemon/BetterPingDistance?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LucydDemon/BetterPingDistance?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
+[![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
+[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 
 PeakChatOps is a modified version based on PeakTextChat.
 
