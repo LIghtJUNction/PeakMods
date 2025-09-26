@@ -6,6 +6,7 @@ namespace PeakChatOps;
 
 public static class PConfig
 {
+
     public static void InitConfig(
         ConfigFile config,
         out ConfigEntry<KeyCode> key,
@@ -22,7 +23,11 @@ public static class PConfig
         out ConfigEntry<string> passOutMessage,
         out ConfigEntry<string> aiModel,
         out ConfigEntry<string> aiApiKey,
-        out ConfigEntry<string> aiEndpoint
+        out ConfigEntry<string> aiEndpoint,
+        out ConfigEntry<int> aiContextMaxCount,
+        out ConfigEntry<bool> aiAutoTranslate,
+        out ConfigEntry<string> promptTranslate
+
     )
     {
         key = config.Bind(
@@ -88,5 +93,19 @@ public static class PConfig
             "AI", "ApiKey", "ollama", "Ollama本地API无需密钥，请检查http://localhost:11434，如果没有输出Ollama is running，请在终端输入ollama serve启动本地服务器");
         aiEndpoint = config.Bind(
             "AI", "Endpoint", "http://localhost:11434/v1", "Ollama本地API端点（OpenAI兼容），如 http://localhost:11434/v1。云端OpenAI为 https://api.openai.com/v1。");
-    }
+        aiContextMaxCount = config.Bind(
+            "AI", "ContextMaxCount", 30, "AI上下文最大历史消息数（影响AI记忆长度，越大越耗费推理资源）");
+
+        // AI 自动翻译 配置
+        aiAutoTranslate = config.Bind(
+            "AI", "AutoTranslate", false, "是否启用AI自动翻译功能（EN: Enable AI automatic translation?）");
+
+        // Prompt 配置
+        promptTranslate = config.Bind(
+            "prompt", "Prompt_Translate",
+            "你是游戏PEAK的翻译助手，负责将其他玩家的语言翻译为我的母语：中文.如果对方说的本来就是中文，请回答：'中文' ",
+            "Please modify the prompt to suit your needs."
+        );
+
+  }
 }

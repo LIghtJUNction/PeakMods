@@ -2,9 +2,11 @@ using System;
 using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using PeakChatOps.API.AI;
 
 namespace PeakChatOps.Core;
 
+// 加载ChatMessageChain > AIChatMessageChain
 public static class ChatMessageChain
 {
     public static void EnsureInitialized()
@@ -18,6 +20,10 @@ public static class ChatMessageChain
         UniEventBusRunner.RunChannelLoop(EventBusRegistry.ChatMessageBus, "sander://other", cts.Token).Forget();
         UniEventBusRunner.RunChannelLoop(EventBusRegistry.ChatMessageBus, "sander://self", cts.Token).Forget();
         UniEventBusRunner.RunChannelLoop(EventBusRegistry.ChatMessageBus, "sander://system", cts.Token).Forget();
+
+        // 启动AIChatMessageChain
+        AIChatMessageChain.EnsureInitialized();
+
     }
 
     #region 接收消息（网络端）后处理器
@@ -28,6 +34,8 @@ public static class ChatMessageChain
             return UniTask.CompletedTask;
         else if (string.IsNullOrWhiteSpace(evt.Message))
             return UniTask.CompletedTask;
+        // 记录其他玩家发来的消息到AI上下文
+        AIChatContextLogger.Instance?.LogUser(evt.Message, evt.Sender, evt.UserId);
         if (evt.Extra != null && evt.Extra.TryGetValue("system", out var isSystem) && isSystem is bool b && b)
         {
             DevLog.UI("[ChatMessageChain] Received system message: " + evt.Message + " UserID: " + evt.UserId);
@@ -42,7 +50,7 @@ public static class ChatMessageChain
         string deadMark = evt.IsDead ? " <b><color=#FF0000>(DEAD)</color></b>" : "";
         string richText = $"<color={colorHex}>[{evt.Sender}]</color>{deadMark}: {evt.Message}";
 
-        PeakOpsUI.instance.AddMessage(richText);
+        
 
         // 检查是不是ping消息 判断：包含Extra.TargetActors 是不是包含自己的 actorNumber 并且 Extra.CmdName == "ping"
         try
@@ -77,6 +85,24 @@ public static class ChatMessageChain
         {
             PeakOpsUI.instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}");
         }
+
+        // 检查是否启用AI自动翻译，若需翻译则发布到AI翻译链
+        if (PeakChatOpsPlugin.aiAutoTranslate.Value && !string.IsNullOrWhiteSpace(evt.Message))
+        {
+            if (!ChatApiUtil.IsMessageInCurrentLanguage(evt.Message, ChatApiUtil.GetCurrentLanguage()))
+            {
+                var aiEvt = new AIChatMessageEvent(
+                    sender: evt.Sender,
+                    message: evt.Message,
+                    userId: evt.UserId,
+                    role: AIChatRole.user
+                );
+                EventBusRegistry.AIChatMessageBus.Publish("ai://translate", aiEvt).Forget();
+                return UniTask.CompletedTask;
+            }
+        }
+        PeakOpsUI.instance.AddMessage(richText);
+
         return UniTask.CompletedTask;
     }
 
@@ -85,8 +111,12 @@ public static class ChatMessageChain
     #region 发送消息（网络端）前处理器
 
     private static async UniTask HandleLocalChatMessageAsync(ChatMessageEvent evt)
-
     {
+        // 记录本地用户直接发送的消息到AI上下文
+        if (evt != null && !string.IsNullOrWhiteSpace(evt.Message))
+        {
+            AIChatContextLogger.Instance?.LogUser(evt.Message, evt.Sender, evt.UserId);
+        }
         string colorHex = "#7CFC00";
         string richText = $"<color={colorHex}>[You]</color>: {evt.Message}";
         try
@@ -113,7 +143,7 @@ public static class ChatMessageChain
         PeakOpsUI.instance.AddMessage(richText);
         await UniTask.CompletedTask;
     }
-    
+
     private static UniTask HandleWhisperChatMessageAsync(ChatMessageEvent evt)
     {
         try
@@ -124,7 +154,7 @@ public static class ChatMessageChain
                 evt.Message,
                 evt.UserId,
                 evt.IsDead,
-                evt.Extra ?? new System.Collections.Generic.Dictionary<string, object>()
+                evt.Extra ?? new Dictionary<string, object>()
             };
             var options = new Photon.Realtime.RaiseEventOptions();
             if (evt.Extra != null && evt.Extra.TryGetValue("TargetActors", out var targetObj) && targetObj is int[] targetActors && targetActors.Length > 0)

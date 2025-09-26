@@ -29,16 +29,7 @@ public class HelpCommand
             }
             else
             {
-                var lines = new List<string>();
-                lines.Add("<b><color=#59A6FF>可用命令：</color></b>");
-                foreach (var meta in metas.Distinct(new PCOCommandAttributeComparer()))
-                {
-                    var namePart = $"<b><color=#59A6FF>/{meta.Name}</color></b>";
-                    var descPart = string.IsNullOrWhiteSpace(meta.Description) ? "" : $" <color=#DED9C2>{meta.Description}</color>";
-                    var helpPart = string.IsNullOrWhiteSpace(meta.HelpInfo) ? "" : $"\n  <size=90%><i><color=#C0C0C0>{meta.HelpInfo}</color></i></size>";
-                    lines.Add(namePart + descPart + helpPart);
-                }
-                output = string.Join("\n", lines);
+                output = BuildHelpLines(metas);
             }
             var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: output, stderr: null, success: true);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
@@ -50,6 +41,41 @@ public class HelpCommand
         }
 
         await UniTask.CompletedTask;
+    }
+
+    // 命令帮助缓存
+    private static int _lastMetasHash = 0;
+    private static string _lastHelpOutput = null;
+
+    // 同步构建命令帮助文本，彻底避免 YieldAwaitable 问题
+    private static string BuildHelpLines(List<PCOCommandAttribute> metas)
+    {
+        // 计算哈希（只用 Name/Description/HelpInfo）
+        int hash = 17;
+        foreach (var meta in metas)
+        {
+            hash = hash * 31 + (meta.Name?.GetHashCode() ?? 0);
+            hash = hash * 31 + (meta.Description?.GetHashCode() ?? 0);
+            hash = hash * 31 + (meta.HelpInfo?.GetHashCode() ?? 0);
+        }
+        if (_lastHelpOutput != null && hash == _lastMetasHash)
+        {
+            return _lastHelpOutput;
+        }
+
+        var lines = new List<string>();
+        lines.Add("<b><color=#59A6FF>可用命令：</color></b>");
+        foreach (var meta in metas.Distinct(new PCOCommandAttributeComparer()))
+        {
+            var namePart = $"<b><color=#59A6FF>/{meta.Name}</color></b>";
+            var descPart = string.IsNullOrWhiteSpace(meta.Description) ? "" : $" <color=#DED9C2>{meta.Description}</color>";
+            var helpPart = string.IsNullOrWhiteSpace(meta.HelpInfo) ? "" : $"\n  <size=90%><i><color=#C0C0C0>{meta.HelpInfo}</color></i></size>";
+            lines.Add(namePart + descPart + helpPart);
+        }
+        var output = string.Join("\n", lines);
+        _lastMetasHash = hash;
+        _lastHelpOutput = output;
+        return output;
     }
 
 

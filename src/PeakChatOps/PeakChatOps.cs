@@ -39,8 +39,17 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
     public static ConfigEntry<string> aiModel = null!;
     public static ConfigEntry<string> aiApiKey = null!;
-
     public static ConfigEntry<string> aiEndpoint = null!;
+    public static ConfigEntry<int> aiContextMaxCount = null!;
+
+        public static ConfigEntry<bool> aiAutoTranslate = null!;
+        public static ConfigEntry<string> promptTranslate = null!;
+
+        // 新增AI参数配置
+        public static ConfigEntry<int> aiMaxTokens = null!;
+        public static ConfigEntry<double> aiTemperature = null!;
+        public static ConfigEntry<double> aiTopP = null!;
+        public static ConfigEntry<int> aiN = null!;
     private void Awake()
     {
         // Plugin startup logic
@@ -53,7 +62,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             out Key, out Pos, out ChatSize, out FontSize, out BgOpacity, out FrameVisible,
             out FadeDelay, out HideDelay, out CmdPrefix,
             out DeathMessage, out ReviveMessage, out PassOutMessage,
-            out aiModel, out aiApiKey, out aiEndpoint
+            out aiModel, out aiApiKey, out aiEndpoint, out aiContextMaxCount,
+            out aiAutoTranslate, out promptTranslate
         );
 
         harmony = new Harmony("com.lightjunction.peakchatops");
@@ -71,6 +81,12 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             GameObject.DontDestroyOnLoad(chatSystemObj);
             Logger.LogInfo("[PeakChatOps] ChatSystem GameObject created and initialized.");
         }
+
+        // 初始化AI参数配置
+        InitAIConfig();
+        // AI上下文记录器初始化
+        AIChatContextLogger.CreateGlobalInstance(aiContextMaxCount.Value);
+
         // Ensure message handler chain is initialized (subscribe buses, start runners)
         try
         {
@@ -83,6 +99,14 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         }
     }
 
+        // 在Awake或配置初始化处添加如下配置项绑定（如已存在则合并）
+        private void InitAIConfig()
+        {
+            aiMaxTokens = Config.Bind("AI", "MaxTokens", 1024, "AI回复最大token数，越大回复越长，消耗也越大");
+            aiTemperature = Config.Bind("AI", "Temperature", 0.7, "AI采样温度，越高越随机，越低越保守");
+            aiTopP = Config.Bind("AI", "TopP", 1.0, "AI采样top_p，1.0为全概率，越低越保守");
+            aiN = Config.Bind("AI", "N", 1, "每次生成的回复数量，通常为1");
+        }
     private void OnDestroy()
     {
         if (PeakOpsUI.instance != null)

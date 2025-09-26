@@ -22,9 +22,12 @@ public class CharacterStatsPatches
     public static void RecordPostfix(CharacterStats __instance, bool useOverridePosition, float overrideHeight)
     {
         DevLog.UI("[Harmony] RecordPostfix called!");
-        // 只处理本地玩家
-        if (!__instance.name.Contains(PhotonNetwork.LocalPlayer.NickName))
-            return;
+
+        // 记录所有玩家的状态变化到AI上下文（system身份）
+        string playerName = __instance.name;
+        string userId = PhotonNetwork.LocalPlayer.UserId;
+        // 只处理本地玩家的聊天推送，AI上下文记录所有玩家
+        bool isLocal = __instance.name.Contains(PhotonNetwork.LocalPlayer.NickName);
 
         var timeline = __instance.timelineInfo;
         if (timeline == null || timeline.Count == 0)
@@ -37,48 +40,61 @@ public class CharacterStatsPatches
         prevRevived = prev.revived;
         prevPassedOut = prev.passedOut;
 
-        // 仅在状态发生变化时推送
+        // 仅在状态发生变化时推送/记录
         if (last.died && !prevDied)
         {
             DevLog.UI($"[CharacterStatsPatches] {__instance.name} justDied");
-            EventBusRegistry.ChatMessageBus.Publish(
-                "sander://self",
-                new ChatMessageEvent(
-                    PhotonNetwork.LocalPlayer.NickName,
-                    PeakChatOpsPlugin.DeathMessage.Value,
-                    PhotonNetwork.LocalPlayer.UserId,
-                    isDead: true,
-                    extra: null
-                )
-            );
+            if (isLocal)
+            {
+                EventBusRegistry.ChatMessageBus.Publish(
+                    "sander://self",
+                    new ChatMessageEvent(
+                        PhotonNetwork.LocalPlayer.NickName,
+                        PeakChatOpsPlugin.DeathMessage.Value,
+                        PhotonNetwork.LocalPlayer.UserId,
+                        isDead: true,
+                        extra: null
+                    )
+                );
+            }
+            // 记录到AI上下文
+            AIChatContextLogger.Instance?.LogSystem($"玩家[{playerName}]死亡", playerName, userId);
         }
         if (last.revived && !prevRevived)
         {
             DevLog.UI($"[CharacterStatsPatches] {__instance.name} justRevived");
-            EventBusRegistry.ChatMessageBus.Publish(
-                "sander://self",
-                new ChatMessageEvent(
-                    PhotonNetwork.LocalPlayer.NickName,
-                    PeakChatOpsPlugin.ReviveMessage.Value,
-                    PhotonNetwork.LocalPlayer.UserId,
-                    isDead: false,
-                    extra: null
-                )
-            );
+            if (isLocal)
+            {
+                EventBusRegistry.ChatMessageBus.Publish(
+                    "sander://self",
+                    new ChatMessageEvent(
+                        PhotonNetwork.LocalPlayer.NickName,
+                        PeakChatOpsPlugin.ReviveMessage.Value,
+                        PhotonNetwork.LocalPlayer.UserId,
+                        isDead: false,
+                        extra: null
+                    )
+                );
+            }
+            AIChatContextLogger.Instance?.LogSystem($"玩家[{playerName}]复活", playerName, userId);
         }
         if (last.justPassedOut && !prevPassedOut)
         {
             DevLog.UI($"[CharacterStatsPatches] {__instance.name} justPassedOut");
-            EventBusRegistry.ChatMessageBus.Publish(
-                "sander://self",
-                new ChatMessageEvent(
-                    PhotonNetwork.LocalPlayer.NickName,
-                    PeakChatOpsPlugin.PassOutMessage.Value,
-                    PhotonNetwork.LocalPlayer.UserId,
-                    isDead: false,
-                    extra: null
-                )
-            );
+            if (isLocal)
+            {
+                EventBusRegistry.ChatMessageBus.Publish(
+                    "sander://self",
+                    new ChatMessageEvent(
+                        PhotonNetwork.LocalPlayer.NickName,
+                        PeakChatOpsPlugin.PassOutMessage.Value,
+                        PhotonNetwork.LocalPlayer.UserId,
+                        isDead: false,
+                        extra: null
+                    )
+                );
+            }
+            AIChatContextLogger.Instance?.LogSystem($"玩家[{playerName}]晕厥", playerName, userId);
         }
 
         // 更新缓存

@@ -22,6 +22,9 @@ public class SyncCommand
             Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
             // 刷新配置 更新UI
             PeakOpsUI.instance.RefreshUI();
+            // 更新AI上下文日志设置
+            AIChatContextLogger.Instance.SyncMaxHistoryFromConfig();
+
             var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "同步完成", stderr: null, success: true);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
         }

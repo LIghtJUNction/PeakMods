@@ -18,7 +18,6 @@ public class ExitCommand
     {
         try
         {
-            
             // SceneManager.LoadScene("MainMenu");
             var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "已返回主菜单。", stderr: null, success: true);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);

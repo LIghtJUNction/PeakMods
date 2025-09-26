@@ -1,4 +1,7 @@
 
+
+using PeakChatOps.API.AI;
+
 namespace PeakChatOps.API;
 
 
@@ -39,6 +42,7 @@ public class CmdMessageEvent
 }
 
 
+
 public class CmdExecResultEvent
 {
     // 原始命令名
@@ -69,6 +73,49 @@ public class CmdExecResultEvent
 }
 
 /// <summary>
+/// AI 聊天消息角色类型，兼容OpenAI chat格式
+/// </summary>
+public enum AIChatRole
+{
+    user,
+    assistant,
+    system
+}
+
+
+/// <summary>
+/// AI 聊天消息事件，专用于 AI 聊天相关的消息传递。
+/// </summary>
+public class AIChatMessageEvent
+{
+    /// <summary>
+    /// 消息角色（user/assistant/system等，兼容OpenAI chat格式）
+    /// </summary>
+    public AIChatRole Role { get; set; }
+    public string Sender { get; set; }
+    public string Message { get; set; }
+    /// <summary>
+    /// 消息身份（OpenAI chat格式的name字段，唯一标识消息发送者，直接用UserId）
+    /// </summary>
+    public string UserId { get; set; }
+    public System.Collections.Generic.Dictionary<string, object>? Extra { get; set; }
+
+    public AIChatMessageEvent(string sender, string message, string userId, AIChatRole role = AIChatRole.user, System.Collections.Generic.Dictionary<string, object>? extra = null)
+    {
+        // 仅显示在UI上的名称
+        Sender = sender;
+        // prompt/content
+        Message = message;
+        // Name字段，AI用于唯一标识消息发送者，可以使用UUID.游戏里使用玩家ID
+        UserId = userId;
+        // 目前仅支持三大角色，不支持工具调用（没有库太难整了）
+        Role = role;
+        // 方便后续拓展的字段
+        Extra = extra;
+    }
+}
+
+/// <summary>
 /// 全局事件总线注册表，主模块和插件都可通过此类访问事件总线单例。
 /// </summary>
 public static class EventBusRegistry
@@ -79,8 +126,11 @@ public static class EventBusRegistry
     public static readonly UniEventBus<object> CommonBus = new UniEventBus<object>();
     // 聊天消息事件总线
     public static readonly UniEventBus<ChatMessageEvent> ChatMessageBus = new UniEventBus<ChatMessageEvent>();
+    // AI 聊天专用事件总线
+    public static readonly UniEventBus<AIChatMessageEvent> AIChatMessageBus = new UniEventBus<AIChatMessageEvent>();
     // 命令消息总线
     public static readonly UniEventBus<CmdMessageEvent> CmdMessageBus = new UniEventBus<CmdMessageEvent>();
 
     public static readonly UniEventBus<CmdExecResultEvent> CmdExecResultBus = new UniEventBus<CmdExecResultEvent>();
 }
+

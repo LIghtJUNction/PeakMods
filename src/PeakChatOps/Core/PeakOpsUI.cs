@@ -15,7 +15,7 @@ namespace PeakChatOps.Core;
 public class PeakOpsUI : MonoBehaviour
 {
     private PeakTextInput peakInput; // 聊天输入框逻辑组件
-    int maxMessages = 100; // 聊天记录最大条数
+    int maxMessages = 500; // 聊天记录最大条数
     Vector2 boxSize = new Vector2(500, 300); // 聊天框的宽高
     float fadeInTime = 0.03f; // 聊天框淡入动画时间
     float fadeOutTime = 5;    // 聊天框淡出动画时间
@@ -240,16 +240,16 @@ public class PeakOpsUI : MonoBehaviour
     void CreateChatUI()
     {
         // 创建聊天框 UI 的代码
-        DevLog.UI("[DebugUI] CreateChatUI start");
+    PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI start");
 
         baseTransform = this.gameObject.GetComponent<RectTransform>() ?? this.gameObject.AddComponent<RectTransform>();
-        DevLog.UI($"[DebugUI] baseTransform assigned: {(baseTransform!=null)}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] baseTransform assigned: {(baseTransform!=null)}");
         baseTransform.SetParent(this.transform, false);
         UpdatePosition();
         baseTransform.sizeDelta = boxSize;
 
         canvasGroup = this.gameObject.AddComponent<CanvasGroup>();
-        DevLog.UI($"[DebugUI] canvasGroup created: {(canvasGroup!=null)}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] canvasGroup created: {(canvasGroup!=null)}");
         canvasGroup.alpha = 1;
         canvasGroup.blocksRaycasts = true;
         canvasGroup.interactable = true;
@@ -257,7 +257,7 @@ public class PeakOpsUI : MonoBehaviour
 
         // 阴影背景
         var shadow = CreateUIGameObject("Shadow", baseTransform);
-    DevLog.UI($"[DebugUI] Shadow created: {(shadow!=null ? shadow.name : "<null>")}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Shadow created: {(shadow!=null ? shadow.name : "<null>")}");
         var shadowTransform = shadow.AddComponent<RectTransform>();
         Utilities.ExpandToParent(shadowTransform);
         var shadowImg = shadow.AddComponent<ProceduralImage>();
@@ -266,7 +266,7 @@ public class PeakOpsUI : MonoBehaviour
         shadowImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 10;
 
         var chatLogHolderObj = CreateUIGameObject("ChatLog", baseTransform);
-    DevLog.UI($"[DebugUI] ChatLog holder created: {(chatLogHolderObj!=null ? chatLogHolderObj.name : "<null>")}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ChatLog holder created: {(chatLogHolderObj!=null ? chatLogHolderObj.name : "<null>")}");
         var chatLogHolderTransform = chatLogHolderObj.AddComponent<RectTransform>();
         chatLogHolderTransform.anchorMin = Vector2.zero;
         chatLogHolderTransform.anchorMax = Vector2.one;
@@ -284,7 +284,7 @@ public class PeakOpsUI : MonoBehaviour
         // 聊天内容容器
         var chatLogContentObj = CreateUIGameObject("Content", chatLogHolderTransform);
         chatLogViewportTransform = chatLogContentObj.AddComponent<RectTransform>();
-    DevLog.UI($"[DebugUI] chatLogViewportTransform created: {(chatLogViewportTransform!=null)}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogViewportTransform created: {(chatLogViewportTransform!=null)}");
         chatLogViewportTransform.pivot = new Vector2(0.5f, 0);
         chatLogViewportTransform.anchorMin = new Vector2(0, 0);
         chatLogViewportTransform.anchorMax = new Vector2(1, 0);
@@ -298,14 +298,14 @@ public class PeakOpsUI : MonoBehaviour
         // 设置 ScrollRect 的 content 和 viewport
         scrollRect.content = chatLogViewportTransform;
         scrollRect.viewport = chatLogHolderTransform;
-    DevLog.UI($"[DebugUI] ScrollRect setup: content={(scrollRect.content!=null)} viewport={(scrollRect.viewport!=null)}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ScrollRect setup: content={(scrollRect.content!=null)} viewport={(scrollRect.viewport!=null)}");
 
 
         // 聊天输入框
         var peakInputGo = GameObject.Instantiate(
             typeof(PeakTextInput).GetProperty("TextInputPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null) as GameObject,
             baseTransform, false);
-        DevLog.UI($"[DebugUI] peakInputGo instantiated: {(peakInputGo!=null ? peakInputGo.name : "<null>")}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] peakInputGo instantiated: {(peakInputGo!=null ? peakInputGo.name : "<null>")}");
 
         peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
         peakInput.SetPlaceholder($"Press {chatKeyText} to chat , Prefix: {PeakChatOpsPlugin.CmdPrefix.Value} .");
@@ -341,7 +341,7 @@ public class PeakOpsUI : MonoBehaviour
         float minSpacing = -Mathf.Max(1f, fontSize / 16f); // allow small negative overlap but not large
         float maxSpacing = Mathf.Max(0f, fontSize / 4f);
         chatLogLayout.spacing = Mathf.Clamp(desiredSpacing, minSpacing, maxSpacing);
-        DevLog.UI($"[DebugUI] chatLogLayout configured: spacing={chatLogLayout.spacing}");
+    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogLayout configured: spacing={chatLogLayout.spacing}");
 
         inputField.onSubmit.AddListener((e) =>
         {
@@ -365,12 +365,12 @@ public class PeakOpsUI : MonoBehaviour
             borderImg.color = offWhite;
             borderImg.BorderWidth = 2;
             borderImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 5;
-            DevLog.UI($"[DebugUI] Border created: {(border!=null ? border.name : "<null>")}");
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Border created: {(border!=null ? border.name : "<null>")}");
         }
         // 如果在 UI 创建前有缓存的消息，刷新它们
         if (pendingMessages != null && pendingMessages.Count > 0)
         {
-            DevLog.UI($"[DebugUI] Flushing {pendingMessages.Count} pending messages");
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Flushing {pendingMessages.Count} pending messages");
             try
             {
                 foreach (var m in pendingMessages.ToArray())
@@ -380,12 +380,12 @@ public class PeakOpsUI : MonoBehaviour
             }
             catch (System.Exception ex)
             {
-                DevLog.UI($"[DebugUI] Exception while flushing pending messages: {ex.Message}");
+                PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Exception while flushing pending messages: {ex.Message}");
             }
             pendingMessages.Clear();
-            DevLog.UI("[DebugUI] Pending messages flushed");
+            PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] Pending messages flushed");
         }
-        DevLog.UI("[DebugUI] CreateChatUI end");
+    PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI end");
 
         // 初始化时添加一条消息以确保内容容器被创建和展示
         try
@@ -398,7 +398,7 @@ public class PeakOpsUI : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            DevLog.UI($"[DebugUI] Failed to add init message: {ex.Message}");
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Failed to add init message: {ex.Message}");
         }
     }
     
@@ -648,77 +648,54 @@ public class PeakOpsUI : MonoBehaviour
             return;
         }
 
-    if (chatLogViewportTransform != null)
+        try
         {
-            try
+            PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] Creating PeakText for message");
+            var peakText = MenuAPI.CreateText(message);
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] MenuAPI.CreateText returned {(peakText == null ? "<null>" : peakText.name)}");
+            if (peakText == null)
             {
-                PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] Creating PeakText for message");
-                // 使用PEAKLib.UI的MenuAPI.CreateText(string)创建文本对象
-        var peakText = MenuAPI.CreateText(message);
-
-                PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] MenuAPI.CreateText returned {(peakText==null?"<null>":peakText.name)}");
-
-                if (peakText == null)
+                PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] peakText is null, aborting AddMessage");
+                return;
+            }
+            peakText.transform.SetParent(chatLogViewportTransform, false);
+            peakText.SetFontSize(fontSize);
+            bool containsRichText = false;
+            if (!string.IsNullOrEmpty(message))
+            {
+                var lower = message.ToLowerInvariant();
+                if (lower.Contains("<color=") || lower.Contains("</color>") || lower.Contains("<b>") || lower.Contains("</b>") || lower.Contains("<i>") || lower.Contains("</i>"))
+                    containsRichText = true;
+            }
+            if (!containsRichText)
+            {
+                if (!string.IsNullOrEmpty(message) && message.Length > 0 && message[0] == '>')
                 {
-                    PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] peakText is null, aborting AddMessage");
-                    return;
-                }
-
-                // 设置父物体为聊天内容容器
-                peakText.transform.SetParent(chatLogViewportTransform, false);
-
-                // 设置样式
-                peakText.SetFontSize(fontSize);
-                // 如果消息包含 TextMeshPro 富文本标签，则尊重富文本样式（不覆盖颜色）
-                bool containsRichText = false;
-                if (!string.IsNullOrEmpty(message))
-                {
-                    // 简单检测常见的富文本标签
-                    var lower = message.ToLowerInvariant();
-                    if (lower.Contains("<color=") || lower.Contains("</color>") || lower.Contains("<b>") || lower.Contains("</b>") || lower.Contains("<i>") || lower.Contains("</i>"))
-                        containsRichText = true;
-                }
-
-                if (containsRichText)
-                {
-                    // 让 MenuAPI/Text 元素保持原始文本（包含富文本标记），不再用 SetColor 覆盖
+                    var cmdBlue = new Color(0.35f, 0.65f, 1.0f);
+                    peakText.SetColor(cmdBlue);
                 }
                 else
                 {
-                    // 如果是本地命令（以 '>' 开头），使用蓝色显示以示区别
-                    if (!string.IsNullOrEmpty(message) && message.Length > 0 && message[0] == '>')
-                    {
-                        // 蓝色 (亮蓝)
-                        var cmdBlue = new Color(0.35f, 0.65f, 1.0f);
-                        peakText.SetColor(cmdBlue);
-                    }
-                    else
-                    {
-                        peakText.SetColor(offWhite);
-                    }
+                    peakText.SetColor(offWhite);
                 }
-
-                PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] After SetParent childCount={chatLogViewportTransform.childCount}");
-
-                // 最大消息数控制
-                while (chatLogViewportTransform.childCount > maxMessages)
-                {
-                    var first = chatLogViewportTransform.GetChild(0);
-                    GameObject.Destroy(first.gameObject);
-                }
-
-                PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Message added. new childCount={chatLogViewportTransform.childCount}");
-                ResetTimers();
             }
-            catch (System.Exception ex)
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] After SetParent childCount={chatLogViewportTransform.childCount}");
+            // 优化：只移除一条，避免多次Destroy
+            if (chatLogViewportTransform.childCount > maxMessages)
             {
-                PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Exception in AddMessage: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-                // don't rethrow to avoid crashing caller flow
+                var first = chatLogViewportTransform.GetChild(0);
+                if (first != null)
+                {
+                    GameObject.Destroy(first.gameObject);
+                    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Oldest message removed. childCount={chatLogViewportTransform.childCount}");
+                }
             }
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Message added. new childCount={chatLogViewportTransform.childCount}");
+            ResetTimers();
         }
-        else
+        catch (System.Exception ex)
         {
-            DevLog.UI("[DebugUI] chatLogViewportTransform is null in AddMessage");
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Exception in AddMessage: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
