@@ -14,7 +14,9 @@ namespace PeakChatOps.Core
             {
                 HarmonyFileLog.Enabled = true;
                 PeakChatOpsPlugin.Logger.LogDebug(message);
-                PeakOpsUI.instance.AddMessage("<color=#FFA500>[DevLog]</color> " + message);
+                // 判空，只有UI实例存在时才调度
+                if (PeakOpsUI.instance != null)
+                    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage("<color=#FFA500>[DevLog]</color> " + message));
             }
             catch { }
         }

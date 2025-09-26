@@ -1,6 +1,3 @@
-using ExitGames.Client.Photon;
-using Photon.Pun;
-using Photon.Realtime;
 using System;
 
 using PeakChatOps.Commands;
@@ -57,7 +54,7 @@ public static class CentralCmdRouter
             }
 
             // display a simple local UI line for the command
-            try { PeakOpsUI.instance.AddMessage($"> {evt.Command} {(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}"); } catch { }
+            try { MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"> {evt.Command} {(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}")); } catch { }
 
             var raw = evt.Command.Trim();
             var candidates = new System.Collections.Generic.List<string>
@@ -115,17 +112,17 @@ public static class CentralCmdRouter
         string colorHex = evt.Success ? "#32CD32" : "#FF4500"; // 成功为石灰绿，失败为橙红色
         string statusText = evt.Success ? "Success" : "Error";
         string richText = $"<color={colorHex}>[Cmd {statusText}]</color>: {evt.Stdout ?? evt.Stderr}";
-    DevLog.UI($"[DebugUI] HandleCmdExecResultAsync -> AddMessage: '{richText}'");
-    PeakOpsUI.instance.AddMessage(richText);
-        return UniTask.CompletedTask;
+        DevLog.UI($"[DebugUI] HandleCmdExecResultAsync -> AddMessage: '{richText}'");
+    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(richText));
+    return UniTask.CompletedTask;
     }
 
     // diy 任何输出样式
     public static UniTask HandleAnyMessageAsync(string anyText)
     {
     DevLog.UI($"[DebugUI] HandleAnyMessageAsync -> AddMessage: '{anyText}'");
-    PeakOpsUI.instance.AddMessage(anyText);
-        return UniTask.CompletedTask;
+    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(anyText));
+    return UniTask.CompletedTask;
     }
 
 }

@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using PeakChatOps.API;
 
@@ -160,20 +161,25 @@ public class AIChatContextLogger
             var choices = obj["choices"] as Newtonsoft.Json.Linq.JArray;
             if (choices != null && choices.Count > 0)
             {
-                // 优先解析 chat 格式
-                var content = choices[0]["message"]?["content"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(content))
-                    return content.Trim();
-                // 兼容 text 字段（如completion老接口）
-                var text = choices[0]["text"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(text))
-                    return text.Trim();
+                foreach (var choice in choices)
+                {
+                    // 1. chat 格式
+                    var content = choice["message"]?["content"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(content))
+                        return content.Trim();
+                    // 2. text 字段（老接口）
+                    var text = choice["text"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(text))
+                        return text.Trim();
+                }
             }
-            return "(AI无回复, No response)";
+            // 3. 兜底：输出原始choices内容，便于调试
+            return "(AI无回复, No response) 原始: " + (choices != null ? choices.ToString() : "null");
         }
-        catch
+        catch (Exception ex)
         {
-            return "(AI响应解析失败, Parse error)";
+            return $"(AI响应解析失败, Parse error: {ex.Message})";
         }
     }
+
 }

@@ -43,24 +43,41 @@ public class AICommand
                 return;
             }
 
-            string prompt = string.Join(" ", evt.Args).Trim();
-            DevLog.UI($"[AI] Step 2: prompt = {prompt}");
+            string prompt;
+            Dictionary<string, object>? extra = null;
+            // 检查最后一个参数是否以@开头
+            if (evt.Args.Length > 0 && evt.Args[^1].StartsWith("@"))
+            {
+                // 解析@参数
+                string atArg = evt.Args[^1].Substring(1); // 去掉@
+                prompt = string.Join(" ", evt.Args.Take(evt.Args.Length - 1)).Trim();
+                extra = new Dictionary<string, object> { { "at", atArg } };
+                DevLog.UI($"[AI] Step 2: prompt = {prompt}, extra.at = {atArg}");
+            }
+            else
+            {
+                prompt = string.Join(" ", evt.Args).Trim();
+                DevLog.UI($"[AI] Step 2: prompt = {prompt}");
+            }
 
             // 只负责路由，不做AI接口调用
             var aiMsg = new AIChatMessageEvent(
                 sender: PeakChatOpsPlugin.aiModel?.Value ?? "ollama",
                 message: prompt,
                 userId: evt.UserId,
-                role: AIChatRole.user
+                role: AIChatRole.user,
+                extra: extra
             );
-            DevLog.UI($"[AI] Step 3: AIChatMessageEvent = sender={aiMsg.Sender}, userId={aiMsg.UserId}, message={aiMsg.Message}");
-            await EventBusRegistry.AIChatMessageBus.Publish("ai://chat", aiMsg);
+            DevLog.UI($"[AI] Step 3: AIChatMessageEvent = sender={aiMsg.Sender}, userId={aiMsg.UserId}, message={aiMsg.Message}, extra={extra?.Count}");
+            EventBusRegistry.AIChatMessageBus.Publish("ai://chat", aiMsg).Forget();
             DevLog.UI("[AI] Step 4: AIChatMessageEvent published to ai://chat");
+            return;
         }
         catch (Exception ex)
         {
             var errEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: null, stderr: ex.Message, success: false);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", errEvt);
+            return;
         }
     }
 }

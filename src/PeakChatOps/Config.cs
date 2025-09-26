@@ -26,7 +26,8 @@ public static class PConfig
         out ConfigEntry<string> aiEndpoint,
         out ConfigEntry<int> aiContextMaxCount,
         out ConfigEntry<bool> aiAutoTranslate,
-        out ConfigEntry<string> promptTranslate
+        out ConfigEntry<string> promptTranslate,    
+        out ConfigEntry<string> promptSend
 
     )
     {
@@ -106,6 +107,14 @@ public static class PConfig
             "你是游戏PEAK的翻译助手，负责将其他玩家的语言翻译为我的母语：中文.如果对方说的本来就是中文，请回答：'中文' ",
             "Please modify the prompt to suit your needs."
         );
+
+        // /ai @action AI助手指令提示词配置
+        promptSend = config.Bind(
+            "prompt", "Prompt_Send",
+            "本轮对话，请你按照我的要求回答。注意！你的回答将以我的身份直接发送给其他玩家，简而言之你是我的的“代言人”, 请你直接开始代言，不需要任何解释。",
+            "When you use: /ai Hello World! @send , AI's reply will be sent to other players"
+        );
+
 
   }
 }

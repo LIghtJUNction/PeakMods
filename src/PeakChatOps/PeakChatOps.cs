@@ -41,15 +41,17 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     public static ConfigEntry<string> aiApiKey = null!;
     public static ConfigEntry<string> aiEndpoint = null!;
     public static ConfigEntry<int> aiContextMaxCount = null!;
-
-        public static ConfigEntry<bool> aiAutoTranslate = null!;
-        public static ConfigEntry<string> promptTranslate = null!;
+    public static ConfigEntry<bool> aiAutoTranslate = null!;
+    public static ConfigEntry<string> promptTranslate = null!;
+    public static ConfigEntry<string> promptSend = null!;
 
         // 新增AI参数配置
-        public static ConfigEntry<int> aiMaxTokens = null!;
+    public static ConfigEntry<int> aiMaxTokens = null!;
         public static ConfigEntry<double> aiTemperature = null!;
         public static ConfigEntry<double> aiTopP = null!;
         public static ConfigEntry<int> aiN = null!;
+
+
     private void Awake()
     {
         // Plugin startup logic
@@ -63,7 +65,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             out FadeDelay, out HideDelay, out CmdPrefix,
             out DeathMessage, out ReviveMessage, out PassOutMessage,
             out aiModel, out aiApiKey, out aiEndpoint, out aiContextMaxCount,
-            out aiAutoTranslate, out promptTranslate
+            out aiAutoTranslate, out promptTranslate, out promptSend
         );
 
         harmony = new Harmony("com.lightjunction.peakchatops");

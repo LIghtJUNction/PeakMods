@@ -1,6 +1,5 @@
 using System;
 using PeakChatOps.API;
-
 using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using PeakChatOps.API.AI;
@@ -20,121 +19,130 @@ public static class AIChatMessageChain
     }
 
     // AI 聊天消息处理器
-    private static UniTask HandleAIChatMessageAsync(AIChatMessageEvent evt)
+
+    private static async UniTask HandleAIChatMessageAsync(AIChatMessageEvent evt)
     {
         if (evt == null)
-            return UniTask.CompletedTask;
-
-        DevLog.UI($"[AIChatMessageChain] evt.Message = '{evt.Message}'");
-        if (string.IsNullOrWhiteSpace(evt.Message))
-            return UniTask.CompletedTask;
-
-        // 判断是否为用户输入（role=user），需要调用AI接口
-        if (evt.Role == AIChatRole.user)
-        {
-            try
+            return;
+        if (evt.Role != AIChatRole.user)
+            if (evt.Role == AIChatRole.assistant)
             {
-                var apiKey = PeakChatOpsPlugin.aiApiKey?.Value;
-                DevLog.UI($"[AI] Step 2: apiKey = '{apiKey}'");
-                var endpoint = PeakChatOpsPlugin.aiEndpoint?.Value;
-                DevLog.UI($"[AI] Step 3: endpoint = '{endpoint}'");
-
-                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint))
-                {
-                    var msg = "未配置OpenAI/Ollama API Key或Endpoint，请先在设置中填写。";
-                    DevLog.UI(msg);
-                    var resultEvt = new CmdExecResultEvent("ai", new string[] { evt.Message }, evt.UserId, stdout: msg, stderr: null, success: false);
-                    EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt).Forget();
-                    return UniTask.CompletedTask;
-                }
-
-                string prompt = evt.Message;
-                var model = PeakChatOpsPlugin.aiModel?.Value;
-                if (string.IsNullOrWhiteSpace(model))
-                    model = "gpt-oss:120b-cloud";
-                DevLog.UI($"[AI] Step 4: OpenAIClient created, prompt = {prompt}, model = {model}");
-                // 构建OpenAI chat/messages格式
-                var messages = AIChatContextLogger.Instance.BuildContextMessages(prompt, evt.UserId);
-                if (messages == null)
-                {
-                    DevLog.UI($"[AI] BuildContextMessages 返回null，自动创建空消息列表。Instance是否未初始化？");
-                    messages = new List<Dictionary<string, object>>();
-                }
-                UniTask.Void(async () =>
-                {
-                    string stdout;
-                    string stderr = null;
-                    bool success = true;
-                    try
-                    {
-                        // 读取全局AI参数
-                        int maxTokens = 1024;
-                        double temperature = 0.7;
-                        double topP = 1.0;
-                        int n = 1;
-                        try { maxTokens = PeakChatOpsPlugin.aiMaxTokens?.Value ?? 1024; } catch { }
-                        try { temperature = PeakChatOpsPlugin.aiTemperature?.Value ?? 0.7; } catch { }
-                        try { topP = PeakChatOpsPlugin.aiTopP?.Value ?? 1.0; } catch { }
-                        try { n = PeakChatOpsPlugin.aiN?.Value ?? 1; } catch { }
-
-                        using var client = new OpenAIClient(apiKey, endpoint, maxTokens, temperature, topP, n);
-                        var chatApi = new API.AI.Apis.OpenAIChatApi(client);
-                        var response = await System.Threading.Tasks.Task.Run(() =>
-                        {
-                            return chatApi.CreateChatCompletion(model, messages, maxTokens);
-                        });
-                        DevLog.UI($"[AI] Step 5.0: Raw response = {response}");
-                        var parsed = AIChatContextLogger.ParseOpenAICompletionResponse(response!);
-                        DevLog.UI($"[AI] Step 5.2: Parsed AI content = {parsed}");
-                        stdout = parsed;
-                        DevLog.UI("[AI] Step 5: Completion success");
-                    }
-                    catch (Exception ex)
-                    {
-                        stdout = $"AI回复失败: {ex.Message}";
-                        stderr = ex.ToString();
-                        success = false;
-                        DevLog.UI($"[AI] Step 6: Completion异常: {ex}");
-                    }
-
-                    var resultEvt2 = new CmdExecResultEvent("ai", new string[] { evt.Message }, evt.UserId, stdout: stdout, stderr: stderr, success: success);
-                    EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt2).Forget();
-                    DevLog.UI("[AI] Step 7: CmdExecResultEvent published");
-
-                    // 直接推送AI助手消息到UI（避免递归自发自收）
-                    if (!string.IsNullOrWhiteSpace(stdout))
-                    {
-                        PeakOpsUI.instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.aiModel?.Value ?? "ollama"}]</color>: {stdout}");
-                        DevLog.UI($"[AI] Step 8: AI助手消息已推送到UI");
-                    }
-                    return;
-                });
-                return UniTask.CompletedTask;
+                return;
             }
-            catch (Exception ex)
+            else
             {
-                var errEvt = new CmdExecResultEvent("ai", new string[] { evt.Message }, evt.UserId, stdout: null, stderr: ex.Message, success: false);
-                EventBusRegistry.CmdExecResultBus.Publish("cmd://", errEvt).Forget();
-                return UniTask.CompletedTask;
+                return;
+            }
+        if (string.IsNullOrWhiteSpace(evt.Message))
+            return;
+
+        // 获取AI回复之前处理下拓展指令
+        if (evt.Extra != null && evt.Extra.TryGetValue("at", out var atObjPre) && atObjPre is string atValPre)
+        {
+            switch (atValPre.ToLowerInvariant())
+            {
+                case "clear":
+                    AIChatContextLogger.Instance?.Clear();
+                    return;
+                case "send":
+                    // 这里修改提示词，加上预设的提示词
+                    var presetPrompt = PeakChatOpsPlugin.promptSend.Value;
+                    evt.Message = $"{evt.Message}({presetPrompt})";
+                    break;
+                default:
+                    break;
             }
         }
 
-        // 如果是AI助手消息（role=assistant），直接推送到UI
-        PeakOpsUI.instance.AddMessage($"<color=#00BFFF>[{evt.Sender}]</color>: {evt.Message}");
-        return UniTask.CompletedTask;
-    }
+        // 获取AI回复（用AsyncUtil后台包装，避免阻塞主线程）
+        string aiReply = null;
+        string aiReplyError = null;
+        var (result, error) = await AsyncUtil.RunInBackground(() => {
+            var apiKey = PeakChatOpsPlugin.aiApiKey?.Value;
+            var endpoint = PeakChatOpsPlugin.aiEndpoint?.Value;
+            if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint))
+            {
+                return "未配置OpenAI/Ollama API Key或Endpoint，请先在设置中填写。";
+            }
+            string prompt = evt.Message;
+            var model = PeakChatOpsPlugin.aiModel?.Value;
+            if (string.IsNullOrWhiteSpace(model))
+                model = "gpt-oss:120b-cloud";
+            var messages = AIChatContextLogger.Instance.BuildContextMessages(prompt, evt.UserId) ?? new List<Dictionary<string, object>>();
+            int maxTokens = PeakChatOpsPlugin.aiMaxTokens?.Value ?? 1024;
+            double temperature = PeakChatOpsPlugin.aiTemperature?.Value ?? 0.7;
+            double topP = PeakChatOpsPlugin.aiTopP?.Value ?? 1.0;
+            int n = PeakChatOpsPlugin.aiN?.Value ?? 1;
+            using var client = new OpenAIClient(apiKey, endpoint, maxTokens, temperature, topP, n);
+            var chatApi = new API.AI.Apis.OpenAIChatApi(client);
+            var response = chatApi.CreateChatCompletion(model, messages, maxTokens);
+            var reply = AIChatContextLogger.ParseOpenAICompletionResponse(response!);
+            AIChatContextLogger.Instance?.LogAssistant(reply, PeakChatOpsPlugin.aiModel?.Value ?? "AI");
+            return reply;
+        });
+        if (error != null)
+        {
+            aiReply = $"AI回复失败: {error.Message}";
+            aiReplyError = error.ToString();
+        }
+        else
+        {
+            aiReply = result;
+        }
 
+        // 在AI回答之后按命令处理
+        if (evt.Extra != null && evt.Extra.TryGetValue("at", out var atObjPost) && atObjPost is string atValPost)
+        {
+            switch (atValPost.ToLowerInvariant())
+            {
+                case "clear":
+                    // 清理上下文后不显示回答
+                    AIChatContextLogger.Instance?.Clear();
+                    return;
+                case "send":
+                    // AI的回答直接发送，而不是显示在本地
+                    if (!string.IsNullOrWhiteSpace(aiReply))
+                    {
+                        var chatEvt = new ChatMessageEvent(
+                            sender: evt.Sender + " And " + PeakChatOpsPlugin.aiModel?.Value, // 发送者+模型名
+                            message: aiReply,
+                            userId: evt.UserId,
+                            isDead: Character.localCharacter.data.dead,
+                            extra: null
+                        );
+                        // 发布到self渠道
+                        EventBusRegistry.ChatMessageBus.Publish("sander://self", chatEvt).Forget();
+                    }
+                    return;
+                default:
+                    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"[AI] 未知的extra.at指令: {atValPost}"));
+                    break;
+            }
+        }
+        else
+        {
+            // 默认行为：显示在本地UI
+            if (!string.IsNullOrWhiteSpace(aiReply))
+            {
+                MainThreadDispatcher.Run(() => {
+                    PeakOpsUI.instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.aiModel?.Value ?? "ollama"}]</color>: {aiReply}");
+                });
+            }
+            return;
+        }
+        // 防御性兜底，所有路径都返回
+    return;
+    }
 
     // AI 翻译消息链
     private static UniTask HandleAITranslateMessageAsync(AIChatMessageEvent evt)
     {
-        // AI翻译
-        // 检查是否是当前语言
-        if (!ChatApiUtil.IsMessageInCurrentLanguage(evt.Message, ChatApiUtil.GetCurrentLanguage()))
+        try
         {
+            // AI自动翻译
             string richText = evt.Message;
             using var client = new OpenAIClient(PeakChatOpsPlugin.aiApiKey?.Value, PeakChatOpsPlugin.aiEndpoint?.Value);
-            string systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.promptTranslate?.Value) ? $"You are a helpful assistant that translates messages to the user's language{ChatApiUtil.GetCurrentLanguage()}." : PeakChatOpsPlugin.promptTranslate.Value;
+            string systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.promptTranslate?.Value) ? $"You are a helpful assistant that translates messages to the player：{evt.Sender}'s language." : PeakChatOpsPlugin.promptTranslate.Value;
             var messages = new List<Dictionary<string, object>>()
                 {
                     new Dictionary<string, object>()
@@ -165,14 +173,13 @@ public static class AIChatMessageChain
                 richText += $"\n<color=#FFA500>[翻译/Translation]</color>: {translation}";
             }
 
-            PeakOpsUI.instance.AddMessage(richText);
-            return UniTask.CompletedTask;
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(richText));
         }
-        
+        catch (Exception ex)
+        {
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"<color=#FF0000>[AI翻译异常]</color>: {ex.Message}"));
+            DevLog.UI($"[AI翻译异常] {ex}");
+        }
         return UniTask.CompletedTask;
     }
-
-
-
-
 }

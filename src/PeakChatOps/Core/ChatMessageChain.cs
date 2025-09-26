@@ -39,7 +39,7 @@ public static class ChatMessageChain
         if (evt.Extra != null && evt.Extra.TryGetValue("system", out var isSystem) && isSystem is bool b && b)
         {
             DevLog.UI("[ChatMessageChain] Received system message: " + evt.Message + " UserID: " + evt.UserId);
-            PeakOpsUI.instance.AddMessage(evt.Message);
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(evt.Message));
         }
 
         string colorHex = "#FFFFFF";
@@ -83,26 +83,22 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}");
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"));
         }
 
         // 检查是否启用AI自动翻译，若需翻译则发布到AI翻译链
         if (PeakChatOpsPlugin.aiAutoTranslate.Value && !string.IsNullOrWhiteSpace(evt.Message))
         {
-            if (!ChatApiUtil.IsMessageInCurrentLanguage(evt.Message, ChatApiUtil.GetCurrentLanguage()))
-            {
-                var aiEvt = new AIChatMessageEvent(
-                    sender: evt.Sender,
-                    message: evt.Message,
-                    userId: evt.UserId,
-                    role: AIChatRole.user
-                );
-                EventBusRegistry.AIChatMessageBus.Publish("ai://translate", aiEvt).Forget();
-                return UniTask.CompletedTask;
-            }
+            var aiEvt = new AIChatMessageEvent(
+                sender: evt.Sender,
+                message: evt.Message,
+                userId: evt.UserId,
+                role: AIChatRole.user
+            );
+            EventBusRegistry.AIChatMessageBus.Publish("ai://translate", aiEvt).Forget();
+            return UniTask.CompletedTask;            
         }
-        PeakOpsUI.instance.AddMessage(richText);
-
+    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(richText));
         return UniTask.CompletedTask;
     }
 
@@ -138,9 +134,9 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}"));
         }
-        PeakOpsUI.instance.AddMessage(richText);
+    MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage(richText));
         await UniTask.CompletedTask;
     }
 
@@ -178,7 +174,7 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}"));
         }
         return UniTask.CompletedTask;
     }

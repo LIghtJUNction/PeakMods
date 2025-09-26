@@ -18,7 +18,7 @@ public class HideCommand
         {
             if (PeakOpsUI.instance != null)
             {
-                PeakOpsUI.instance.HideNow();
+                MainThreadDispatcher.Run(() => PeakOpsUI.instance.HideNow());
                 var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "聊天框已隐藏。", stderr: null, success: true);
                 await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
             }

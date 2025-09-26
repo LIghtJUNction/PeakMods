@@ -1,5 +1,7 @@
+
+using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,12 +10,21 @@ using UnityEngine.UI.ProceduralImage;
 using PEAKLib.UI;
 using PEAKLib.UI.Elements;
 using PeakChatOps.Patches;
-using System.Linq;
 
 namespace PeakChatOps.Core;
 
 public class PeakOpsUI : MonoBehaviour
 {
+    // 双缓冲消息渲染结构
+    private readonly Queue<string> messageRenderQueue = new Queue<string>(); // 待渲染消息队列
+    private volatile bool isRendering = false; // 渲染中标记
+    private List<string> backgroundVisibleMessages = new List<string>(); // 背景线程计算的可见消息
+    private object renderLock = new object();
+
+    // 虚拟化消息渲染核心数据结构
+    private readonly List<string> allMessages = new List<string>(); // 全部消息历史
+    private readonly Dictionary<int, PeakText> activeTextMap = new Dictionary<int, PeakText>(); // 当前激活的UI对象
+    private readonly Stack<PeakText> textPool = new Stack<PeakText>(); // PeakText对象池
     private PeakTextInput peakInput; // 聊天输入框逻辑组件
     int maxMessages = 500; // 聊天记录最大条数
     Vector2 boxSize = new Vector2(500, 300); // 聊天框的宽高
@@ -72,13 +83,12 @@ public class PeakOpsUI : MonoBehaviour
     public static PeakOpsUI instance = null!; // 聊天显示的单例引用
 
     GameObject currentSelection = null!; // 当前选中的 UI 元素
-    // 当 UI 尚未创建时缓存要显示的消息，CreateChatUI 完成后会刷新
-    System.Collections.Generic.List<string> pendingMessages = new System.Collections.Generic.List<string>();
+                                         // 当 UI 尚未创建时缓存要显示的消息，CreateChatUI 完成后会刷新
+    List<string> pendingMessages = new List<string>();
 
     void Awake()
     {
         instance = this;
-        
     }
 
     void Start()
@@ -240,16 +250,16 @@ public class PeakOpsUI : MonoBehaviour
     void CreateChatUI()
     {
         // 创建聊天框 UI 的代码
-    PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI start");
+        PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI start");
 
         baseTransform = this.gameObject.GetComponent<RectTransform>() ?? this.gameObject.AddComponent<RectTransform>();
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] baseTransform assigned: {(baseTransform!=null)}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] baseTransform assigned: {(baseTransform != null)}");
         baseTransform.SetParent(this.transform, false);
         UpdatePosition();
         baseTransform.sizeDelta = boxSize;
 
         canvasGroup = this.gameObject.AddComponent<CanvasGroup>();
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] canvasGroup created: {(canvasGroup!=null)}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] canvasGroup created: {(canvasGroup != null)}");
         canvasGroup.alpha = 1;
         canvasGroup.blocksRaycasts = true;
         canvasGroup.interactable = true;
@@ -257,7 +267,7 @@ public class PeakOpsUI : MonoBehaviour
 
         // 阴影背景
         var shadow = CreateUIGameObject("Shadow", baseTransform);
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Shadow created: {(shadow!=null ? shadow.name : "<null>")}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Shadow created: {(shadow != null ? shadow.name : "<null>")}");
         var shadowTransform = shadow.AddComponent<RectTransform>();
         Utilities.ExpandToParent(shadowTransform);
         var shadowImg = shadow.AddComponent<ProceduralImage>();
@@ -266,7 +276,7 @@ public class PeakOpsUI : MonoBehaviour
         shadowImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 10;
 
         var chatLogHolderObj = CreateUIGameObject("ChatLog", baseTransform);
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ChatLog holder created: {(chatLogHolderObj!=null ? chatLogHolderObj.name : "<null>")}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ChatLog holder created: {(chatLogHolderObj != null ? chatLogHolderObj.name : "<null>")}");
         var chatLogHolderTransform = chatLogHolderObj.AddComponent<RectTransform>();
         chatLogHolderTransform.anchorMin = Vector2.zero;
         chatLogHolderTransform.anchorMax = Vector2.one;
@@ -284,7 +294,7 @@ public class PeakOpsUI : MonoBehaviour
         // 聊天内容容器
         var chatLogContentObj = CreateUIGameObject("Content", chatLogHolderTransform);
         chatLogViewportTransform = chatLogContentObj.AddComponent<RectTransform>();
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogViewportTransform created: {(chatLogViewportTransform!=null)}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogViewportTransform created: {(chatLogViewportTransform != null)}");
         chatLogViewportTransform.pivot = new Vector2(0.5f, 0);
         chatLogViewportTransform.anchorMin = new Vector2(0, 0);
         chatLogViewportTransform.anchorMax = new Vector2(1, 0);
@@ -298,14 +308,14 @@ public class PeakOpsUI : MonoBehaviour
         // 设置 ScrollRect 的 content 和 viewport
         scrollRect.content = chatLogViewportTransform;
         scrollRect.viewport = chatLogHolderTransform;
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ScrollRect setup: content={(scrollRect.content!=null)} viewport={(scrollRect.viewport!=null)}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] ScrollRect setup: content={(scrollRect.content != null)} viewport={(scrollRect.viewport != null)}");
 
 
         // 聊天输入框
         var peakInputGo = GameObject.Instantiate(
             typeof(PeakTextInput).GetProperty("TextInputPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).GetValue(null) as GameObject,
             baseTransform, false);
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] peakInputGo instantiated: {(peakInputGo!=null ? peakInputGo.name : "<null>")}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] peakInputGo instantiated: {(peakInputGo != null ? peakInputGo.name : "<null>")}");
 
         peakInput = peakInputGo.GetComponent<PeakTextInput>() ?? peakInputGo.AddComponent<PeakTextInput>();
         peakInput.SetPlaceholder($"Press {chatKeyText} to chat , Prefix: {PeakChatOpsPlugin.CmdPrefix.Value} .");
@@ -341,7 +351,7 @@ public class PeakOpsUI : MonoBehaviour
         float minSpacing = -Mathf.Max(1f, fontSize / 16f); // allow small negative overlap but not large
         float maxSpacing = Mathf.Max(0f, fontSize / 4f);
         chatLogLayout.spacing = Mathf.Clamp(desiredSpacing, minSpacing, maxSpacing);
-    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogLayout configured: spacing={chatLogLayout.spacing}");
+        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] chatLogLayout configured: spacing={chatLogLayout.spacing}");
 
         inputField.onSubmit.AddListener((e) =>
         {
@@ -365,7 +375,7 @@ public class PeakOpsUI : MonoBehaviour
             borderImg.color = offWhite;
             borderImg.BorderWidth = 2;
             borderImg.SetModifierType<UniformModifier>().Radius = fontSize / 4 + 5;
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Border created: {(border!=null ? border.name : "<null>")}");
+            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Border created: {(border != null ? border.name : "<null>")}");
         }
         // 如果在 UI 创建前有缓存的消息，刷新它们
         if (pendingMessages != null && pendingMessages.Count > 0)
@@ -378,30 +388,30 @@ public class PeakOpsUI : MonoBehaviour
                     AddMessage(m);
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Exception while flushing pending messages: {ex.Message}");
             }
             pendingMessages.Clear();
             PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] Pending messages flushed");
         }
-    PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI end");
+        PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] CreateChatUI end");
 
         // 初始化时添加一条消息以确保内容容器被创建和展示
         try
         {
             // 使用 TextMeshPro 富文本美化启动提示：把标签和链接高亮为蓝色
             AddMessage("<b><color=#DED9C2>Github:</color></b> <color=#59A6FF>https://github.com/LIghtJUNction/PeakMods</color>"); // 初始化时添加一条消息以创建内容容器
-            // 额外的启动提示（版本号高亮）
+                                                                                                                                  // 额外的启动提示（版本号高亮）
             AddMessage($"<i><color=#C0C0C0>Version:</color></i> <color=#59A6FF>{typeof(PeakOpsUI).Assembly.GetName().Version}</color>");
 
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Failed to add init message: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// 动态设置输入框的占位符文本
     /// </summary>
@@ -409,7 +419,6 @@ public class PeakOpsUI : MonoBehaviour
     {
         if (peakInput != null)
             peakInput.SetPlaceholder(text);
-
     }
 
     void UpdatePosition()
@@ -506,7 +515,6 @@ public class PeakOpsUI : MonoBehaviour
         positionDirty = true;
     }
 
-    
     void Update()
     {
         // 缓存常用引用以减少每帧的查找
@@ -635,69 +643,255 @@ public class PeakOpsUI : MonoBehaviour
     }
 
     // 新增：支持指定颜色的 AddMessage 重载
+
+
+    /// <summary>
+    /// 新增虚拟化渲染的AddMessage：只添加到数据，不直接创建UI
+    /// </summary>
     public void AddMessage(string message)
     {
-        PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] AddMessage called. message='{message}' chatLogViewportTransform={(chatLogViewportTransform!=null)} childCount={(chatLogViewportTransform!=null?chatLogViewportTransform.childCount:-1)}");
-
-        if (chatLogViewportTransform == null)
+        allMessages.Add(message);
+        if (allMessages.Count > maxMessages)
+            allMessages.RemoveAt(0);
+        lock (renderLock)
         {
-            // UI 尚未创建，缓存消息以便稍后刷新
-            pendingMessages ??= new List<string>();
-            pendingMessages.Add(message);
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] AddMessage queued. pendingCount={pendingMessages.Count}");
-            return;
+            messageRenderQueue.Enqueue(message);
         }
+        TryStartBackgroundRender();
+    }
 
-        try
+
+    /// <summary>
+    /// 启动后台渲染任务（如未在渲染中）
+    /// </summary>
+    private void TryStartBackgroundRender()
+    {
+        if (isRendering) return;
+        isRendering = true;
+        System.Threading.Tasks.Task.Run(() => BackgroundRenderLoop());
+    }
+
+
+    /// <summary>
+    /// 后台线程：计算可见消息、准备渲染状态
+    /// </summary>
+    private void BackgroundRenderLoop()
+    {
+        while (true)
         {
-            PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] Creating PeakText for message");
-            var peakText = MenuAPI.CreateText(message);
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] MenuAPI.CreateText returned {(peakText == null ? "<null>" : peakText.name)}");
-            if (peakText == null)
+            string msg = null;
+            lock (renderLock)
             {
-                PeakChatOpsPlugin.Logger.LogDebug("[DebugUI] peakText is null, aborting AddMessage");
-                return;
+                if (messageRenderQueue.Count > 0)
+                    msg = messageRenderQueue.Dequeue();
             }
-            peakText.transform.SetParent(chatLogViewportTransform, false);
-            peakText.SetFontSize(fontSize);
-            bool containsRichText = false;
-            if (!string.IsNullOrEmpty(message))
+            if (msg == null) break;
+            // 这里只做数据准备和可见区计算，不操作UI
+            var visible = ComputeVisibleMessages();
+            lock (renderLock)
             {
-                var lower = message.ToLowerInvariant();
-                if (lower.Contains("<color=") || lower.Contains("</color>") || lower.Contains("<b>") || lower.Contains("</b>") || lower.Contains("<i>") || lower.Contains("</i>"))
-                    containsRichText = true;
+                backgroundVisibleMessages = visible;
             }
-            if (!containsRichText)
+            // 通知主线程刷新
+            MainThreadDispatcher.Run(() => ApplyBackgroundRender());
+        }
+        isRendering = false;
+    }
+
+
+    /// <summary>
+    /// 计算当前可见消息（可扩展为分页、滚动等）
+    /// </summary>
+    private List<string> ComputeVisibleMessages()
+    {
+        // 这里只做简单的“显示最后N条”
+        int visibleCount = GetVisibleMessageCount();
+        int total = allMessages.Count;
+        int end = total - 1;
+        int start = Mathf.Max(0, end - visibleCount + 1);
+        return allMessages.Skip(start).Take(visibleCount).ToList();
+    }
+
+    /// <summary>
+    /// 主线程：应用后台渲染结果，切换UI
+    /// </summary>
+    private List<string> lastRenderedMessages = new List<string>();
+    private void ApplyBackgroundRender()
+    {
+        lock (renderLock)
+        {
+            // 优化：如果只是新增一条消息，直接增量渲染，避免全量diff重排
+            if (lastRenderedMessages.Count + 1 == backgroundVisibleMessages.Count
+                && backgroundVisibleMessages.Take(lastRenderedMessages.Count).SequenceEqual(lastRenderedMessages))
             {
-                if (!string.IsNullOrEmpty(message) && message.Length > 0 && message[0] == '>')
+                AddMessageIncremental();
+                lastRenderedMessages = backgroundVisibleMessages.ToList();
+            }
+            else
+            {
+                int baseIdx = allMessages.Count - backgroundVisibleMessages.Count;
+                // diff渲染：只更新变动的消息
+                for (int i = 0; i < backgroundVisibleMessages.Count; i++)
                 {
-                    var cmdBlue = new Color(0.35f, 0.65f, 1.0f);
-                    peakText.SetColor(cmdBlue);
+                    int idx = baseIdx + i;
+                    string newMsg = backgroundVisibleMessages[i];
+                    string oldMsg = (lastRenderedMessages.Count > i) ? lastRenderedMessages[i] : null;
+                    PeakText pt = null;
+                    if (!activeTextMap.TryGetValue(idx, out pt))
+                    {
+                        if (textPool.Count > 0)
+                        {
+                            pt = textPool.Pop();
+                            pt.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            pt = MenuAPI.CreateText("");
+                            pt.transform.SetParent(chatLogViewportTransform, false);
+                        }
+                        activeTextMap[idx] = pt;
+                        // 新建UI对象必须设置内容
+                        pt.SetText(newMsg);
+                        pt.SetFontSize(fontSize);
+                        pt.SetColor(offWhite);
+                        pt.transform.SetSiblingIndex(i);
+                    }
+                    else
+                    {
+                        // 只有内容变化时才SetText
+                        if (oldMsg != newMsg)
+                        {
+                            pt.SetText(newMsg);
+                        }
+                        // 始终设置字体和颜色（因无法diff，且SetFontSize/SetColor本身较轻）
+                        pt.SetFontSize(fontSize);
+                        pt.SetColor(offWhite);
+                        // 只有顺序变化时才SetSiblingIndex
+                        if (pt.transform.GetSiblingIndex() != i)
+                            pt.transform.SetSiblingIndex(i);
+                    }
+                }
+                // 隐藏多余UI
+                int maxIdx = baseIdx;
+                var toHide = activeTextMap.Keys.Where(k => k < maxIdx).ToList();
+                foreach (var k in toHide)
+                {
+                    if (activeTextMap.TryGetValue(k, out var pt))
+                    {
+                        pt.gameObject.SetActive(false);
+                        textPool.Push(pt);
+                        activeTextMap.Remove(k);
+                    }
+                }
+                // 更新渲染快照
+                lastRenderedMessages = backgroundVisibleMessages.ToList();
+            }
+        }
+        ResetTimers();
+    }
+
+    /// <summary>
+    /// 虚拟化渲染核心：只为可见区间创建/激活PeakText对象
+    /// </summary>
+    /// <summary>
+    /// 增量渲染：仅在AddMessage时插入一条UI对象，不刷新全区间
+    /// </summary>
+    /// <summary>
+    /// 异步分帧插入消息，避免主线程阻塞
+    /// </summary>
+    private void AddMessageIncremental()
+    {
+        if (chatLogViewportTransform == null || allMessages.Count == 0)
+            return;
+        int idx = allMessages.Count - 1;
+        PeakText pt = null;
+        if (textPool.Count > 0)
+        {
+            pt = textPool.Pop();
+            pt.gameObject.SetActive(true);
+        }
+        else
+        {
+            pt = MenuAPI.CreateText("");
+            pt.transform.SetParent(chatLogViewportTransform, false);
+        }
+        var msg = allMessages[idx];
+        pt.SetText(msg);
+        pt.SetFontSize(fontSize);
+        pt.SetColor(offWhite);
+        activeTextMap[idx] = pt;
+        pt.transform.SetSiblingIndex(chatLogViewportTransform.childCount - 1);
+        ResetTimers();
+    }
+
+    /// <summary>
+    /// 滚动时批量虚拟化：只在滚动或历史翻页时调用
+    /// </summary>
+    public void RefreshVirtualizedChat()
+    {
+        if (chatLogViewportTransform == null || allMessages.Count == 0)
+            return;
+        int visibleCount = GetVisibleMessageCount();
+        int total = allMessages.Count;
+        int end = total - 1;
+        int start = Mathf.Max(0, end - visibleCount + 1);
+        // 回收不在区间内的PeakText到池
+        var toRemove = activeTextMap.Keys.Where(idx => idx < start || idx > end).ToList();
+        foreach (var idx in toRemove)
+        {
+            var pt = activeTextMap[idx];
+            pt.gameObject.SetActive(false);
+            textPool.Push(pt);
+            activeTextMap.Remove(idx);
+        }
+        // 激活/创建区间内PeakText
+        for (int i = start; i <= end; i++)
+        {
+            if (!activeTextMap.ContainsKey(i))
+            {
+                PeakText pt = null;
+                if (textPool.Count > 0)
+                {
+                    pt = textPool.Pop();
+                    pt.gameObject.SetActive(true);
                 }
                 else
                 {
-                    peakText.SetColor(offWhite);
+                    pt = MenuAPI.CreateText("");
+                    pt.transform.SetParent(chatLogViewportTransform, false);
                 }
+                var msg = allMessages[i];
+                pt.SetText(msg);
+                pt.SetFontSize(fontSize);
+                pt.SetColor(offWhite);
+                activeTextMap[i] = pt;
             }
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] After SetParent childCount={chatLogViewportTransform.childCount}");
-            // 优化：只移除一条，避免多次Destroy
-            if (chatLogViewportTransform.childCount > maxMessages)
-            {
-                var first = chatLogViewportTransform.GetChild(0);
-                if (first != null)
-                {
-                    GameObject.Destroy(first.gameObject);
-                    PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Oldest message removed. childCount={chatLogViewportTransform.childCount}");
-                }
-            }
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Message added. new childCount={chatLogViewportTransform.childCount}");
-            ResetTimers();
+            activeTextMap[i].transform.SetSiblingIndex(i - start);
         }
-        catch (System.Exception ex)
+        // 多余的UI对象隐藏
+        while (chatLogViewportTransform.childCount > (end - start + 1))
         {
-            PeakChatOpsPlugin.Logger.LogDebug($"[DebugUI] Exception in AddMessage: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+            var extra = chatLogViewportTransform.GetChild(0);
+            if (!activeTextMap.Values.Contains(extra.GetComponent<PeakText>()))
+            {
+                extra.gameObject.SetActive(false);
+            }
         }
+        ResetTimers();
     }
+
+    /// <summary>
+    /// 估算可见消息数（可根据chatLogViewportTransform高度和字体大小调整）
+    /// </summary>
+    private int GetVisibleMessageCount()
+    {
+        if (chatLogViewportTransform == null)
+            return 10;
+        float height = chatLogViewportTransform.rect.height;
+        float line = Mathf.Max(1, fontSize * 1.2f);
+        return Mathf.Max(3, Mathf.FloorToInt(height / line));
+    }
+
 
     /// <summary>
     /// 聊天内容向上滚动一格（单条消息）
@@ -732,5 +926,6 @@ public class PeakOpsUI : MonoBehaviour
         }
     }
 
-
 }
+
+

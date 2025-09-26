@@ -21,7 +21,7 @@ public class SyncCommand
             Cmdx.LoadPCmd();
             Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
             // 刷新配置 更新UI
-            PeakOpsUI.instance.RefreshUI();
+            MainThreadDispatcher.Run(() => PeakOpsUI.instance.RefreshUI());
             // 更新AI上下文日志设置
             AIChatContextLogger.Instance.SyncMaxHistoryFromConfig();
 
