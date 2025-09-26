@@ -16,18 +16,16 @@ Major changes:
 - Improved Chinese support
 
 
+
 Features:
 - Chat box now supports paging! Use the mouse wheel to scroll up and down
 - Supports config hot-reload, changes take effect immediately
-- Minecraft-like command system! (Easily extensible, currently a few built-in commands, more can be added)
+- Minecraft-like command system! （支持内置命令和插件扩展）
 - **System messages now support multi-language and rich text color tags!**
-	- Each language line can have its own color, making notifications vibrant and easy to distinguish
-	- Default system messages (death, revive, pass out) are preset with colorful styles for all supported languages
+  - Each language line can have its own color, making notifications vibrant and easy to distinguish
+  - Default system messages (death, revive, pass out) are preset with colorful styles for all supported languages
 
-New command set mod:
-PeakChatOps Extra
-In development, for reference
-Source: https://github.com/LIghtJUNction/PeakMods
+
 
 
 ## Features
@@ -37,7 +35,6 @@ Source: https://github.com/LIghtJUNction/PeakMods
 - **System messages (death, revive, pass out) support multi-language and per-line color customization via Unity rich text tags**
 - Chat input box Tab completion and prediction
 - Supports config hot-reload
-- Supports player teleport and other extension commands
 
 ## Installation
 1. Recommended: Use a mod manager for installation
@@ -59,8 +56,7 @@ Source: https://github.com/LIghtJUNction/PeakMods
 		```
 - Supports runtime hot-reload
 
-## Development & Extension
-- To add a new command: Inherit from `PCmd`, implement the Handler, and put it in an extension DLL for auto loading
+
 
 
 ## build

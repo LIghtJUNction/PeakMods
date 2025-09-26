@@ -4,12 +4,19 @@ schemaVersion = "0.0.1"
 [general]
 repository = "https://thunderstore.io"
 
+
 [package]
 namespace = "LightPeak"
 name = "PeakChatOps"
-description = "A chat system for PEAK. Basic messaging functionality with UI enhancements."
+version = "1.1.3"
+description = "A chat system for PEAK. Basic messaging functionality with UI enhancements. Includes AI assistant support via OpenAI SDK."
 websiteUrl = "https://github.com/LIghtJUNction/PeakMods"
 containsNsfwContent = false
+authors = ["LIghtJUNction"]
+readme = "./README.md"
+icon = "./icon.png"
+license = "./LICENSE"
+
 
 [package.dependencies]
 BepInEx-BepInExPack_PEAK = "5.4.2403"
@@ -17,11 +24,14 @@ Snosz-PhotonCustomPropsUtils = "1.1.0"
 PEAKModding-PEAKLib_Core = "1.5.1"
 PEAKModding-PEAKLib_UI = "1.5.0"
 Cysharp-UniTask = "2.5.0"
+OpenAI_BepInEx-OpenAI = "2.5.0"
 
 [build]
 icon = "./icon.png"
 readme = "./README.md"
+license = "./LICENSE"
 outdir = "../../artifacts/thunderstore/"
+
 
 [[build.copy]]
 source = "../../artifacts/bin/PeakChatOps/release/com.github.LIghtJUNction.PeakChatOps.dll"
@@ -36,7 +46,7 @@ source = "./CHANGELOG.md"
 target = "/"
 
 [[build.copy]]
-source = "../../LICENSE"
+source = "./LICENSE"
 target = "/"
 
 # The following config options only apply when using TCLI to publish to Thunderstore directly:
@@ -49,4 +59,4 @@ communities = [ "peak", ]
 [publish.categories]
 # See categories at:
 # https://thunderstore.io/api/experimental/community/peak/category/
-peak = [ "mods", ]
+peak = [ "qol", "tools", "mods" ]

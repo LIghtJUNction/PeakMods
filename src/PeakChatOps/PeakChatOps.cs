@@ -22,7 +22,6 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     internal static new ManualLogSource Logger = null!;
 
     public static Harmony harmony = null!;
-
     public static ConfigEntry<float> FontSize = null!;
     public static ConfigEntry<string> ChatSize = null!;
     public static ConfigEntry<float> MessageFadeDelay = null!;
@@ -36,8 +35,12 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     public static ConfigEntry<string> CmdPrefix = null!;
     public static ConfigEntry<string> DeathMessage = null!;
     public static ConfigEntry<string> ReviveMessage = null!;
-
     public static ConfigEntry<string> PassOutMessage = null!;
+
+    public static ConfigEntry<string> aiModel = null!;
+    public static ConfigEntry<string> aiApiKey = null!;
+
+    public static ConfigEntry<string> aiEndpoint = null!;
     private void Awake()
     {
         // Plugin startup logic
@@ -49,7 +52,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             Config, // 这里的 Config 是 BaseUnityPlugin 的属性，类型为 ConfigFile
             out Key, out Pos, out ChatSize, out FontSize, out BgOpacity, out FrameVisible,
             out FadeDelay, out HideDelay, out CmdPrefix,
-            out DeathMessage, out ReviveMessage, out PassOutMessage
+            out DeathMessage, out ReviveMessage, out PassOutMessage,
+            out aiModel, out aiApiKey, out aiEndpoint
         );
 
         harmony = new Harmony("com.lightjunction.peakchatops");
@@ -95,8 +99,6 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
         harmony.UnpatchSelf();
     }
-
-
 }
 
 public static class ProceduralImageExtensions {

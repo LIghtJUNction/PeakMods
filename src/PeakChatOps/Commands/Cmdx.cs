@@ -11,9 +11,11 @@ using PeakChatOps.Core;
 #nullable enable
 namespace PeakChatOps.Commands;
 
-[PCOCommand("cmdx", "命令执行器", "用法: /cmdx <cmd> <args>\n执行指定的命令。")]
-public class Cmdx
-{
+ [PCOCommand("cmdx", "命令执行器", "用法: /cmdx <cmd> <args>\n执行指定的命令。")]
+ public class Cmdx
+ {
+     // 静态保存所有命令元数据，供Help等调用
+     public static readonly List<PCOCommandAttribute> CommandMetas = new List<PCOCommandAttribute>();
     // 全局命令前缀（用于外部引用）
     public static string Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
     public Cmdx()
@@ -70,11 +72,16 @@ public class Cmdx
         {
             try
             {
-                // 仅对公开的、非抽象、可实例化类型尝试
                 if (t.IsAbstract || t.IsInterface) return;
                 var ctor = t.GetConstructor(Type.EmptyTypes);
-                if (ctor == null) return; // 无无参构造则跳过
+                if (ctor == null) return;
                 Activator.CreateInstance(t);
+                // 收集命令元数据
+                var attr = t.GetCustomAttribute<PCOCommandAttribute>();
+                if (attr != null)
+                {
+                    CommandMetas.Add(attr);
+                }
                 DevLog.UI($"[Cmdx] Instantiated command class: {t.FullName}");
             }
             catch (Exception ex)
@@ -82,23 +89,19 @@ public class Cmdx
                 PeakChatOpsPlugin.Logger.LogWarning($"Failed to instantiate command class '{t.FullName}': {ex.Message}");
             }
         }
-        // 命令执行器+加载器
-        TryInstantiate(typeof(Cmdx));
-        // 快速入手命令开发的示例命令
-        TryInstantiate(typeof(EchoCommand));
-        // 基础命令
-        TryInstantiate(typeof(ExitCommand));
-        // 没啥用的命令
-        TryInstantiate(typeof(HideCommand));
-        // 帮助命令
-        TryInstantiate(typeof(HelpCommand));
-        // 有用但是不多的同步命令
-        TryInstantiate(typeof(SyncCommand));
-        // 看看其他人有没有安装相同插件/版本的命令
-        TryInstantiate(typeof(PingCommand));
+    // 清空元数据
+    CommandMetas.Clear();
+    // 命令执行器+加载器
+    TryInstantiate(typeof(Cmdx));
+    TryInstantiate(typeof(EchoCommand));
+    TryInstantiate(typeof(ExitCommand));
+    TryInstantiate(typeof(HideCommand));
+    TryInstantiate(typeof(HelpCommand));
+    TryInstantiate(typeof(SyncCommand));
+    TryInstantiate(typeof(PingCommand));
+    TryInstantiate(typeof(AICommand));
 
-
-        // 通过反射加载插件目录下的 dll 并实例化带 PCOCommand 特性的类型以触发其构造函数
+        // 通过反射加载插件目录下的 dll 并实例化带 PCOCommand 特性的类型以触发其构造函数，并收集元数据
         string pluginsDir = Paths.PluginPath;
         try
         {
@@ -123,6 +126,7 @@ public class Cmdx
                                 if (attr != null)
                                 {
                                     TryInstantiate(type);
+                                    // TryInstantiate已收集元数据
                                 }
                             }
                             catch (Exception exType)

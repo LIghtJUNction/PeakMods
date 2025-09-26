@@ -19,7 +19,10 @@ public static class PConfig
         out ConfigEntry<string> cmdPrefix,
         out ConfigEntry<string> deathMessage,
         out ConfigEntry<string> reviveMessage,
-        out ConfigEntry<string> passOutMessage
+        out ConfigEntry<string> passOutMessage,
+        out ConfigEntry<string> aiModel,
+        out ConfigEntry<string> aiApiKey,
+        out ConfigEntry<string> aiEndpoint
     )
     {
         key = config.Bind(
@@ -78,6 +81,12 @@ public static class PConfig
             "系统消息：角色晕倒时的提示文本，支持变量。每行一种语言，顺序：中/英/日/韩/俄/德/印尼/世界语。"
         );
 
-	}
+        // AI 配置（Ollama/OpenAI 兼容）
+        aiModel = config.Bind(
+            "AI", "Model", "gpt-oss:120b-cloud", "Ollama本地模型名称，使用http://localhost:11434/v1/models查询");
+        aiApiKey = config.Bind(
+            "AI", "ApiKey", "ollama", "Ollama本地API无需密钥，请检查http://localhost:11434，如果没有输出Ollama is running，请在终端输入ollama serve启动本地服务器");
+        aiEndpoint = config.Bind(
+            "AI", "Endpoint", "http://localhost:11434/v1", "Ollama本地API端点（OpenAI兼容），如 http://localhost:11434/v1。云端OpenAI为 https://api.openai.com/v1。");
+    }
 }
-

@@ -106,7 +106,7 @@ namespace PeakChatOps.API
         /// Try to get the registered handler for a channel.
         /// Runtime code may use this to obtain the handler and await it safely in the runtime assembly.
         /// </summary>
-        public bool TryGetHandler(string channel, out Func<T, UniTask> handler)
+        public bool TryGetHandler(string channel, out Func<T, UniTask>? handler)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             return _handlers.TryGetValue(channel, out handler);

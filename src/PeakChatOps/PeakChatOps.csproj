@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <!-- This is the most appropriate target framework for the game's Unity version. -->
-    <TargetFramework>netstandard2.1</TargetFramework>
+  <TargetFramework>netstandard2.1</TargetFramework>
     <!-- This is the GUID of your mod. Example: com.github.YourAccount.BepInExTemplate -->
     <AssemblyName>com.github.LIghtJUNction.PeakChatOps</AssemblyName>
     <!-- This is the display name of your mod. Example: BepInEx Template -->
     <AssemblyTitle>PeakChatOps</AssemblyTitle>
     <!-- This is the version number of your mod. -->
-    <Version>1.1.0</Version>
+    <Version>1.1.3</Version>
     <!-- Disable nullable reference type warnings for now -->
     <Nullable>disable</Nullable>
     <Configurations>Debug;Release</Configurations>
@@ -27,6 +27,10 @@
     <PackageReference Include="PEAKModding.PEAKLib.UI" Version="1.5.0" />
     <PackageReference Include="Snosz-PhotonCustomPropsUtils" Version="1.1.0" Private="False" />
     <PackageReference Include="Cysharp-UniTask" Version="2.5.0" Private="False" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="BepInEx.AssemblyPublicizer.MSBuild" Version="0.5.0-beta.1" />
   </ItemGroup>
 
   <!--
