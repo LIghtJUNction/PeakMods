@@ -1,8 +1,14 @@
 name: Publish PeakChatOps to Thunderstore
+# 触发条件：当 PeakChatOps.csproj 文件被提交时（含分支推送、PR合并）
 on: 
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [ '*' ]  # 监听所有分支的推送（可按需限定为 main/dev 等）
+    paths:
+      - 'src/PeakChatOps/PeakChatOps.csproj'  # 仅监听该 csproj 文件的变更
+  pull_request:  # 可选：PR合并时也触发（如需可保留，不需要可删除）
+    branches: [ '*' ]
+    paths:
+      - 'src/PeakChatOps/PeakChatOps.csproj'
 
 jobs:
   build-and-publish:
@@ -20,31 +26,28 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Sync version to .csproj
+      # 版本处理：从 csproj 读取版本（不再依赖标签，因触发条件已变）
+      - name: Get version from .csproj
         working-directory: ./src/PeakChatOps
+        id: get_version
         run:
-          TAG_VERSION=${{ github.ref_name }}
-          CLEAN_VERSION=${TAG_VERSION#v}
-          sed -i "s|<Version>.*</Version>|<Version>$CLEAN_VERSION</Version>|" PeakChatOps.csproj
-          cat PeakChatOps.csproj | grep "<Version>"
+          # 从 csproj 中提取 Version 字段值
+          VERSION=$(grep -oP '<Version>\K[^<]+' PeakChatOps.csproj)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  # 存入环境变量
 
-      # 关键修正：明确基于 thunderstore.yaml 配置打包，确保路径匹配
       - name: Build & Package PeakChatOps (PackTS)
         working-directory: ./src/PeakChatOps
         run: dotnet build PeakChatOps.csproj -c Release -target:PackTS -v d
-        env:
-          # 显式指定 TCLI 读取 thunderstore.yaml（默认也会读，但加此配置更稳妥）
-          TCLI_CONFIG: ./thunderstore.yaml
 
       - name: Install Thunderstore CLI
         run: dotnet tool install --global Thunderstore.CLI
 
-      # 上传文件来源修正：TCLI 读取 thunderstore.yaml 中 outdir 配置的路径
       - name: Publish to Thunderstore
         working-directory: ./src/PeakChatOps
         env:
           THUNDERSTORE_TOKEN: ${{ secrets.THUNDERSTORE_API_TOKEN }}
-          TCLI_CONFIG: ./thunderstore.yaml  # 确保加载正确的配置文件
+        # 使用从 csproj 提取的版本号发布
         run:
+          echo "查看打包输出目录文件："
           ls ../../artifacts/thunderstore/
-          tcli publish --token $THUNDERSTORE_TOKEN --version ${{ github.ref_name }}
+          tcli publish --token $THUNDERSTORE_TOKEN --version "v$VERSION"  # 加 v 前缀符合 Thunderstore 习惯
