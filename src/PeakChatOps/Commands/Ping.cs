@@ -4,12 +4,29 @@ using System;
 using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
 using PeakChatOps.Core;
-#nullable enable
 namespace PeakChatOps.Commands;
 
-    [PCOCommand("ping", "pong!", "用法: /ping\n使用同一模块的人会回答Pong!")]
-    public class PingCommand
+[PCOCommand("ping", "pong!", "用法: /ping\n使用同一模块的人会回答Pong!")]
+public class PingCommand
+{
+    // Typed payload for Ping extra
+    private class PingExtra
     {
+        public string CmdName { get; set; } = "ping";
+        public int UserActorNumber { get; set; }
+        public int[] TargetActors { get; set; } = Array.Empty<int>();
+
+        // Helper to produce a dictionary representation for serialization/compatibility
+        public System.Collections.Generic.Dictionary<string, object> ToDictionary()
+        {
+            return new System.Collections.Generic.Dictionary<string, object>
+            {
+                ["CmdName"] = CmdName,
+                ["UserActorNumber"] = UserActorNumber,
+                ["TargetActors"] = TargetActors
+            };
+        }
+    }
     // 注册
     public PingCommand()
     {
@@ -25,7 +42,12 @@ namespace PeakChatOps.Commands;
         string userName = Photon.Pun.PhotonNetwork.LocalPlayer?.NickName ?? "Unknown";
         string userId = Photon.Pun.PhotonNetwork.LocalPlayer?.UserId ?? "?";
         var extra = new System.Collections.Generic.Dictionary<string, object>();
-        extra["CmdName"] = "ping";
+        // Use a top-level "Ping" object for easier parsing by message-chain handlers
+        var pingPayload = new PeakChatOps.Core.MsgChain.PingExtra
+        {
+            CmdName = "ping",
+            UserActorNumber = myActorNumber
+        };
         int[] targetActors;
         if (string.Equals(target, "other", StringComparison.OrdinalIgnoreCase))
         {
@@ -45,9 +67,11 @@ namespace PeakChatOps.Commands;
         {
             // 私聊指定玩家
             int actorNumber = -1;
-            try {
+            try
+            {
                 actorNumber = ChatApiUtil.NameToActorId(target);
-            } catch {}
+            }
+            catch { }
             if (actorNumber <= 0)
             {
                 var errEvt = new CmdExecResultEvent(
@@ -63,7 +87,8 @@ namespace PeakChatOps.Commands;
             }
             targetActors = new int[] { actorNumber };
         }
-        extra["TargetActors"] = targetActors;
+        pingPayload.TargetActors = targetActors;
+        extra["Ping"] = pingPayload;
 
         // 2. 发送ping消息
         string richPing = $"<color=#00BFFF>[PeakChatOps Ping]</color> <b>{userName}</b> (ID: {userId}) at {DateTime.Now:HH:mm:ss}";
@@ -74,7 +99,7 @@ namespace PeakChatOps.Commands;
             isDead: false,
             extra: extra
         );
-        
+
         // 远程分发
         if (string.Equals(target, "other", StringComparison.OrdinalIgnoreCase))
         {

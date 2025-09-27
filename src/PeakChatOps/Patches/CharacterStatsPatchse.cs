@@ -10,11 +10,31 @@ namespace PeakChatOps.Patches;
 [HarmonyPatch(typeof(CharacterStats))]
 public class CharacterStatsPatches
 {
+    private class CharacterStateInfo
+    {
+        public bool died { get; set; }
+        public bool revived { get; set; }
+        public bool passedOut { get; set; }
+    }
+
+    private static Dictionary<string, object> CreateExtraForEvent(CharacterStateInfo info)
+    {
+        return new Dictionary<string, object>
+        {
+            ["CharacterState"] = new Dictionary<string, bool>
+            {
+                ["died"] = info?.died ?? false,
+                ["revived"] = info?.revived ?? false,
+                ["passedOut"] = info?.passedOut ?? false
+            }
+        };
+    }
     // 用于缓存每个角色的上一次状态，避免重复推送
     private static readonly Dictionary<CharacterStats, (bool died, bool revived, bool passedOut)> lastStates = new();
     static CharacterStatsPatches()
     {
         PeakChatOpsPlugin.Logger.LogWarning("[Harmony] CharacterStatsPatches static ctor loaded!");
+        
     }
 
     [HarmonyPatch("Record", new[] { typeof(bool), typeof(float) })]
@@ -53,7 +73,7 @@ public class CharacterStatsPatches
                         PeakChatOpsPlugin.DeathMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: true,
-                        extra: null
+                        extra: CreateExtraForEvent(new CharacterStateInfo { died = true })
                     )
                 );
             }
@@ -72,7 +92,7 @@ public class CharacterStatsPatches
                         PeakChatOpsPlugin.ReviveMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: false,
-                        extra: null
+                        extra: CreateExtraForEvent(new CharacterStateInfo { revived = true })
                     )
                 );
             }
@@ -90,7 +110,7 @@ public class CharacterStatsPatches
                         PeakChatOpsPlugin.PassOutMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: false,
-                        extra: null
+                        extra: CreateExtraForEvent(new CharacterStateInfo { passedOut = true })
                     )
                 );
             }

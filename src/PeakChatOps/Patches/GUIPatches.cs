@@ -26,7 +26,6 @@ public static class StaminaBarPatch
             barGroupChildWatcher.ChatOpsDummyTransform = ChatOpsDummyObj.transform;
         }
     }
-
     public static void CleanupObjects()
     {
         GameObject.Destroy(barGroupChildWatcher.ChatOpsDummyTransform);

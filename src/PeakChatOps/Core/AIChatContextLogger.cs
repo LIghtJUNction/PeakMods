@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using PeakChatOps.API;
 
+#nullable enable
 namespace PeakChatOps.Core;
 
 /// <summary>
@@ -61,7 +62,7 @@ public class AIChatContextLogger
     /// <summary>
     /// 全局唯一实例（可用于全局上下文管理）
     /// </summary>
-    public static AIChatContextLogger Instance { get; private set; }
+    public static AIChatContextLogger? Instance { get; private set; }
 
     /// <summary>
     /// 创建并设置全局唯一实例
@@ -151,9 +152,11 @@ public class AIChatContextLogger
     }
 
     /// <summary>
-    /// 解析OpenAI completions响应，提取text字段（使用Newtonsoft.Json）
+    /// 解析 OpenAI completions 响应，返回 content 与 reasoning（若存在）
+    /// 返回的元组中 content 和 reasoning 都可能为 null。
+    /// 兼顾 chat 格式（message.content、message.reasoning）与老接口（text）。
     /// </summary>
-    public static string ParseOpenAICompletionResponse(string response)
+    public static (string? content, string? reasoning) ParseOpenAICompletionResponseWithReasoning(string response)
     {
         try
         {
@@ -163,17 +166,44 @@ public class AIChatContextLogger
             {
                 foreach (var choice in choices)
                 {
-                    // 1. chat 格式
+                    // 优先尝试 message.content
                     var content = choice["message"]?["content"]?.ToString();
-                    if (!string.IsNullOrWhiteSpace(content))
-                        return content.Trim();
-                    // 2. text 字段（老接口）
+                    // 常见命名可能为 reasoning、thoughts 等，这里优先尝试 message.reasoning，然后兼容 thoughts
+                    var reasoning = choice["message"]?["reasoning"]?.ToString() ?? choice["message"]?["thoughts"]?.ToString();
+                    // 兼容老接口 text 字段
                     var text = choice["text"]?.ToString();
+
+                    if (!string.IsNullOrWhiteSpace(content))
+                        return (content.Trim(), string.IsNullOrWhiteSpace(reasoning) ? null : reasoning.Trim());
+                    if (!string.IsNullOrWhiteSpace(reasoning))
+                        return (null, reasoning.Trim());
                     if (!string.IsNullOrWhiteSpace(text))
-                        return text.Trim();
+                        return (text.Trim(), null);
                 }
             }
-            // 3. 兜底：输出原始choices内容，便于调试
+            return (null, null);
+        }
+        catch (Exception)
+        {
+            return (null, null);
+        }
+    }
+
+    /// <summary>
+    /// 向后兼容的单字符串解析器：优先返回 content，其次 reasoning，再回退到原始 choices 输出或错误信息。
+    /// </summary>
+    public static string ParseOpenAICompletionResponse(string response)
+    {
+        try
+        {
+            var (content, reasoning) = ParseOpenAICompletionResponseWithReasoning(response);
+            if (!string.IsNullOrWhiteSpace(content))
+                return content!;
+            if (!string.IsNullOrWhiteSpace(reasoning))
+                return reasoning!;
+
+            var obj = Newtonsoft.Json.Linq.JObject.Parse(response);
+            var choices = obj["choices"] as Newtonsoft.Json.Linq.JArray;
             return "(AI无回复, No response) 原始: " + (choices != null ? choices.ToString() : "null");
         }
         catch (Exception ex)

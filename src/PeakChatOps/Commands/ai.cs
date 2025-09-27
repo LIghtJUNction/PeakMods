@@ -51,7 +51,12 @@ public class AICommand
                 // 解析@参数
                 string atArg = evt.Args[^1].Substring(1); // 去掉@
                 prompt = string.Join(" ", evt.Args.Take(evt.Args.Length - 1)).Trim();
-                extra = new Dictionary<string, object> { { "at", atArg } };
+                var aiExtra = new Core.MsgChain.AIExtra
+                {
+                    AtCommand = atArg,
+                    PromptAppend = string.Empty
+                };
+                extra = new Dictionary<string, object> { { "AI", aiExtra } };
                 DevLog.UI($"[AI] Step 2: prompt = {prompt}, extra.at = {atArg}");
             }
             else

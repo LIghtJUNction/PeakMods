@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 #nullable enable
 namespace PeakChatOps.Commands;
 
-[PCOCommand("exit", "游戏直接结束并返回主菜单", "用法: /exit\n返回主菜单，并记为失败")]
+[PCOCommand("exit", "游戏直接结束并返回主菜单", "用法: /exit\n返回主菜单")]
 public class ExitCommand
 {
     public ExitCommand()
@@ -18,7 +18,7 @@ public class ExitCommand
     {
         try
         {
-            // SceneManager.LoadScene("MainMenu");
+            SceneManager.LoadScene("MainMenu");
             var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "已返回主菜单。", stderr: null, success: true);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
         }

@@ -1,5 +1,5 @@
 # PeakChatOps
-[![GitHub](https://img.shields.io/badge/GitHub-BetterPingDistance-brightgreen?style=for-the-badge&logo=GitHub)](https://github.com/LIghtJUNction/PeakMods)
+[![GitHub](https://img.shields.io/badge/GitHub-PeakChatOps-LIghtJUNction?style=for-the-badge&logo=GitHub)](https://github.com/LIghtJUNction/PeakMods)
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 
@@ -15,8 +15,6 @@ Major changes:
 - Some components now use PeakLib implementations
 - Improved Chinese support
 
-
-
 Features:
 - Chat box now supports paging! Use the mouse wheel to scroll up and down
 - Supports config hot-reload, changes take effect immediately
@@ -24,9 +22,6 @@ Features:
 - **System messages now support multi-language and rich text color tags!**
   - Each language line can have its own color, making notifications vibrant and easy to distinguish
   - Default system messages (death, revive, pass out) are preset with colorful styles for all supported languages
-
-
-
 
 ## Features
 - Chat message sending/receiving and UI display
@@ -39,9 +34,62 @@ Features:
 ## Installation
 1. Recommended: Use a mod manager for installation
 
+## AI Feature Guide
+
+PeakChatOps supports AI chat assistant. We highly recommend using the free [Ollama](https://ollama.com/) cloud model (can be deployed on your own server or cloud VM).
+
+### 1. Download and Install Ollama
+
+- Visit [Ollama official site](https://ollama.com/) and download the installer for your OS.
+- Follow the instructions to install and start Ollama.
+- Optional: Run `ollama run llama3` or `ollama run qwen:7b` in your terminal to pre-download models.
+- You can also deploy Ollama on a cloud server (e.g. AWS, Azure, GCP, or any VPS) and expose the API endpoint for remote access.
+
+### 2. Configure AI Settings
+
+- In-game, open the PeakChatOps settings panel.
+- Set `AI Endpoint` to your Ollama server address, e.g. `http://localhost:11434` (local) or `http://your-cloud-ip:11434` (cloud).
+- Leave `API Key` empty (Ollama does not require a key by default).
+- Set `AI Model` to `llama3`, `qwen:7b`, or any model you have downloaded.
+- You can adjust `Max Tokens`, `Temperature`, `TopP` and other parameters to control response length and style.
+
+### 3. Using the /ai Command
+
+- Type `/ai your question` in the chat box, e.g.:
+ `/ai Translate this sentence`
+- The AI assistant will reply in the chat box.
+- Use `/ai prompt @send` to send the AI reply as a message.
+- Use `/ai @clear` to clear the AI context/history.
+
+### 4. Customizing Prompts
+
+- In the settings panel, you can set a custom `AI Prompt` to define the assistant's behavior.
+- Example:
+	`You are a professional Unity developer assistant. Please answer in concise English.`
+- The prompt will be automatically appended to your AI requests.
+
+### 5. Recommended Free Models
+
+We personally recommend Ollama's cloud models for best compatibility and cost-free usage. Popular free models include:
+
+- llama3 (general-purpose, fast)
+- qwen:7b (Chinese/English, strong reasoning)
+- phi3 (compact, efficient)
+- gemma (multilingual)
+
+You can find more models on the [Ollama model list](https://ollama.com/library) or via the command line.
+
+### 6. Troubleshooting
+
+- If you cannot connect, make sure Ollama is running and listening on port 11434.
+- If AI replies are empty or error occurs, check if the model is downloaded and the endpoint is correct.
+
+For advanced usage and parameter details, refer to the Ollama documentation or the PeakChatOps settings panel.
+
+---
 ## Usage
-- Chat: Press the configured hotkey (e.g. Y) to open the input box, type and press Enter to send
-- Commands: Type `/help` to see all commands
+Chat: Press the configured hotkey (e.g. Y) to open the input box, type and press Enter to send
+Commands: Type `/help` to see all commands
 
 
 ## Configuration

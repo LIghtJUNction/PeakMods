@@ -1,9 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using PeakChatOps.API;
 using System;
+using Cysharp.Threading.Tasks;
 
 namespace PeakChatOps.Core;
 
@@ -27,34 +30,39 @@ public class MessageData
 }
 
 /// <summary>
-/// 统一的聊天系统 - 包含消息包处理和网络通信
+/// 统一的聊天系统 - 包含消息包处理和网络通信（异步版本）
+/// 注意：此类只保留异步 API（UniTask），旧的同步方法已移除。
 /// </summary>
 public class ChatSystem : MonoBehaviour
 {
     public static ChatSystem Instance;
-    // Chat event code moved to API: EventCodes.ChatEventCode
 
     // 事件处理字典
     private readonly Dictionary<byte, Action<EventData>> eventHandlers = new();
+    // 静态并发队列：当 ChatSystem 实例尚未就绪时，可缓存要发送的消息，实例化后会排空并发送
+    private static ConcurrentQueue<(string message, Dictionary<string, object> extra)> _staticPendingSends = new ConcurrentQueue<(string, Dictionary<string, object>)>();
 
     private void Start()
     {
         DevLog.UI("[ChatSystem.Start] Called, registering EventReceived");
+        try { PeakChatOpsPlugin.Logger.LogDebug("[ChatSystem] Start called"); } catch { }
         Instance = this;
-    // 注册事件处理器
-    eventHandlers[EventCodes.ChatEventCode] = HandleChatEvent;
+        // 实例化后尝试排空任何静态缓存的发送请求（例如 UI 提交时实例尚未就绪）
+        FlushStaticPendingSendsAsync().Forget();
+        // 注册事件处理器
+        eventHandlers[EventCodes.ChatEventCode] = HandleChatEvent;
         PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
     }
 
     private void OnDestroy()
     {
-    DevLog.UI("[ChatSystem.OnDestroy] Unregistering EventReceived");
+        DevLog.UI("[ChatSystem.OnDestroy] Unregistering EventReceived");
         PhotonNetwork.NetworkingClient.EventReceived -= OnEvent;
     }
 
     public void OnEvent(EventData photonEvent)
     {
-    DevLog.UI($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
+        DevLog.UI($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
         if (eventHandlers.TryGetValue(photonEvent.Code, out var handler))
         {
             handler(photonEvent);
@@ -67,19 +75,50 @@ public class ChatSystem : MonoBehaviour
 
     private void HandleChatEvent(EventData photonEvent)
     {
+        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] HandleChatEvent code={photonEvent.Code} sender={photonEvent.Sender}"); } catch { }
         var data = (object[])photonEvent.CustomData;
         if (data.Length < 4) return;
+        // Normalize the extra payload: accept Dictionary<string, object> or Photon Hashtable
+        Dictionary<string, object> extraDict = null;
+        if (data.Length > 4 && data[4] != null)
+        {
+            if (data[4] is Dictionary<string, object> dict)
+            {
+                extraDict = dict;
+            }
+            else if (data[4] is ExitGames.Client.Photon.Hashtable ht)
+            {
+                extraDict = ConvertHashtableToDictionary(ht);
+            }
+            else if (data[4] is IDictionary objDict)
+            {
+                // fallback: try to copy entries where keys are strings
+                extraDict = new Dictionary<string, object>();
+                foreach (DictionaryEntry de in objDict)
+                {
+                    if (de.Key != null)
+                    {
+                        var key = de.Key.ToString();
+                        extraDict[key] = de.Value;
+                    }
+                }
+            }
+        }
+
         var msg = new MessageData(
             data[0]?.ToString() ?? null,
             data[1]?.ToString() ?? null,
             data[2]?.ToString() ?? null,
             bool.TryParse(data[3]?.ToString(), out var d) && d,
-            (data.Length > 4 && data[4] is Dictionary<string, object> dict) ? dict : null
+            extraDict
         );
-        ReceiveChatMessage(msg);
+        // Photon 回调是同步的；以 fire-and-forget 的方式启动异步处理
+        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}"); } catch { }
+        ReceiveChatMessageAsync(msg).Forget();
     }
 
-    public void ReceiveChatMessage(MessageData msg)
+    // 异步版本：处理接收到的消息并发布到事件总线
+    public async UniTask ReceiveChatMessageAsync(MessageData msg)
     {
         var evt = new ChatMessageEvent(
             msg.Nickname,
@@ -88,54 +127,103 @@ public class ChatSystem : MonoBehaviour
             msg.IsDead,
             msg.Extra
         );
-    _ = EventBusRegistry.ChatMessageBus.Publish("sander://other", evt);
+        await EventBusRegistry.ChatMessageBus.Publish("sander://other", evt);
     }
 
-    public void SendChatMessage(string message)
+    // Convert Photon Hashtable to Dictionary<string, object>, handling nested Hashtables
+    private static Dictionary<string, object> ConvertHashtableToDictionary(ExitGames.Client.Photon.Hashtable ht)
     {
-        SendChatMessage(message, new Dictionary<string, object>());
+        if (ht == null) return null;
+        var dict = new Dictionary<string, object>();
+        foreach (DictionaryEntry de in ht)
+        {
+            var key = de.Key?.ToString() ?? string.Empty;
+            var val = de.Value;
+            if (val is ExitGames.Client.Photon.Hashtable nestedHt)
+            {
+                dict[key] = ConvertHashtableToDictionary(nestedHt);
+            }
+            else
+            {
+                dict[key] = val;
+            }
+        }
+        return dict;
     }
 
-    // 新增重载，支持扩展字典
-    // local player send message // cmd
-    public void SendChatMessage(string message, Dictionary<string, object> extra)
+    // 异步版本的发送实现，负责发布到 ChatMessageBus（以及网络发送）
+    public async UniTask SendChatMessageAsync(string message, Dictionary<string, object> extra)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
-        DevLog.UI($"[ChatSystem.SendChatMessage] called, message={message}");
+        DevLog.UI($"[ChatSystem.SendChatMessageAsync] called, message={message}");
+        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra==null?0:extra.Count)}"); } catch { }
         string prefix = PeakChatOpsPlugin.CmdPrefix.Value;
-        // 初始值
         bool isDead = false;
-        // 检查是否为命令
         if (!string.IsNullOrEmpty(prefix) && message.StartsWith(prefix))
         {
+            try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Detected command prefix. processing as command: {message}"); } catch { }
             if (Character.localCharacter?.data != null)
             {
                 isDead = Character.localCharacter.data.dead;
             }
-            // 解析命令（去掉前缀）
             var withoutPrefix = message.Substring(prefix.Length).Trim();
-            var parts = withoutPrefix.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var parts = withoutPrefix.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
             var command = parts.Length > 0 ? parts[0] : string.Empty;
             var args = parts.Length > 1 ? parts[1..] : new string[0];
             var cmdEvt = new CmdMessageEvent(command, args, PhotonNetwork.LocalPlayer.UserId);
-            _ = EventBusRegistry.CmdMessageBus.Publish("cmd://", cmdEvt); // 路由
+            await EventBusRegistry.CmdMessageBus.Publish("cmd://", cmdEvt);
             return;
         }
-        // 普通消息：准备发送给其他玩家
-        {
-            if (Character.localCharacter?.data != null)
-            {
-                isDead = Character.localCharacter.data.dead;
-            }
 
-            var evt = new ChatMessageEvent(
-                PhotonNetwork.LocalPlayer.NickName,
-                message,
-                PhotonNetwork.LocalPlayer.UserId,
-                isDead,
-                extra
-            );
-            _ = EventBusRegistry.ChatMessageBus.Publish("sander://self", evt);
+        if (Character.localCharacter?.data != null)
+        {
+            isDead = Character.localCharacter.data.dead;
+        }
+
+        var evt = new ChatMessageEvent(
+            PhotonNetwork.LocalPlayer.NickName,
+            message,
+            PhotonNetwork.LocalPlayer.UserId,
+            isDead,
+            extra
+        );
+    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Publishing chat event to bus: sender={evt.Sender} msg={evt.Message}"); } catch { }
+        await EventBusRegistry.ChatMessageBus.Publish("sander://self", evt);
+    }
+
+    /// <summary>
+    /// 将发送请求加入静态缓存队列，以防 ChatSystem 实例尚未就绪。
+    /// UI 可以在无法直接调用实例时使用此方法。
+    /// </summary>
+    public static void EnqueuePendingSend(string message, Dictionary<string, object> extra)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        _staticPendingSends.Enqueue((message, extra ?? new Dictionary<string, object>()));
+    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Enqueued pending send. queuedCount approx: {_staticPendingSends.Count}"); } catch { }
+    }
+
+    // 排空静态缓存并通过实例发送（在实例化后调用）
+    private async UniTaskVoid FlushStaticPendingSendsAsync()
+    {
+        try
+        {
+            while (_staticPendingSends.TryDequeue(out var item))
+            {
+                try
+                {
+                    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Flushing queued send: message='{item.message}'"); } catch { }
+                    await SendChatMessageAsync(item.message, item.extra);
+                }
+                catch (Exception ex)
+                {
+                    DevLog.UI($"[ChatSystem.FlushStaticPendingSendsAsync] failed to send: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            DevLog.UI($"[ChatSystem.FlushStaticPendingSendsAsync] exception: {ex.Message}");
         }
     }
+
 }

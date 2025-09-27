@@ -5,6 +5,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 using PeakChatOps.Core;
+using PeakChatOps.Core.MsgChain;
 using PEAKLib.Core;
 using PEAKLib.UI;
 using UnityEngine.UI.ProceduralImage;
@@ -20,38 +21,7 @@ namespace PeakChatOps;
 partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger = null!;
-
     public static Harmony harmony = null!;
-    public static ConfigEntry<float> FontSize = null!;
-    public static ConfigEntry<string> ChatSize = null!;
-    public static ConfigEntry<float> MessageFadeDelay = null!;
-    public static ConfigEntry<float> FadeDelay = null!;
-    public static ConfigEntry<float> HideDelay = null!;
-    public static ConfigEntry<KeyCode> Key = null!;
-    public static ConfigEntry<UIAlignment> Pos = null!;
-    public static ConfigEntry<float> BgOpacity = null!;
-    public static ConfigEntry<bool> FrameVisible = null!;
-    public static ConfigEntry<bool> HideInputField = null!;
-    public static ConfigEntry<string> CmdPrefix = null!;
-    public static ConfigEntry<string> DeathMessage = null!;
-    public static ConfigEntry<string> ReviveMessage = null!;
-    public static ConfigEntry<string> PassOutMessage = null!;
-
-    public static ConfigEntry<string> aiModel = null!;
-    public static ConfigEntry<string> aiApiKey = null!;
-    public static ConfigEntry<string> aiEndpoint = null!;
-    public static ConfigEntry<int> aiContextMaxCount = null!;
-    public static ConfigEntry<bool> aiAutoTranslate = null!;
-    public static ConfigEntry<string> promptTranslate = null!;
-    public static ConfigEntry<string> promptSend = null!;
-
-        // 新增AI参数配置
-    public static ConfigEntry<int> aiMaxTokens = null!;
-        public static ConfigEntry<double> aiTemperature = null!;
-        public static ConfigEntry<double> aiTopP = null!;
-        public static ConfigEntry<int> aiN = null!;
-
-
     private void Awake()
     {
         // Plugin startup logic

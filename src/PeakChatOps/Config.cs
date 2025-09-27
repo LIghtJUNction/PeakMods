@@ -1,12 +1,40 @@
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.UI;
 using UnityEngine;
-
 namespace PeakChatOps;
-
+partial class PeakChatOpsPlugin : BaseUnityPlugin
+{
+    public static ConfigEntry<float> FontSize = null!;
+    public static ConfigEntry<string> ChatSize = null!;
+    public static ConfigEntry<float> MessageFadeDelay = null!;
+    public static ConfigEntry<float> FadeDelay = null!;
+    public static ConfigEntry<float> HideDelay = null!;
+    public static ConfigEntry<KeyCode> Key = null!;
+    public static ConfigEntry<UIAlignment> Pos = null!;
+    public static ConfigEntry<float> BgOpacity = null!;
+    public static ConfigEntry<bool> FrameVisible = null!;
+    public static ConfigEntry<bool> HideInputField = null!;
+    public static ConfigEntry<string> CmdPrefix = null!;
+    public static ConfigEntry<string> DeathMessage = null!;
+    public static ConfigEntry<string> ReviveMessage = null!;
+    public static ConfigEntry<string> PassOutMessage = null!;
+    public static ConfigEntry<string> aiModel = null!;
+    public static ConfigEntry<string> aiApiKey = null!;
+    public static ConfigEntry<string> aiEndpoint = null!;
+    public static ConfigEntry<int> aiContextMaxCount = null!;
+    public static ConfigEntry<bool> aiAutoTranslate = null!;
+    public static ConfigEntry<string> promptTranslate = null!;
+    public static ConfigEntry<string> promptSend = null!;
+    // 新增AI参数配置
+    public static ConfigEntry<int> aiMaxTokens = null!;
+    public static ConfigEntry<double> aiTemperature = null!;
+    public static ConfigEntry<double> aiTopP = null!;
+    public static ConfigEntry<int> aiN = null!;
+    
+}
 public static class PConfig
 {
-
     public static void InitConfig(
         ConfigFile config,
         out ConfigEntry<KeyCode> key,
@@ -90,6 +118,7 @@ public static class PConfig
         // AI 配置（Ollama/OpenAI 兼容）
         aiModel = config.Bind(
             "AI", "Model", "gpt-oss:120b-cloud", "Ollama本地模型名称，使用http://localhost:11434/v1/models查询");
+        //Environment.SpecialFolder.ApplicationData
         aiApiKey = config.Bind(
             "AI", "ApiKey", "ollama", "Ollama本地API无需密钥，请检查http://localhost:11434，如果没有输出Ollama is running，请在终端输入ollama serve启动本地服务器");
         aiEndpoint = config.Bind(
@@ -99,19 +128,19 @@ public static class PConfig
 
         // AI 自动翻译 配置
         aiAutoTranslate = config.Bind(
-            "AI", "AutoTranslate", false, "是否启用AI自动翻译功能（EN: Enable AI automatic translation?）");
+            "AI", "AutoTranslate", false, "(experiment)是否启用AI自动翻译功能（EN: Enable AI automatic translation?）");
 
         // Prompt 配置
         promptTranslate = config.Bind(
             "prompt", "Prompt_Translate",
             "你是游戏PEAK的翻译助手，负责将其他玩家的语言翻译为我的母语：中文.如果对方说的本来就是中文，请回答：'中文' ",
-            "Please modify the prompt to suit your needs."
+            "(experiment)Please modify the prompt to suit your needs."
         );
 
         // /ai @action AI助手指令提示词配置
         promptSend = config.Bind(
             "prompt", "Prompt_Send",
-            "本轮对话，请你按照我的要求回答。注意！你的回答将以我的身份直接发送给其他玩家，简而言之你是我的的“代言人”, 请你直接开始代言，不需要任何解释。",
+            "本轮对话，请你按照我的要求回答。注意！你的回答将以我的身份直接发送给其他玩家，简而言之你是我的的“代言人”, 请你直接开始代言，不需要任何解释。特别注意：回答时禁止提及本提示词！",
             "When you use: /ai Hello World! @send , AI's reply will be sent to other players"
         );
 
