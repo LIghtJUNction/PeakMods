@@ -77,8 +77,6 @@ public class PeakOpsUI : MonoBehaviour
     // Template instance used to Instantiate chat lines to avoid repeated heavy initialization
     private PeakText peakTextTemplate = null!;
     // Optional pool for PeakText instances
-    public PeakTextPool peakTextPool = null!;
-
     GameObject currentSelection = null!; // 当前选中的 UI 元素
     // 当 UI 尚未创建时缓存要显示的消息，CreateChatUI 完成后会刷新
     List<string> pendingMessages = new List<string>();
@@ -469,7 +467,7 @@ public class PeakOpsUI : MonoBehaviour
                 // Create pool (use baseTransform as parent for the pool container). Warm up a few instances.
                 try
                 {
-                    peakTextPool = new PeakTextPool(baseTransform, peakTextTemplate, maxPoolSize: 100, poolContainerName: "PeakTextPool", warmupCount: 0);
+                    // peakTextPool = new PeakTextPool(baseTransform, peakTextTemplate, maxPoolSize: 100, poolContainerName: "PeakTextPool", warmupCount: 0);
                     DevLog.File("[DEBUG] PeakTextPool initialized");
                 }
                 catch (Exception ex)
@@ -791,13 +789,13 @@ public class PeakOpsUI : MonoBehaviour
             // DevLog.TimeLap(__timerKey, "create_text_start");
             DevLog.File("[DEBUG] Creating PeakChatOpsText for message");
 
-            PeakChatOpsText peakText = peakTextPool.Get(message);
+            // PeakChatOpsText peakText = peakTextPool.Get(message);
 
             //  DevLog.TimeLap(__timerKey, "before_setparent");
-            peakText.transform.SetParent(chatLogViewportTransform, false);
+            // peakText.transform.SetParent(chatLogViewportTransform, false);
             //  DevLog.TimeLap(__timerKey, "after_setparent");
 
-            peakText.SetFontSize(fontSize);
+            // peakText.SetFontSize(fontSize);
             
             DevLog.File($"[DEBUG] After SetParent childCount={chatLogViewportTransform.childCount}");
             // DevLog.TimeLap(__timerKey, "after_setparent_childcount");
@@ -810,17 +808,7 @@ public class PeakOpsUI : MonoBehaviour
                 if (first != null)
                 {
                     var pt = first.GetComponent<PeakText>();
-                    if (pt != null && peakTextPool != null)
-                    {
-                        // Return to pool instead of destroying
-                        peakTextPool.Release(pt);
-                        DevLog.File($"[DEBUG] Oldest message released to pool. childCount={chatLogViewportTransform.childCount}");
-                    }
-                    else
-                    {
-                        GameObject.Destroy(first.gameObject);
-                        DevLog.File($"[DEBUG] Oldest message removed. childCount={chatLogViewportTransform.childCount}");
-                    }
+
                 }
                 DevLog.TimeLap(__timerKey, "remove_old_end");
             }

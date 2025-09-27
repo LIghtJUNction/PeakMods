@@ -226,4 +226,3 @@ artifacts/**/*.zip
 *.txt
 artifacts/**
 Config.Build.user.props
-/Assembly-CSharp

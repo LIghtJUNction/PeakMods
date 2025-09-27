@@ -76,8 +76,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         private void InitAIConfig()
         {
             aiMaxTokens = Config.Bind("AI", "MaxTokens", 1024, "AI回复最大token数，越大回复越长，消耗也越大");
-            aiTemperature = Config.Bind("AI", "Temperature", 0.7, "AI采样温度，越高越随机，越低越保守");
-            aiTopP = Config.Bind("AI", "TopP", 1.0, "AI采样top_p，1.0为全概率，越低越保守");
+            aiTemperature = Config.Bind("AI", "Temperature", 0.7f, "AI采样温度，越高越随机，越低越保守");
+            aiTopP = Config.Bind("AI", "TopP", 1.0f, "AI采样top_p，1.0为全概率，越低越保守");
             aiN = Config.Bind("AI", "N", 1, "每次生成的回复数量，通常为1");
         }
     private void OnDestroy()

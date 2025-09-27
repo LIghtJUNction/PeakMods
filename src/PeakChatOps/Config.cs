@@ -28,8 +28,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
     public static ConfigEntry<string> promptSend = null!;
     // 新增AI参数配置
     public static ConfigEntry<int> aiMaxTokens = null!;
-    public static ConfigEntry<double> aiTemperature = null!;
-    public static ConfigEntry<double> aiTopP = null!;
+    public static ConfigEntry<float> aiTemperature = null!;
+    public static ConfigEntry<float> aiTopP = null!;
     public static ConfigEntry<int> aiN = null!;
     public static ConfigEntry<bool> aiShowResponse = null!;
 
