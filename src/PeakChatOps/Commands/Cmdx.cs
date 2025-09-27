@@ -89,6 +89,8 @@ namespace PeakChatOps.Commands;
                 PeakChatOpsPlugin.Logger.LogWarning($"Failed to instantiate command class '{t.FullName}': {ex.Message}");
             }
         }
+
+        #region 注册命令
         // 清空元数据
         CommandMetas.Clear();
         // 命令执行器+加载器
@@ -100,7 +102,17 @@ namespace PeakChatOps.Commands;
         TryInstantiate(typeof(SyncCommand));
         TryInstantiate(typeof(PingCommand));
         TryInstantiate(typeof(AICommand));
+        TryInstantiate(typeof(WhisperCommand));
+        TryInstantiate(typeof(InviteCommand));
 
+        #endregion
+
+
+        #if DEBUG
+        TryInstantiate(typeof(DevCommand));
+        #endif
+        
+        
         // 通过反射加载插件目录下的 dll 并实例化带 PCOCommand 特性的类型以触发其构造函数，并收集元数据
         string pluginsDir = Paths.PluginPath;
         try

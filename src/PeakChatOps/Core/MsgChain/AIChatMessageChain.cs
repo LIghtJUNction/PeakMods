@@ -14,9 +14,9 @@ public static class AIChatMessageChain
         // 订阅 AI 聊天消息总线
         EventBusRegistry.AIChatMessageBus.Subscribe("ai://chat", HandleAIChatMessageAsync);
         EventBusRegistry.AIChatMessageBus.Subscribe("ai://translate", HandleAITranslateMessageAsync);
-    // 启动 runner
-    var cts = CentralCmdRouter.GetOrCreateBusCts();
-    EventBusRegistry.AIChatMessageBus.RunAsync("ai://chat", cts.Token).Forget();
+        // 启动 runner
+        var cts = CentralCmdRouter.GetOrCreateBusCts();
+        EventBusRegistry.AIChatMessageBus.RunAsync("ai://chat", cts.Token).Forget();
     }
 
     // AI 聊天消息处理器
@@ -36,6 +36,13 @@ public static class AIChatMessageChain
             }
         if (string.IsNullOrWhiteSpace(evt.Message))
             return;
+
+        // per-invocation timer key to measure elapsed time for AI processing
+        var __timerKey = $"AIChat::{(evt.UserId ?? evt.Sender ?? Guid.NewGuid().ToString())}::{Guid.NewGuid():N}";
+
+        string __devlog_model = null;
+        try
+        {
 
         // 获取AI回复之前处理下拓展指令（优先使用类型化 AIExtra）
         if (evt.Extra != null)
@@ -92,25 +99,40 @@ public static class AIChatMessageChain
             else
             {
                 string prompt = evt.Message;
-                var model = PeakChatOpsPlugin.aiModel?.Value;
+                // capture configured model for reporting
+                __devlog_model = PeakChatOpsPlugin.aiModel?.Value;
+                string model = __devlog_model;
                 if (string.IsNullOrWhiteSpace(model))
                     model = "gpt-oss:120b-cloud";
+
                 var messages = AIChatContextLogger.Instance.BuildContextMessages(prompt, evt.UserId) ?? new List<Dictionary<string, object>>();
+
                 int maxTokens = PeakChatOpsPlugin.aiMaxTokens?.Value ?? 1024;
                 double temperature = PeakChatOpsPlugin.aiTemperature?.Value ?? 0.7;
                 double topP = PeakChatOpsPlugin.aiTopP?.Value ?? 1.0;
                 int n = PeakChatOpsPlugin.aiN?.Value ?? 1;
                 using var client = new OpenAIClient(apiKey, endpoint, maxTokens, temperature, topP, n);
                 var chatApi = new API.AI.Apis.OpenAIChatApi(client);
+
                 var response = await chatApi.CreateChatCompletionAsync(model, messages, maxTokens);
+
                 var (content, reasoning) = AIChatContextLogger.ParseOpenAICompletionResponseWithReasoning(response!);
+
                 // displayText：用于本地显示（包含 reasoning）；sendText：仅用于发送（仅 content）
                 string displayText;
                 if (content != null && reasoning != null)
                 {
-                    // 推理以更小字体和淡灰色显示（TextMeshPro 富文本）
-                    var reasoningFormatted = $"<size=80%><color=#C0C0C0>{reasoning}</color></size>";
-                    displayText = content + "\n<color=#888>[R]</color>: " + reasoningFormatted;
+                    // 仅在配置允许时显示推理；推理以更小字体和淡灰色显示（TextMeshPro 富文本）
+                    if (PeakChatOpsPlugin.aiShowResponse?.Value ?? true)
+                    {
+                        var reasoningFormatted = $"<size=80%><color=#C0C0C0>{reasoning}</color></size>";
+                        displayText = content + "\n<color=#888>[R]</color>: " + reasoningFormatted;
+                    }
+                    else
+                    {
+                        // 跳过推理显示，仅显示 content
+                        displayText = content;
+                    }
                 }
                 else if (content != null)
                 {
@@ -119,7 +141,7 @@ public static class AIChatMessageChain
                 else if (reasoning != null)
                 {
                     // 仅有推理时本地显示推理（小号淡灰）
-                    displayText = $"<size=80%><color=#C0C0C0>{reasoning}</color></size>";
+                    displayText = $"<size=70%><color=#C0C0C0>{reasoning}</color></size>";
                 }
                 else
                 {
@@ -132,11 +154,14 @@ public static class AIChatMessageChain
                 // 如果使用了 reasoning（content 为 null），记录以便追踪
                 if (content == null && reasoning != null)
                 {
-                    try { PeakChatOpsPlugin.Logger.LogDebug($"[AIContext] Reply taken from reasoning field (not sent). Preview: {reasoning?.Substring(0, Math.Min(200, reasoning.Length))}"); } catch { }
+                    DevLog.File($"[AIContext] Reply taken from reasoning field (not sent). Preview: {reasoning?.Substring(0, Math.Min(200, reasoning.Length))}");
+
                 }
 
                 // 记录到上下文：优先记录 content（若无则记录 displayText）
+
                 AIChatContextLogger.Instance?.LogAssistant(content ?? displayText, PeakChatOpsPlugin.aiModel?.Value ?? "AI");
+
                 // aiReply 用于默认本地显示（保留原样）
                 aiReply = displayText;
                 
@@ -146,9 +171,10 @@ public static class AIChatMessageChain
         {
             aiReply = $"AI回复失败: {ex.Message}";
             aiReplyError = ex.ToString();
+
         }
 
-        // 在AI回答之后按命令处理（优先使用类型化 AIExtra）
+    // 在AI回答之后按命令处理（优先使用类型化 AIExtra）
         if (evt.Extra != null)
         {
             bool handledPost = false;
@@ -216,6 +242,11 @@ public static class AIChatMessageChain
         }
         // 防御性兜底，所有路径都返回
     return;
+        }
+        finally
+        {
+            // 
+        }
     }
 
     // AI 翻译消息链

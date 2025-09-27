@@ -35,7 +35,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             out FadeDelay, out HideDelay, out CmdPrefix,
             out DeathMessage, out ReviveMessage, out PassOutMessage,
             out aiModel, out aiApiKey, out aiEndpoint, out aiContextMaxCount,
-            out aiAutoTranslate, out promptTranslate, out promptSend
+            out aiAutoTranslate, out promptTranslate, out promptSend,
+            out aiShowResponse
         );
 
         harmony = new Harmony("com.lightjunction.peakchatops");

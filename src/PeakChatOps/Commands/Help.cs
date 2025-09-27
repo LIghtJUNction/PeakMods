@@ -29,7 +29,8 @@ public class HelpCommand
             }
             else
             {
-                output = BuildHelpLines(metas);
+                // 使用异步构建以避免阻塞调用线程（可能包含较多命令）
+                output = await BuildHelpLinesAsync(metas);
             }
             var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: output, stderr: null, success: true);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
@@ -47,8 +48,7 @@ public class HelpCommand
     private static int _lastMetasHash = 0;
     private static string _lastHelpOutput = null;
 
-    // 同步构建命令帮助文本，彻底避免 YieldAwaitable 问题
-    private static string BuildHelpLines(List<PCOCommandAttribute> metas)
+    private static UniTask<string> BuildHelpLinesAsync(List<PCOCommandAttribute> metas)
     {
         // 计算哈希（只用 Name/Description/HelpInfo）
         int hash = 17;
@@ -58,11 +58,13 @@ public class HelpCommand
             hash = hash * 31 + (meta.Description?.GetHashCode() ?? 0);
             hash = hash * 31 + (meta.HelpInfo?.GetHashCode() ?? 0);
         }
+
         if (_lastHelpOutput != null && hash == _lastMetasHash)
         {
-            return _lastHelpOutput;
+            return UniTask.FromResult(_lastHelpOutput);
         }
 
+        // Build help text synchronously on the caller thread to avoid thread/context issues.
         var lines = new List<string>();
         lines.Add("<b><color=#59A6FF>可用命令：</color></b>");
         foreach (var meta in metas.Distinct(new PCOCommandAttributeComparer()))
@@ -73,11 +75,11 @@ public class HelpCommand
             lines.Add(namePart + descPart + helpPart);
         }
         var output = string.Join("\n", lines);
+
         _lastMetasHash = hash;
         _lastHelpOutput = output;
-        return output;
+        return UniTask.FromResult(output);
     }
-
 
     // 简单的比较器：按 Name 去重
     internal class PCOCommandAttributeComparer : IEqualityComparer<PCOCommandAttribute>

@@ -45,7 +45,7 @@ public class ChatSystem : MonoBehaviour
     private void Start()
     {
         DevLog.UI("[ChatSystem.Start] Called, registering EventReceived");
-        try { PeakChatOpsPlugin.Logger.LogDebug("[ChatSystem] Start called"); } catch { }
+        DevLog.File("[ChatSystem] Start called");
         Instance = this;
         // 实例化后尝试排空任何静态缓存的发送请求（例如 UI 提交时实例尚未就绪）
         FlushStaticPendingSendsAsync().Forget();
@@ -75,7 +75,7 @@ public class ChatSystem : MonoBehaviour
 
     private void HandleChatEvent(EventData photonEvent)
     {
-        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] HandleChatEvent code={photonEvent.Code} sender={photonEvent.Sender}"); } catch { }
+        DevLog.File($"[ChatSystem] HandleChatEvent code={photonEvent.Code} sender={photonEvent.Sender}");
         var data = (object[])photonEvent.CustomData;
         if (data.Length < 4) return;
         // Normalize the extra payload: accept Dictionary<string, object> or Photon Hashtable
@@ -113,7 +113,7 @@ public class ChatSystem : MonoBehaviour
             extraDict
         );
         // Photon 回调是同步的；以 fire-and-forget 的方式启动异步处理
-        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}"); } catch { }
+        DevLog.File($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}");
         ReceiveChatMessageAsync(msg).Forget();
     }
 
@@ -156,12 +156,12 @@ public class ChatSystem : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         DevLog.UI($"[ChatSystem.SendChatMessageAsync] called, message={message}");
-        try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra==null?0:extra.Count)}"); } catch { }
+        DevLog.File($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra==null?0:extra.Count)}");
         string prefix = PeakChatOpsPlugin.CmdPrefix.Value;
         bool isDead = false;
         if (!string.IsNullOrEmpty(prefix) && message.StartsWith(prefix))
         {
-            try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Detected command prefix. processing as command: {message}"); } catch { }
+            DevLog.File($"[ChatSystem] Detected command prefix. processing as command: {message}");
             if (Character.localCharacter?.data != null)
             {
                 isDead = Character.localCharacter.data.dead;
@@ -187,7 +187,7 @@ public class ChatSystem : MonoBehaviour
             isDead,
             extra
         );
-    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Publishing chat event to bus: sender={evt.Sender} msg={evt.Message}"); } catch { }
+        DevLog.File($"[ChatSystem] Publishing chat event to bus: sender={evt.Sender} msg={evt.Message}");
         await EventBusRegistry.ChatMessageBus.Publish("sander://self", evt);
     }
 
@@ -199,7 +199,7 @@ public class ChatSystem : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         _staticPendingSends.Enqueue((message, extra ?? new Dictionary<string, object>()));
-    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Enqueued pending send. queuedCount approx: {_staticPendingSends.Count}"); } catch { }
+         DevLog.File($"[ChatSystem] Enqueued pending send. queuedCount approx: {_staticPendingSends.Count}"); 
     }
 
     // 排空静态缓存并通过实例发送（在实例化后调用）
@@ -211,7 +211,7 @@ public class ChatSystem : MonoBehaviour
             {
                 try
                 {
-                    try { PeakChatOpsPlugin.Logger.LogDebug($"[ChatSystem] Flushing queued send: message='{item.message}'"); } catch { }
+                    DevLog.File($"[ChatSystem] Flushing queued send: message='{item.message}'");
                     await SendChatMessageAsync(item.message, item.extra);
                 }
                 catch (Exception ex)
