@@ -24,7 +24,7 @@ public class DevCommand
 
         var args = evt.Args ?? Array.Empty<string>();
         // 测试
-
+        await UniTask.SwitchToMainThread();
     }
 
 }

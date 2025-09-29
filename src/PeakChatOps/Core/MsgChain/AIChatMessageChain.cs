@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 
 using System.Collections.Generic;
 using PeakChatOps.API.AI;
+using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
 
@@ -200,7 +201,7 @@ public static class AIChatMessageChain
                         }
                         return;
                     default:
-                        PeakOpsUI.instance.AddMessage($"[AI] 未知的AI扩展指令: {aiAtPost}");
+                        PeakChatOpsUI.Instance.AddMessage($"[AI] 未知的AI扩展指令: {aiAtPost}");
                         handledPost = true;
                         break;
                 }
@@ -226,7 +227,7 @@ public static class AIChatMessageChain
                         }
                         return;
                     default:
-                        PeakOpsUI.instance.AddMessage($"[AI] 未知的extra.at指令: {atValPost}");
+                        PeakChatOpsUI.Instance.AddMessage($"[AI] 未知的extra.at指令: {atValPost}");
                         break;
                 }
             }
@@ -236,7 +237,7 @@ public static class AIChatMessageChain
             // 默认行为：显示在本地UI
             if (!string.IsNullOrWhiteSpace(aiReply))
             {
-                    PeakOpsUI.instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.aiModel?.Value ?? "ollama"}]</color>: {aiReply}");
+                    PeakChatOpsUI.Instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.aiModel?.Value ?? "ollama"}]</color>: {aiReply}");
             }
             return;
         }
@@ -290,11 +291,11 @@ public static class AIChatMessageChain
                 richText += $"\n<color=#FFA500>[翻译/Translation]</color>: {translation}";
             }
 
-            PeakOpsUI.instance.AddMessage(richText);
+            PeakChatOpsUI.Instance.AddMessage(richText);
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[AI翻译异常]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[AI翻译异常]</color>: {ex.Message}");
             DevLog.UI($"[AI翻译异常] {ex}");
         }
     return;

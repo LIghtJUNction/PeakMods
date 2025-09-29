@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using PeakChatOps.UI;
 using UnityEngine;
 
 namespace PeakChatOps.Patches;
@@ -13,7 +14,7 @@ public static class InputBlockingPatches {
     [HarmonyPatch(typeof(GUIManager),nameof(GUIManager.UpdateWindowStatus))]
     [HarmonyPostfix]
     public static void UpdateWindowStatusPatch() {
-    bool shouldBlockInput = Core.PeakOpsUI.instance?.isBlockingInput == true;
+    bool shouldBlockInput = PeakChatOpsUI.Instance?.isBlockingInput == true;
         
         if (shouldBlockInput) {
             windowBlockingInput?.Invoke(GUIManager.instance,[ true ]);

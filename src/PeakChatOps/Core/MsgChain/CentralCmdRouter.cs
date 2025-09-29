@@ -3,6 +3,7 @@ using PeakChatOps.Commands;
 using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
 
@@ -51,7 +52,7 @@ public static class CentralCmdRouter
             }
 
             // display a simple local UI line for the command (coloring moved to router level)
-            try { PeakOpsUI.instance.AddMessage($"<color=#59A6FF>> {evt.Command}</color> {(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}"); } catch { }
+            try { PeakChatOpsUI.Instance.AddMessage($"<color=#59A6FF>> {evt.Command}</color> {(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}"); } catch { }
 
             var raw = evt.Command.Trim();
             var candidates = new System.Collections.Generic.List<string>
@@ -110,7 +111,7 @@ public static class CentralCmdRouter
         string statusText = evt.Success ? "Success" : "Error";
         string richText = $"<color={colorHex}>[Cmd {statusText}]</color>: {evt.Stdout ?? evt.Stderr}";
         DevLog.UI($"[DebugUI] HandleCmdExecResultAsync -> AddMessage: '{richText}'");
-    PeakOpsUI.instance.AddMessage(richText);
+    PeakChatOpsUI.Instance.AddMessage(richText);
     return UniTask.CompletedTask;
     }
 
@@ -118,7 +119,7 @@ public static class CentralCmdRouter
     public static UniTask HandleAnyMessageAsync(string anyText)
     {
     DevLog.UI($"[DebugUI] HandleAnyMessageAsync -> AddMessage: '{anyText}'");
-    PeakOpsUI.instance.AddMessage(anyText);
+    PeakChatOpsUI.Instance.AddMessage(anyText);
     return UniTask.CompletedTask;
     }
 

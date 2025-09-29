@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Reflection;
 using ExitGames.Client.Photon;
+using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
 
@@ -40,7 +41,7 @@ public static class ChatMessageChain
         if (evt.Extra != null && evt.Extra.GetExtraValue<bool>("system", false))
         {
             DevLog.UI("[ChatMessageChain] Received system message: " + evt.Message + " UserID: " + evt.UserId);
-            PeakOpsUI.instance.AddMessage(evt.Message);
+            PeakChatOpsUI.Instance.AddMessage(evt.Message);
         }
 
         string colorHex = "#FFFFFF";
@@ -61,15 +62,15 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            try { PeakOpsUI.instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"); } catch { }
+            try { PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"); } catch { }
         }
 
         // 检查是否启用AI自动翻译，若已启用则委托 AITranslateHandler 处理并早退
-        if (PeakChatOps.Core.MsgChain.Handle.AITranslateHandler.TryHandleAutoTranslate(evt))
+        if (Handle.AITranslateHandler.TryHandleAutoTranslate(evt))
         {
             return UniTask.CompletedTask;
         }
-        PeakOpsUI.instance.AddMessage(richText);
+        PeakChatOpsUI.Instance.AddMessage(richText);
         return UniTask.CompletedTask;
     }
 
@@ -105,9 +106,9 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
         }
-        PeakOpsUI.instance.AddMessage(richText);
+        PeakChatOpsUI.Instance.AddMessage(richText);
         await UniTask.CompletedTask;
     }
 
@@ -195,7 +196,7 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakOpsUI.instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
         }
         return UniTask.CompletedTask;
     }

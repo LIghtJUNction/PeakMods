@@ -1,23 +1,19 @@
 ﻿using BepInEx;
 using System;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 using PeakChatOps.Core;
 using PeakChatOps.Core.MsgChain;
-using PEAKLib.Core;
-using PEAKLib.UI;
 using UnityEngine.UI.ProceduralImage;
 
 using PeakChatOps.Patches;
+using PeakChatOps.UI;
 
 namespace PeakChatOps;
 
 [BepInAutoPlugin]
 [BepInDependency("com.snosz.photoncustompropsutils", BepInDependency.DependencyFlags.HardDependency)]
-[BepInDependency(CorePlugin.Id)]
-[BepInDependency(UIPlugin.Id)]
 partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger = null!;
@@ -42,9 +38,13 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         harmony = new Harmony("com.lightjunction.peakchatops");
 
         harmony.PatchAll(typeof(GUIManagerPatch));
-        harmony.PatchAll(typeof(StaminaBarPatch));
+
         harmony.PatchAll(typeof(InputBlockingPatches));
         harmony.PatchAll(typeof(CharacterStatsPatches));
+
+        // 加载自定义本地化文本
+        harmony.PatchAll(typeof(LocalizationPatches));
+
 
         // 聊天系统初始化：自动挂载 ChatSystem
         if (GameObject.Find("ChatSystem") == null)
@@ -54,6 +54,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             GameObject.DontDestroyOnLoad(chatSystemObj);
             Logger.LogInfo("[PeakChatOps] ChatSystem GameObject created and initialized.");
         }
+
 
         // 初始化AI参数配置
         InitAIConfig();
@@ -82,8 +83,8 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         }
     private void OnDestroy()
     {
-        if (PeakOpsUI.instance != null)
-            GameObject.Destroy(PeakOpsUI.instance.gameObject);
+        if (PeakChatOpsUI.Instance != null)
+            GameObject.Destroy(PeakChatOpsUI.Instance.gameObject);
         if (GUIManagerPatch.ChatOpsCanvas != null)
             GameObject.Destroy(GUIManagerPatch.ChatOpsCanvas);
 
@@ -92,7 +93,6 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         if (chatSystemObj != null)
             GameObject.Destroy(chatSystemObj);
 
-        StaminaBarPatch.CleanupObjects();
 
         harmony.UnpatchSelf();
     }

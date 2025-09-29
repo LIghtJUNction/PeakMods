@@ -1,6 +1,6 @@
 using BepInEx;
 using BepInEx.Configuration;
-using PEAKLib.UI;
+using PeakChatOps.UI;
 using UnityEngine;
 namespace PeakChatOps;
 partial class PeakChatOpsPlugin : BaseUnityPlugin
@@ -164,4 +164,14 @@ public static class PConfig
 
 
   }
+}
+
+public enum UIAlignment
+{
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+    Center
+    
 }

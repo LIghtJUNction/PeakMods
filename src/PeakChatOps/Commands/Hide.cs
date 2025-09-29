@@ -2,6 +2,7 @@ using System;
 using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
 using PeakChatOps.Core;
+using PeakChatOps.UI;
 #nullable enable
 namespace PeakChatOps.Commands;
 
@@ -16,9 +17,9 @@ public class HideCommand
     {
         try
         {
-            if (PeakOpsUI.instance != null)
+            if (PeakChatOpsUI.Instance != null)
             {
-                PeakOpsUI.instance.HideNow();
+                PeakChatOpsUI.Instance.HideNow();
                 var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: "聊天框已隐藏。", stderr: null, success: true);
                 await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
             }

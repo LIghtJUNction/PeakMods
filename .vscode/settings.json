@@ -1,6 +1,7 @@
 {
     "deepscan.enable": true,
     "cSpell.words": [
+        "Behaviour",
         "Hashtable",
         "ollama"
     ]

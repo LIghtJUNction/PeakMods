@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PeakChatOps.API;
 using PeakChatOps.Core.MsgChain;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain.Handle;
 
@@ -85,7 +86,7 @@ public static class PingHandler
         }
         catch (Exception ex)
         {
-            try { PeakOpsUI.instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"); } catch { }
+            try { PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"); } catch { }
         }
     }
 }
