@@ -3,6 +3,12 @@
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 
+# UI
+
+The UI is being remade to solve lag issues and to expand more interfaces for better functionality.
+Please wait patiently.
+If you want me to update as soon as possible, please send an email to: lightjunction.me@gmail.com
+
 PeakChatOps is a modified version based on PeakTextChat.
 
 Retained from the original:

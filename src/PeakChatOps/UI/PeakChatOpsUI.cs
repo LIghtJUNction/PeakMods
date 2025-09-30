@@ -25,9 +25,6 @@ public class PeakChatOpsUI : MonoBehaviour
 
     }
 
-    // 可扩展：统一管理UI节点、事件、数据等
-
-
     #region API
 
     public void AddMessage(string message)
