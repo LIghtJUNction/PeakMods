@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: DepartureBoard
+  m_Shader: {fileID: 4800000, guid: 8b8b793ab34dea646ab4520cb8b122ba, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 2
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _BaseTexture:
+        m_Texture: {fileID: 18700000, guid: 988fc17e8d8b07544b459980a447fa3a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaToMask: 0
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BumpScale: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Columns: 2
+      _Cull: 2
+      _Cutoff: 0.5
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EnvironmentReflections: 1
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _Glow: 1.5
+      _HeaderMask: 0.79
+      _HeaderMaskU: 0.71
+      _HeaderMaskV: 0.8
+      _Metallic: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.005
+      _PatternScrollSpeed: 0.1
+      _QueueControl: 0
+      _QueueOffset: 0
+      _ReceiveShadows: 1
+      _Rows: 10
+      _Smoothness: 0.5
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TopSection: -4.68
+      _WorkflowMode: 1
+      _ZWrite: 1
+      _slices: 8
+    m_Colors:
+      _BGColor: {r: 0, g: 0.2917719, b: 1, a: 0}
+      _BGPatternColor: {r: 0, g: 0.093925, b: 1, a: 0}
+      _Background: {r: 0.108490564, g: 0.28329664, b: 1, a: 0}
+      _Background2: {r: 0, g: 0.09407518, b: 1, a: 0}
+      _Backgrounf: {r: 0, g: 0, b: 0, a: 0}
+      _BaseColor: {r: 0, g: 0.4648962, b: 1, a: 1}
+      _Color: {r: 0, g: 0.46489614, b: 1, a: 1}
+      _EmissionColor: {r: 0, g: 1.3063387, b: 2.297397, a: 1}
+      _HeaderTilingOffset: {r: 1.38, g: 6.45, b: -0.04, a: -0.42}
+      _SlotsTilingOffset: {r: 1, g: 1, b: -0.05, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _TopSectionBounce: {r: 0, g: 0.01, b: 0, a: 0}
+      _Vector0: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

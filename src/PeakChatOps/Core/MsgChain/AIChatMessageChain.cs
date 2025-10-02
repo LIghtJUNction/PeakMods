@@ -58,7 +58,7 @@ public static class AIChatMessageChain
                         AIChatContextLogger.Instance?.Clear();
                         return;
                     case "send":
-                        var presetPrompt = PeakChatOpsPlugin.promptSend.Value;
+                        var presetPrompt = PeakChatOpsPlugin.config.PromptSend.Value;
                         if (!string.IsNullOrWhiteSpace(aiExtra.PromptAppend))
                             evt.Message = $"{evt.Message}({aiExtra.PromptAppend})";
                         else
@@ -77,7 +77,7 @@ public static class AIChatMessageChain
                         AIChatContextLogger.Instance?.Clear();
                         return;
                     case "send":
-                        var presetPrompt = PeakChatOpsPlugin.promptSend.Value;
+                        var presetPrompt = PeakChatOpsPlugin.config.PromptSend.Value;
                         evt.Message = $"{evt.Message}({presetPrompt})";
                         break;
                     default:
@@ -91,8 +91,8 @@ public static class AIChatMessageChain
         string aiReplyError = null;
         try
         {
-            var apiKey = PeakChatOpsPlugin.aiApiKey?.Value;
-            var endpoint = PeakChatOpsPlugin.aiEndpoint?.Value;
+            var apiKey = PeakChatOpsPlugin.config.AiApiKey?.Value;
+            var endpoint = PeakChatOpsPlugin.config.AiEndpoint?.Value;
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint))
             {
                 aiReply = "未配置OpenAI/Ollama API Key或Endpoint，请先在设置中填写。";
@@ -101,17 +101,17 @@ public static class AIChatMessageChain
             {
                 string prompt = evt.Message;
                 // capture configured model for reporting
-                __devlog_model = PeakChatOpsPlugin.aiModel?.Value;
+                __devlog_model = PeakChatOpsPlugin.config.AiModel?.Value;
                 string model = __devlog_model;
                 if (string.IsNullOrWhiteSpace(model))
                     model = "gpt-oss:120b-cloud";
 
                 var messages = AIChatContextLogger.Instance.BuildContextMessages(prompt, evt.UserId) ?? new List<Dictionary<string, object>>();
 
-                int maxTokens = PeakChatOpsPlugin.aiMaxTokens?.Value ?? 1024;
-                double temperature = PeakChatOpsPlugin.aiTemperature?.Value ?? 0.7;
-                double topP = PeakChatOpsPlugin.aiTopP?.Value ?? 1.0;
-                int n = PeakChatOpsPlugin.aiN?.Value ?? 1;
+                int maxTokens = PeakChatOpsPlugin.config.AiMaxTokens?.Value ?? 1024;
+                double temperature = PeakChatOpsPlugin.config.AiTemperature?.Value ?? 0.7;
+                double topP = PeakChatOpsPlugin.config.AiTopP?.Value ?? 1.0;
+                int n = PeakChatOpsPlugin.config.AiN?.Value ?? 1;
                 using var client = new OpenAIClient(apiKey, endpoint, maxTokens, temperature, topP, n);
                 var chatApi = new API.AI.Apis.OpenAIChatApi(client);
 
@@ -124,7 +124,7 @@ public static class AIChatMessageChain
                 if (content != null && reasoning != null)
                 {
                     // 仅在配置允许时显示推理；推理以更小字体和淡灰色显示（TextMeshPro 富文本）
-                    if (PeakChatOpsPlugin.aiShowResponse?.Value ?? true)
+                    if (PeakChatOpsPlugin.config.AiShowResponse?.Value ?? true)
                     {
                         var reasoningFormatted = $"<size=80%><color=#C0C0C0>{reasoning}</color></size>";
                         displayText = content + "\n<color=#888>[R]</color>: " + reasoningFormatted;
@@ -161,7 +161,7 @@ public static class AIChatMessageChain
 
                 // 记录到上下文：优先记录 content（若无则记录 displayText）
 
-                AIChatContextLogger.Instance?.LogAssistant(content ?? displayText, PeakChatOpsPlugin.aiModel?.Value ?? "AI");
+                AIChatContextLogger.Instance?.LogAssistant(content ?? displayText, PeakChatOpsPlugin.config.AiModel?.Value ?? "AI");
 
                 // aiReply 用于默认本地显示（保留原样）
                 aiReply = displayText;
@@ -191,7 +191,7 @@ public static class AIChatMessageChain
                         if (!string.IsNullOrWhiteSpace(aiReply))
                         {
                             var chatEvt = new ChatMessageEvent(
-                                sender: evt.Sender + " And " + PeakChatOpsPlugin.aiModel?.Value,
+                                sender: evt.Sender + " And " + PeakChatOpsPlugin.config.AiModel?.Value,
                                 message: aiReply,
                                 userId: evt.UserId,
                                 isDead: Character.localCharacter.data.dead,
@@ -201,7 +201,7 @@ public static class AIChatMessageChain
                         }
                         return;
                     default:
-                        PeakChatOpsUI.Instance.AddMessage($"[AI] 未知的AI扩展指令: {aiAtPost}");
+                        PeakChatOpsUI.Instance.AddMessage("[AI] 未知的AI扩展指令",aiAtPost);
                         handledPost = true;
                         break;
                 }
@@ -217,7 +217,7 @@ public static class AIChatMessageChain
                         if (!string.IsNullOrWhiteSpace(aiReply))
                         {
                             var chatEvt = new ChatMessageEvent(
-                                sender: evt.Sender + " And " + PeakChatOpsPlugin.aiModel?.Value,
+                                sender: evt.Sender + " And " + PeakChatOpsPlugin.config.AiModel?.Value,
                                 message: aiReply,
                                 userId: evt.UserId,
                                 isDead: Character.localCharacter.data.dead,
@@ -227,7 +227,7 @@ public static class AIChatMessageChain
                         }
                         return;
                     default:
-                        PeakChatOpsUI.Instance.AddMessage($"[AI] 未知的extra.at指令: {atValPost}");
+                        PeakChatOpsUI.Instance.AddMessage("[AI] 未知的extra.at指令", atValPost);
                         break;
                 }
             }
@@ -237,7 +237,7 @@ public static class AIChatMessageChain
             // 默认行为：显示在本地UI
             if (!string.IsNullOrWhiteSpace(aiReply))
             {
-                    PeakChatOpsUI.Instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.aiModel?.Value ?? "ollama"}]</color>: {aiReply}");
+                PeakChatOpsUI.Instance.AddMessage($"<color=#00BFFF>[{PeakChatOpsPlugin.config.AiModel?.Value ?? "ollama"}]</color>", aiReply);
             }
             return;
         }
@@ -257,8 +257,8 @@ public static class AIChatMessageChain
         {
             // AI自动翻译
             string richText = evt.Message;
-            using var client = new OpenAIClient(PeakChatOpsPlugin.aiApiKey?.Value, PeakChatOpsPlugin.aiEndpoint?.Value);
-            string systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.promptTranslate?.Value) ? $"You are a helpful assistant that translates messages to the player：{evt.Sender}'s language." : PeakChatOpsPlugin.promptTranslate.Value;
+            using var client = new OpenAIClient(PeakChatOpsPlugin.config.AiApiKey?.Value, PeakChatOpsPlugin.config.AiEndpoint?.Value);
+            string systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.PromptTranslate?.Value) ? $"You are a helpful assistant that translates messages to the player：{evt.Sender}'s language." : PeakChatOpsPlugin. config.PromptTranslate.Value;
             var messages = new List<Dictionary<string, object>>()
                 {
                     new Dictionary<string, object>()
@@ -275,7 +275,7 @@ public static class AIChatMessageChain
 
             var jsonBodyObj = new
             {
-                model = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.aiModel?.Value) ? "gpt-oss:120b-cloud" : PeakChatOpsPlugin.aiModel.Value,
+                model = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.AiModel?.Value) ? "gpt-oss:120b-cloud" : PeakChatOpsPlugin.config.AiModel.Value,
                 messages = messages,
                 max_tokens = 256
             };
@@ -286,16 +286,11 @@ public static class AIChatMessageChain
             var (tContent, tReasoning) = AIChatContextLogger.ParseOpenAICompletionResponseWithReasoning(response);
             string translation = tContent ?? tReasoning ?? "(AI无回复, No response)";
 
-            if (!string.IsNullOrWhiteSpace(translation))
-            {
-                richText += $"\n<color=#FFA500>[翻译/Translation]</color>: {translation}";
-            }
-
-            PeakChatOpsUI.Instance.AddMessage(richText);
+            PeakChatOpsUI.Instance.AddMessage("<color=#FFA500>[翻译/Translation]</color>", translation);
         }
         catch (Exception ex)
         {
-            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[AI翻译异常]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage("<color=#FF0000>[AI翻译异常]</color>", ex.Message);
             DevLog.UI($"[AI翻译异常] {ex}");
         }
     return;

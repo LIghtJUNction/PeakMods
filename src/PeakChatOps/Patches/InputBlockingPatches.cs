@@ -9,15 +9,19 @@ public static class InputBlockingPatches {
     private static readonly MethodInfo windowBlockingInput = AccessTools.PropertySetter(typeof(GUIManager),"windowBlockingInput");
 
     /// <summary>
-    /// 智能输入阻塞 - 只在聊天输入时阻塞游戏输入
+    /// 智能输入阻塞 - 只在聊天输入时阻塞游戏输入并控制鼠标显示
     /// </summary>
     [HarmonyPatch(typeof(GUIManager),nameof(GUIManager.UpdateWindowStatus))]
     [HarmonyPostfix]
-    public static void UpdateWindowStatusPatch() {
-    bool shouldBlockInput = PeakChatOpsUI.Instance?.isBlockingInput == true;
+    public static void UpdateWindowStatusPatch(GUIManager __instance) {
+        bool shouldBlockInput = PeakChatOpsUI.Instance?.isBlockingInput == true;
         
         if (shouldBlockInput) {
-            windowBlockingInput?.Invoke(GUIManager.instance,[ true ]);
+            // 阻塞游戏输入
+            windowBlockingInput?.Invoke(__instance, [ true ]);
+            
+            // 强制显示鼠标（覆盖游戏的鼠标控制）
+            __instance.windowShowingCursor = true;
         }
     }
 

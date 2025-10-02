@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1971549032953010
+GameObject:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Component:
+  - component: {fileID: 4231073476607315}
+  - component: {fileID: 114607519507637074}
+  m_Layer: 0
+  m_Name: VineSpawnList
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4231073476607315
+Transform:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971549032953010}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+--- !u!114 &114607519507637074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1971549032953010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0721f4cb7f1d93f3fb7a11b1ef007243, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  items:
+  - prefab: {fileID: 1982540133488070, guid: 99ff8dc2f54ed1149b5f8de054e4ea22, type: 2}
+    weight: 200
+    percentageOdds: 0
+  - prefab: {fileID: 1869458888919981, guid: bd6a47f26453999438e308bf6ee98de4, type: 2}
+    weight: 100
+    percentageOdds: 0
+  - prefab: {fileID: 1913560019283119, guid: 3e0d8bd6fd66c8c488fa889499ffbb47, type: 2}
+    weight: 100
+    percentageOdds: 0
+  - prefab: {fileID: 1304264332122000, guid: cd9d488e9ab816842b4e16f65688bb1e, type: 2}
+    weight: 100
+    percentageOdds: 0

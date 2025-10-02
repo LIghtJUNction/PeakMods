@@ -21,6 +21,7 @@ license = "./LICENSE"
 [package.dependencies]
 BepInEx-BepInExPack_PEAK = "5.4.75301"
 Snosz-PhotonCustomPropsUtils = "1.1.0"
+PEAKModding-PEAKLib_Core = "1.5.1"
 
 Cysharp-UniTask = "2.5.0"
 
@@ -45,6 +46,11 @@ target = "/"
 [[build.copy]]
 source = "./Localization.csv"
 target = "/"
+
+[[build.copy]]
+source = "./Assets"
+target = "/Assets"
+
 
 # The following config options only apply when using TCLI to publish to Thunderstore directly:
 

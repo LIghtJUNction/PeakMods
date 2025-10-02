@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: PageLeft
+  m_Shader: {fileID: 4800000, guid: eadccc2fdbba4aa45a650769f9128060, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _FLIPBEND_ON
+  m_InvalidKeywords:
+  - _USEUV2_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2450
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _BaseTexture:
+        m_Texture: {fileID: 8400000, guid: fd2364e2375378d4eb02ff4d2924bc30, type: 2}
+        m_Scale: {x: 0.4, y: 1}
+        m_Offset: {x: 0.06, y: 0}
+      _ClipTex:
+        m_Texture: {fileID: 2800000, guid: a425db5053b0bc34cbe3dc06867291da, type: 3}
+        m_Scale: {x: 0.5, y: 0.5}
+        m_Offset: {x: 1.41, y: 0}
+      _Texture1:
+        m_Texture: {fileID: 2800000, guid: fb9669c9249cd1e4d9af3a99180d3609, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Texture2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Texture3:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaToMask: 0
+      _BaseMetallic: 0
+      _BaseSmooth: 0
+      _Bend: 0
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BlendOp: 0
+      _BumpScale: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Clip: 1.39
+      _Cull: 2
+      _Cutoff: 0.5
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EnvironmentReflections: 1
+      _FLIPBEND: 1
+      _Flip1: 0
+      _Flip2: 0
+      _Flip3: 0
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _HueStr1: 1
+      _HueStr2: 0
+      _INTERACTABLE: 0
+      _Interactable: 0
+      _Metallic: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.005
+      _QueueControl: 1
+      _QueueOffset: 0
+      _ReceiveShadows: 1
+      _SampleGI: 0
+      _Smooth1: 0
+      _Smooth2: 0
+      _Smooth3: 0
+      _Smoothness: 0.5
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TopDown1On: 0
+      _TopDown2On: 0
+      _TopDown3On: 0
+      _Triplanar1On: 0
+      _Triplanar2On: 0
+      _Triplanar3On: 0
+      _UV1: -0.13
+      _UV2: 1
+      _UV3: 1
+      _UseUV2: 1
+      _VertexColorAmount: 1
+      _ViewDirBlend: 0
+      _WorkflowMode: 1
+      _ZWrite: 1
+    m_Colors:
+      _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _Color1: {r: 0.3679245, g: 0.30939445, b: 0.27941436, a: 0.48235294}
+      _Color21: {r: 1, g: 1, b: 1, a: 0}
+      _Color3: {r: 1, g: 1, b: 1, a: 0}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _Emissive: {r: 1, g: 1, b: 1, a: 1}
+      _HueShifts1: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount1: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount2: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount3: {r: 0, g: 0, b: 0, a: 0}
+      _Remap1: {r: 0.23765433, g: 0.7222222, b: 0, a: 0}
+      _Remap2: {r: 0, g: 1, b: 0, a: 0}
+      _Remap3: {r: 0, g: 1, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _TextureScroll: {r: 0, g: 0, b: 0, a: 0}
+      _Tint: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

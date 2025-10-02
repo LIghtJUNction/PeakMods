@@ -8,7 +8,7 @@
     <!-- This is the display name of your mod. Example: BepInEx Template -->
     <AssemblyTitle>PeakChatOps</AssemblyTitle>
     <!-- This is the version number of your mod. -->
-    <Version>1.1.5</Version>
+    <Version>1.2.0</Version>
     <!-- Disable nullable reference type warnings for now -->
     <Nullable>disable</Nullable>
     <Configurations>Debug;Release</Configurations>
@@ -22,6 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="PEAKModding.PEAKLib.Core" Version="1.5.1" />
     <PackageReference Include="Snosz-PhotonCustomPropsUtils" Version="1.1.0" Private="False" />
     <PackageReference Include="Cysharp-UniTask" Version="2.5.0" Private="False" />
   </ItemGroup>

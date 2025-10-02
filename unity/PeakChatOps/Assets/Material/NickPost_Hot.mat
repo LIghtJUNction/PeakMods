@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: NickPost_Hot
+  m_Shader: {fileID: 4800000, guid: 44174a8b6521225409a8fe5aad034720, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3020
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _Texture:
+        m_Texture: {fileID: 2800000, guid: 0b4655aafde4fec40869eb2b3b6ddae7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _Alpha: 0.99999946
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaToMask: 0
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BumpScale: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Cull: 2
+      _Cutoff: 0.5
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _Distort: 0.02
+      _DistortScale: 0.62
+      _DistortStr: 0.01
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _Edge: 1.37
+      _EdgeAdd: 0.13
+      _EnvironmentReflections: 1
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _Intensity: 0
+      _LavaHeight: 848.9
+      _Metallic: 0
+      _OcclusionStrength: 1
+      _Parallax: 0.005
+      _Pixels: 0.1
+      _QueueControl: 0
+      _QueueOffset: 20
+      _ReceiveShadows: 1
+      _Scale: 0.1
+      _ScrollSpeed: -2
+      _SkyColor: 0.2
+      _Smoothness: 0.5
+      _SmoothnessTextureChannel: 0
+      _SparkleScale: 1
+      _SparkleSkyColor: 0.01
+      _SpatterIntensity: 0.148
+      _SpatterScale: 4.58
+      _SpecularHighlights: 1
+      _SpecularIntensity: 1.55
+      _SpecularPower: 17.3
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TessEdgeLength: 16
+      _TessMax: 25
+      _TessMaxDisp: 25
+      _TessMin: 10
+      _TessPhongStrength: 0.5
+      _TessValue: 16
+      _TextureStrength: 1
+      _TriplanarScale: 0.1
+      _WarpAmount: 0.04
+      _WarpScrollSpeed: 0.1
+      _WorkflowMode: 1
+      _ZWrite: 1
+      __dirty: 1
+      _t: -2
+    m_Colors:
+      _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+      _Color: {r: 4, g: 0.4750016, b: 0, a: 1}
+      _Color2: {r: 0.84705883, g: 0.042352945, b: 0, a: 1}
+      _ColorMap: {r: 0, g: 0.59839356, b: 0, a: 0}
+      _DistortScroll: {r: 0, g: 1, b: 0, a: 0}
+      _DistortStrength: {r: 0.05, g: 0.05, b: 0, a: 0}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _RainSpatterEdge: {r: 0, g: 0.2, b: 0, a: 0}
+      _Remap: {r: 0.003937008, g: 1, b: 0, a: 0}
+      _SparkleRemap: {r: 0.14642188, g: 0.44808733, b: 0, a: 0}
+      _SparkleScroll: {r: 0, g: 3, b: 0, a: 0}
+      _SpatterSmoothstep: {r: 0.03278686, g: 0.092895985, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _SprinkleColor: {r: 0.043431822, g: 0.13197081, b: 0.1509434, a: 0}
+      _TextureStretch: {r: 1, g: 0.5, b: 1, a: 0}
+      _WarpTiling: {r: 0.5, g: 0.2, b: 0, a: 0}
+      _WaterColor: {r: 0.6915272, g: 0.74100053, b: 0.7924528, a: 0}
+      _Wind: {r: 0, g: 3, b: 0, a: 0}
+      _WindSparkle: {r: 0, g: 2, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

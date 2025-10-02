@@ -30,7 +30,7 @@ public static class LocalizationPatches
 
         LoadModTable(csvPath);
 
-        PeakChatOpsPlugin.Logger.LogInfo($"LocalizedText test: PEAKCHATOPSWELCOME (SimplifiedChinese) = '{LocalizedText.GetText("PEAKCHATOPSWELCOME")}'");
+        
     }
     
     public static void LoadModTable(string csvPath)

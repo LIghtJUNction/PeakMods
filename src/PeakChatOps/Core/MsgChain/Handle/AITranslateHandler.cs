@@ -14,7 +14,7 @@ public static class AITranslateHandler
         try
         {
             if (evt == null || string.IsNullOrWhiteSpace(evt.Message)) return false;
-            if (!PeakChatOpsPlugin.aiAutoTranslate.Value) return false;
+            if (!PeakChatOpsPlugin.config.AiAutoTranslate.Value) return false;
 
             var aiEvt = new AIChatMessageEvent(
                 sender: evt.Sender,

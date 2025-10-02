@@ -20,7 +20,7 @@ public class SyncCommand
         {
             // 重新加载命令
             Cmdx.LoadPCmd();
-            Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+            Cmdx.Prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
             // 刷新配置 更新UI
             PeakChatOpsUI.Instance.RefreshUI();
             // 更新AI上下文日志设置

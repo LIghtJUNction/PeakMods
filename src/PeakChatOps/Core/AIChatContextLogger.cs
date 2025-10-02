@@ -87,7 +87,7 @@ public class AIChatContextLogger
     public void SyncMaxHistoryFromConfig()
     {
         int configVal = 30;
-        try { configVal = PeakChatOpsPlugin.aiContextMaxCount?.Value ?? 30; } catch { }
+        try { configVal = PeakChatOpsPlugin.config.AiContextMaxCount?.Value ?? 30; } catch { }
         if (configVal > 0) _maxHistory = configVal;
     }
 

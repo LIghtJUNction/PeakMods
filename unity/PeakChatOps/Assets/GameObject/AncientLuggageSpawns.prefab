@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1283666077778525
+GameObject:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Component:
+  - component: {fileID: 4650672146575385}
+  - component: {fileID: 114406395906487847}
+  m_Layer: 0
+  m_Name: AncientLuggageSpawns
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4650672146575385
+Transform:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1283666077778525}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+--- !u!114 &114406395906487847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1283666077778525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0721f4cb7f1d93f3fb7a11b1ef007243, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  items:
+  - prefab: {fileID: 1677482060660728, guid: b554f0062417259478f335497c6978de, type: 2}
+    weight: 100
+    percentageOdds: 12.8
+  - prefab: {fileID: 1793427653054501, guid: 3ad0b9b5c454311498d676e60c148bca, type: 2}
+    weight: 50
+    percentageOdds: 6.4
+  - prefab: {fileID: 1202297753143515, guid: 520f099a9e5e3644cb5331da6909fcf0, type: 2}
+    weight: 100
+    percentageOdds: 12.8
+  - prefab: {fileID: 1465497704064821, guid: 7f1e34afe688ab6428942dac21ac6217, type: 2}
+    weight: 50
+    percentageOdds: 6.4
+  - prefab: {fileID: 1257969884583940, guid: 570b5fd25f273cf429dbaccdd4d37fb7, type: 2}
+    weight: 100
+    percentageOdds: 12.8
+  - prefab: {fileID: 1500984034907314, guid: 096e87b281b25234b93575b070263a25, type: 2}
+    weight: 100
+    percentageOdds: 12.8
+  - prefab: {fileID: 1818076085088755, guid: 629acdef2fbce5d409fc074c783b17f6, type: 2}
+    weight: 80
+    percentageOdds: 10.2
+  - prefab: {fileID: 1518834887268520, guid: 773240cfa1257504db79b6f2d468b423, type: 2}
+    weight: 100
+    percentageOdds: 12.8
+  - prefab: {fileID: 1067253350105605, guid: c09f3cd5affe7884d9276a80aeab6d72, type: 2}
+    weight: 100
+    percentageOdds: 12.8

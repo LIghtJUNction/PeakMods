@@ -1,0 +1,185 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_RopeBridge (Instance)
+  m_Shader: {fileID: 4800000, guid: b1198a79494977e4681157f1975b0575, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _TRIPLANAR1_UV
+  - _TRIPLANAR2_UV
+  - _TRIPLANAR3_UV
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _JitterTexture:
+        m_Texture: {fileID: 2800000, guid: 338055d3d23f49c4791237d7bdcc177a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Shape:
+        m_Texture: {fileID: 2800000, guid: 7416bdc7089d0dc43a9bf4d444fee2f9, type: 3}
+        m_Scale: {x: 12, y: 12}
+        m_Offset: {x: 0, y: 0}
+      _Texture1:
+        m_Texture: {fileID: 2800000, guid: c4cc5b19c3494ff4cbffcca0040db4a4, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
+      _Texture2:
+        m_Texture: {fileID: 2800000, guid: cbd4116e59e95be4ca761ee30fb72969, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Texture3:
+        m_Texture: {fileID: 2800000, guid: 08df9c84be9138447b0ed71130a19c3a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _AddSpecular: 0
+      _AlphaClip: 0.011
+      _AlphaCutoff: 0.5
+      _AlphaSource: 0
+      _AlphaToMask: 0
+      _BaseMetallic: 0
+      _BaseSmooth: 0.19
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BreakAmount: 0
+      _BreakPoint: 0.5
+      _Brightness: 1
+      _BumpScale: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Clip: 0
+      _Cull: 2
+      _Cutoff: 0.5
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EdgeHueShift: 0
+      _EnvironmentReflections: 1
+      _Flip1: 0
+      _Flip2: 0
+      _Flip3: 0
+      _Flip4: 0
+      _FlipTextureSmooth1: 1
+      _Float3: 0
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _H: 0
+      _Hang: -4.430609
+      _Height1: 0
+      _Height2: 0
+      _Height3: 0
+      _Height4: -0.1
+      _HueShiftStr: 0
+      _HueStr: 0.292
+      _INTERACTABLE: 0
+      _Interactable: 0
+      _JitterAmount: 0
+      _JitterScale: 1
+      _JitterSpeed: 1
+      _LengthScale: 0.52076024
+      _Metalic: 0
+      _Metallic: 0
+      _OcclusionStrength: 1
+      _Outline: 0
+      _Parallax: 0.005
+      _QueueControl: 0
+      _QueueOffset: 0
+      _ReceiveShadows: 1
+      _ReflectionBoost: 0
+      _S: 1
+      _Smooth: 1
+      _Smooth1: 0.2
+      _Smooth2: 0.32
+      _Smooth3: 0
+      _Smooth4: 0
+      _Smooth_Edge: 0
+      _Smoothness: 0.781
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TextureSmoothness1: 0.149
+      _ToggleSwitch0: 0
+      _TopColorNormalAmount: 0
+      _Triplanar: 1
+      _Triplanar1: 0
+      _Triplanar2: 0
+      _Triplanar3: 0
+      _Triplanar4: 1
+      _TriplanarScale: 1
+      _UV1: 2
+      _UV2: 5
+      _UV3: 5
+      _UV4: 0.7
+      _UVWindAmount: 0
+      _UVWorldOffset: 0
+      _UseLocalTopColor: 0
+      _UseSimpleMask: 0
+      _UseTopColor: 1
+      _V: 1
+      _VertexColorAmount: 1
+      _VertexOffsetMaskAmount: 1
+      _WorkflowMode: 1
+      _ZWrite: 1
+      _smoothbasic: 1
+    m_Colors:
+      _BaseColor: {r: 0.05, g: 0.029310348, b: 0.020689657, a: 0}
+      _BottomColor: {r: 0.16700785, g: 0.18284868, b: 0.254717, a: 1}
+      _Color: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}
+      _Color0: {r: 4, g: 2.191751, b: 0, a: 0}
+      _Color1: {r: 0.205, g: 0.09761904, b: 0.039047617, a: 1}
+      _Color2: {r: 0.047169805, g: 0.026168222, b: 0.008677465, a: 0.27058825}
+      _Color3: {r: 0, g: 0, b: 0, a: 0.6509804}
+      _Color4: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 1}
+      _Color_Edge: {r: 1, g: 1, b: 1, a: 0}
+      _EdgeShifts: {r: 0, g: 0, b: 0, a: 0}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _HueShifts: {r: -0.87, g: 1.31, b: -0.1, a: 1.26}
+      _JitterDirection: {r: 0.1, g: 1, b: 1, a: 0}
+      _LocalTopDirection: {r: 0, g: 0, b: 0, a: 0}
+      _Offset: {r: 0, g: -3.38, b: 0, a: 0}
+      _Remap1: {r: 0, g: 1, b: 0, a: 0}
+      _Remap2: {r: 0, g: 0.49681526, b: 0, a: 0}
+      _Remap3: {r: 0, g: 1, b: 0, a: 0}
+      _Remap4: {r: 0, g: 1, b: 0, a: 0}
+      _RemapEdge: {r: 0, g: 0.9999998, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _Tint: {r: 1, g: 1, b: 1, a: 1}
+      _TopColor: {r: 0.36712348, g: 0.46865755, b: 0.4716981, a: 1}
+      _TopColorSecondary: {r: 0.02118193, g: 0.6415094, b: 0.21013337, a: 0.6509804}
+      _TopSurfaceTightness: {r: 0.7070337, g: 0.7647954, b: 0, a: 0}
+      _VertexWindAmount: {r: 1, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

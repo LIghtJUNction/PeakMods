@@ -41,7 +41,7 @@ public static class ChatMessageChain
         if (evt.Extra != null && evt.Extra.GetExtraValue<bool>("system", false))
         {
             DevLog.UI("[ChatMessageChain] Received system message: " + evt.Message + " UserID: " + evt.UserId);
-            PeakChatOpsUI.Instance.AddMessage(evt.Message);
+            PeakChatOpsUI.Instance.AddMessage(evt.Sender, evt.Message);
         }
 
         string colorHex = "#FFFFFF";
@@ -53,16 +53,16 @@ public static class ChatMessageChain
             if (!string.IsNullOrEmpty(cStr)) colorHex = cStr;
         }
         string deadMark = evt.IsDead ? " <b><color=#FF0000>(DEAD)</color></b>" : "";
-        string richText = $"<color={colorHex}>[{evt.Sender}]</color>{deadMark}: {evt.Message}";
+
 
         // Ping handling delegated to PingHandler
         try
         {
-            MsgChain.Handle.PingHandler.HandlePing(evt);
+            Handle.PingHandler.HandlePing(evt);
         }
         catch (Exception ex)
         {
-            try { PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[PongError]</color>: {ex.Message}"); } catch { }
+            try { PeakChatOpsUI.Instance.AddMessage("<color=#FF0000>[PongError]</color>: ", ex.Message); } catch { }
         }
 
         // 检查是否启用AI自动翻译，若已启用则委托 AITranslateHandler 处理并早退
@@ -70,7 +70,7 @@ public static class ChatMessageChain
         {
             return UniTask.CompletedTask;
         }
-        PeakChatOpsUI.Instance.AddMessage(richText);
+        PeakChatOpsUI.Instance.AddMessage($"<color={colorHex}>[{evt.Sender}]</color>{deadMark}", evt.Message);
         return UniTask.CompletedTask;
     }
 
@@ -86,7 +86,7 @@ public static class ChatMessageChain
             AIChatContextLogger.Instance?.LogUser(evt.Message, evt.Sender, evt.UserId);
         }
         string colorHex = "#7CFC00";
-        string richText = $"<color={colorHex}>[You]</color>: {evt.Message}";
+
         try
         {
         object[] payload = new object[]
@@ -106,9 +106,9 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage("<color=#FF0000>[Error]</color>", ex.Message);
         }
-        PeakChatOpsUI.Instance.AddMessage(richText);
+        PeakChatOpsUI.Instance.AddMessage($"<color={colorHex}>[You]</color>", evt.Message);
         await UniTask.CompletedTask;
     }
 
@@ -196,7 +196,7 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            PeakChatOpsUI.Instance.AddMessage($"<color=#FF0000>[Error]</color>: {ex.Message}");
+            PeakChatOpsUI.Instance.AddMessage("<color=#FF0000>[Error]</color>", ex.Message);
         }
         return UniTask.CompletedTask;
     }

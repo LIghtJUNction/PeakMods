@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1682326224124790
+GameObject:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Component:
+  - component: {fileID: 4621599615568639}
+  - component: {fileID: 114559977021821419}
+  m_Layer: 0
+  m_Name: LuggageSpawnsBeach
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4621599615568639
+Transform:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682326224124790}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+--- !u!114 &114559977021821419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682326224124790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0721f4cb7f1d93f3fb7a11b1ef007243, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  items:
+  - prefab: {fileID: 1698997795358892, guid: 6e23cbedebb799846951c7a5022d562d, type: 2}
+    weight: 100
+    percentageOdds: 15.1
+  - prefab: {fileID: 1154529832317310, guid: a7529cdd3b8cfe041acf9458a1771102, type: 2}
+    weight: 100
+    percentageOdds: 15.1
+  - prefab: {fileID: 1178036053939699, guid: 1d79daf6aea909949bd4f12e67913520, type: 2}
+    weight: 90
+    percentageOdds: 13.6
+  - prefab: {fileID: 1465497704064821, guid: 7f1e34afe688ab6428942dac21ac6217, type: 2}
+    weight: 80
+    percentageOdds: 12.1
+  - prefab: {fileID: 1677482060660728, guid: b554f0062417259478f335497c6978de, type: 2}
+    weight: 70
+    percentageOdds: 10.6
+  - prefab: {fileID: 1067253350105605, guid: c09f3cd5affe7884d9276a80aeab6d72, type: 2}
+    weight: 20
+    percentageOdds: 7.5
+  - prefab: {fileID: 1793427653054501, guid: 3ad0b9b5c454311498d676e60c148bca, type: 2}
+    weight: 40
+    percentageOdds: 6
+  - prefab: {fileID: 1760572740734168, guid: cb6a22044f54c03479dcafd5c59ffa0e, type: 2}
+    weight: 30
+    percentageOdds: 4.5
+  - prefab: {fileID: 1911111490425315, guid: ab61287652561b843b0055cee662b6f2, type: 2}
+    weight: 20
+    percentageOdds: 3
+  - prefab: {fileID: 1257969884583940, guid: 570b5fd25f273cf429dbaccdd4d37fb7, type: 2}
+    weight: 20
+    percentageOdds: 3
+  - prefab: {fileID: 1344307383049244, guid: fb1b67163c4050042859ca56a92b6e8c, type: 2}
+    weight: 20
+    percentageOdds: 3
+  - prefab: {fileID: 1660199030170333, guid: 08af2a8ed5e43da4bad9fa7970ec2eb5, type: 2}
+    weight: 20
+    percentageOdds: 3
+  - prefab: {fileID: 1841577710113428, guid: 04fe33c1307b9fb43ba2678111144689, type: 2}
+    weight: 10
+    percentageOdds: 1.5
+  - prefab: {fileID: 1139621334959721, guid: 1b5766c57eef7934786d583a447b922f, type: 2}
+    weight: 10
+    percentageOdds: 1.5
+  - prefab: {fileID: 1843517309784621, guid: 55fa2e1a6904a6b4baa825758bbff79b, type: 2}
+    weight: 20
+    percentageOdds: 0

@@ -1,0 +1,248 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_Rock_Crystal 3
+  m_Shader: {fileID: 4800000, guid: fd02cfd5c5183cf4cafc57f3a91a6e34, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _FLIP3_ON
+  - _USEUV2_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _BaseTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Texture1:
+        m_Texture: {fileID: 2800000, guid: e72a5ab74b638c04facde2f4160e3f5b, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
+      _Texture2:
+        m_Texture: {fileID: 2800000, guid: 5f16ab1db9394ef4e9b47a22f745cdc5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Texture3:
+        m_Texture: {fileID: 2800000, guid: 5f16ab1db9394ef4e9b47a22f745cdc5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _AddSpecular: 2
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaSource: 0
+      _AlphaToMask: 0
+      _BaseMetallic: 0.77
+      _BaseSmooth: 1
+      _BaseTexScale: 0.1
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _Brightness: 1
+      _BumpScale: 1
+      _CavityMapHueShift: 0.09
+      _CavityTopColorAlpha: 0
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Clip: 0
+      _Cull: 2
+      _Cutoff: 0.5
+      _DebugTopSurface: 0
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EdgeColorTexScale: 1
+      _EdgeHueShift: 0
+      _EdgeTexStr: 0
+      _EnvironmentReflections: 1
+      _Flip1: 0
+      _Flip1On: 0
+      _Flip2: 0
+      _Flip2On: 0
+      _Flip2On1: 0
+      _Flip3: 1
+      _Flip3On: 0
+      _Flip4: 0
+      _Flip4On: 0
+      _FlipCavityMap: 1
+      _FlipTextureSmooth1: 1
+      _FlipTop1: 0
+      _Float1: 0.2
+      _Float3: 0
+      _FresnelPower: 3.2
+      _FresnelScale: 1
+      _GlobalTextureScale: 0
+      _GlobalWorldScale: 0.1
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _H: 0
+      _Height1: 0
+      _Height2: 0
+      _Height3: 0
+      _Height4: -0.1
+      _HueStr: 0.226
+      _HueStr1: 0.01
+      _HueStr2: 0
+      _INTERACTABLE: 0
+      _InnerGlowIntensity: 0
+      _InnerGlowPower: 0
+      _Interactable: 0
+      _Metalic: 0
+      _Metallic: 0
+      _MinTransparency: 0
+      _OcclusionStrength: 1
+      _Outline: 0
+      _Parallax: 0.005
+      _QueueControl: 0
+      _QueueOffset: 0
+      _ReceiveShadows: 1
+      _ReflectionBoost: 0
+      _S: 1
+      _Smooth: 1
+      _Smooth1: 0.46
+      _Smooth2: 0.36
+      _Smooth3: 0.7
+      _Smooth4: 0
+      _Smooth_Edge: 0
+      _Smoothness: 0.781
+      _SmoothnessTextureChannel: 0
+      _SnowPuff: 0
+      _SparkleAmount: 0
+      _SparkleSize: 22
+      _SpecularAmount: 0
+      _SpecularHighlights: 1
+      _SpecularIntensity: 0
+      _SpecularPower: 0
+      _SphereFrenel: 0
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TextureSmoothness1: 0.149
+      _TopBaseSmooth: 0
+      _TopColorAlpha: 0
+      _TopColorAmount: 0
+      _TopColorCavityFade: 0
+      _TopColorNormalAmount: 0
+      _TopColorTexInfuence: 0.5
+      _TopColorTexScale: 0.5
+      _TopDown1On: 0
+      _TopDown2On: 0
+      _TopDown3On: 0
+      _TopHueStr: 0.45
+      _TopMaskTexScale: 1
+      _TopSmooth1: 0
+      _TopSmooth2: 0.09
+      _TopTriplanar1On: 1
+      _TopTriplanar2On: 1
+      _TopUV1: 1
+      _TopUV2: 0.5
+      _TransparencyDistortion: 0.1
+      _Triplanar: 1
+      _Triplanar1: 1
+      _Triplanar1On: 0
+      _Triplanar2: 1
+      _Triplanar2On: 0
+      _Triplanar2On1: 0
+      _Triplanar3: 1
+      _Triplanar3On: 0
+      _Triplanar4: 1
+      _Triplanar4On: 1
+      _TriplanarScale: 0.5
+      _UV1: 4.09
+      _UV2: 0.5
+      _UV3: 2
+      _UV4: 0.7
+      _UVTopColor: 0
+      _UseLocalTopColor: 0
+      _UseTopColor: 1
+      _UseUV2: 1
+      _V: 1
+      _VertexColorAmount: 1
+      _ViewDirBlend: 0.1
+      _WorkflowMode: 1
+      _ZWrite: 1
+      _smoothbasic: 1
+    m_Colors:
+      _BaseColor: {r: 0, g: 0.14726722, b: 2.9960785, a: 0.9882353}
+      _BottomColor: {r: 0.16700785, g: 0.18284868, b: 0.254717, a: 1}
+      _CaveGlow: {r: 13.550021, g: 0, b: 29.857058, a: 0}
+      _CavityMapH: {r: 0, g: 1, b: 0, a: 0}
+      _CavityMapHuetightness: {r: 0.2501833, g: 0.39191565, b: 0, a: 0}
+      _CavityMapTightness: {r: 0.23497269, g: 0.44262302, b: 0, a: 0}
+      _CavityTopColor: {r: 0.02118193, g: 0.6415094, b: 0.21013346, a: 0}
+      _CavityTopColorSecondary: {r: 0.02118193, g: 0.6415094, b: 0.21013346, a: 0}
+      _Color: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}
+      _Color0: {r: 4, g: 2.191751, b: 0, a: 0}
+      _Color1: {r: 0.022902349, g: 0, b: 0.85882354, a: 0.56078434}
+      _Color2: {r: 1, g: 0, b: 0, a: 1}
+      _Color21: {r: 0.00090829196, g: 0.0013103994, b: 0.0058350875, a: 0.5254902}
+      _Color3: {r: 0.0048570633, g: 0, b: 1, a: 0.3529412}
+      _Color4: {r: 0.09433961, g: 0.09433961, b: 0.09433961, a: 1}
+      _Color_Edge: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 0.3882353}
+      _EdgeColor: {r: 0, g: 0, b: 0, a: 0}
+      _EdgeShifts: {r: -0.21, g: -0.36, b: 0.16, a: 0.13}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _HueShifts: {r: -0.87, g: 1.31, b: -0.1, a: 1.26}
+      _HueShifts1: {r: 0.19, g: 0.1, b: -0.01, a: 0}
+      _LocalTopDirection: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount1: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount2: {r: 0, g: 0, b: 0, a: 0}
+      _MoveAmount3: {r: 0, g: 0, b: 0, a: 0}
+      _Remap1: {r: 0.34238094, g: 0.63348866, b: 0, a: 0}
+      _Remap2: {r: 0.16642857, g: 0.43451607, b: 0, a: 0}
+      _Remap3: {r: 0.40404728, g: 1, b: 0, a: 0}
+      _Remap4: {r: 0, g: 1, b: 0, a: 0}
+      _Remap5: {r: 0, g: 1, b: 0, a: 0}
+      _RemapEdge: {r: 0.38797814, g: 0.56284165, b: 0, a: 0}
+      _SparkleRangeSmoothstep: {r: 0, g: 1, b: 0, a: 0}
+      _SparkleSmoothstep1: {r: 0, g: 1, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _SpecularTightness: {r: 0, g: 0, b: 0, a: 0}
+      _TextureScroll: {r: 0, g: 0.001, b: 0.01, a: 0}
+      _Tint: {r: 1, g: 1, b: 1, a: 1}
+      _TopColor: {r: 0.32213417, g: 0.53773576, b: 0.3315817, a: 1}
+      _TopColor1: {r: 0.4053178, g: 0.6037736, b: 0.11107157, a: 0.18431373}
+      _TopColor2: {r: 0.06603773, g: 0.12150942, b: 0.26415092, a: 0.36078432}
+      _TopColor23: {r: 0.018912425, g: 0.039663363, b: 0.16037738, a: 0.14117648}
+      _TopColorRemap: {r: 0.6859011, g: 0.80117035, b: 0, a: 0}
+      _TopColorSecondary: {r: 0.45967913, g: 0.5568628, b: 0.20784312, a: 0.6862745}
+      _TopHueShifts: {r: -0.1, g: 0.1, b: 0, a: 0}
+      _TopRemap1: {r: 0.06010929, g: 0.52459013, b: 0, a: 0}
+      _TopRemap2: {r: 0, g: 0.32240433, b: 0, a: 0}
+      _TopSurfaceTightness: {r: 0.7070337, g: 0.7647954, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

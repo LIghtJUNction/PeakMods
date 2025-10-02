@@ -16,7 +16,7 @@ public static class CentralCmdRouter
     {
         // 初始化命令链和消息链
         Cmdx.LoadPCmd();
-        Cmdx.Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+        Cmdx.Prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
 
         // 只订阅命令相关
         DevLog.UI("[DebugUI] CentralCmdRouter static ctor: subscribing to command buses and starting runners");
@@ -52,7 +52,7 @@ public static class CentralCmdRouter
             }
 
             // display a simple local UI line for the command (coloring moved to router level)
-            try { PeakChatOpsUI.Instance.AddMessage($"<color=#59A6FF>> {evt.Command}</color> {(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}"); } catch { }
+            PeakChatOpsUI.Instance.AddMessage($"<color=#59A6FF>> {evt.Command}</color> ", $"{(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}");
 
             var raw = evt.Command.Trim();
             var candidates = new System.Collections.Generic.List<string>
@@ -111,16 +111,16 @@ public static class CentralCmdRouter
         string statusText = evt.Success ? "Success" : "Error";
         string richText = $"<color={colorHex}>[Cmd {statusText}]</color>: {evt.Stdout ?? evt.Stderr}";
         DevLog.UI($"[DebugUI] HandleCmdExecResultAsync -> AddMessage: '{richText}'");
-    PeakChatOpsUI.Instance.AddMessage(richText);
+        PeakChatOpsUI.Instance.AddMessage($"<color={colorHex}>[Cmd {statusText}]</color>",evt.Stdout ?? evt.Stderr);
     return UniTask.CompletedTask;
     }
 
     // diy 任何输出样式
     public static UniTask HandleAnyMessageAsync(string anyText)
     {
-    DevLog.UI($"[DebugUI] HandleAnyMessageAsync -> AddMessage: '{anyText}'");
-    PeakChatOpsUI.Instance.AddMessage(anyText);
-    return UniTask.CompletedTask;
+        DevLog.UI($"[DebugUI] HandleAnyMessageAsync -> AddMessage: '{anyText}'");
+        PeakChatOpsUI.Instance.AddMessage($"<color=#FFFFFF>[Any]</color>",anyText);
+        return UniTask.CompletedTask;
     }
 
 }

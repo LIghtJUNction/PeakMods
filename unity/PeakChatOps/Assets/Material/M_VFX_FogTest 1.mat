@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_VFX_FogTest 1
+  m_Shader: {fileID: 4800000, guid: 2341e1c36c13c854795953e6ea116ad7, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2999
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _DistortTexture:
+        m_Texture: {fileID: 2800000, guid: 338055d3d23f49c4791237d7bdcc177a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Innernoise:
+        m_Texture: {fileID: 2800000, guid: 08df9c84be9138447b0ed71130a19c3a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _TextureSample0:
+        m_Texture: {fileID: 2800000, guid: 3de31af8063b5af45bf53307341b1143, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaToMask: 0
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BumpScale: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _CloseDistance: 38.42
+      _CloseMaskAmount: 0.811
+      _CloseMaskNoise: 1
+      _Cull: 2
+      _Cutoff: 0.5
+      _DScale: 0.25
+      _DStr: 0
+      _DebugAlphaMaskIndex: 1
+      _DebugAlphaMasks: 0
+      _DebugColor: 0
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _DistanceMaskNoise: 15.4
+      _DistanceVisibilityOffset: 30
+      _DistanceVisibilitysoftness: 40
+      _DistancefadeSize: 0.02
+      _Distancefadeoffset: 672
+      _DistortTexAmount: 0.01
+      _DistortTexScale: 0.2
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EdgeFadeDistance: 12.29
+      _EdgeFadeOffset: 13.65
+      _Edgesoftness: 0.1
+      _Enabled: 1
+      _EnvironmentReflections: 1
+      _FakeMountainAmount: 0.837
+      _Float0: 0.041
+      _Float7: 3.47
+      _Float8: 844.4
+      _FogDepth: 389.1
+      _FogHeight: 18.53
+      _FogTexScale: 0.3
+      _FogheightOffset: 0
+      _FrostTexScale: 0.1
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _GroundFadeOffset: -15
+      _GroundFadeOffset2: 0
+      _GroundFadeSoftness: 10
+      _GroundFadeSoftness2: 0.1
+      _GroundFadeTextureInfluence: 16.65
+      _GroundFadeTextureInfluence2: 6.6
+      _HeightOffset: 1.9
+      _InFogThresholdOffset: -10
+      _InFogThresholdSoftness: 20
+      _InsideFogDensity: 1
+      _InsideFogdistance: 100
+      _InsideNoiseDistortAmount: 0.04
+      _Maxfogdensity: 1
+      _Metallic: 0
+      _MountainScale: 0.013
+      _MountainTextureDistort: 0.19
+      _NoiseHeightamount: 4.7
+      _NoiseScale: 1
+      _OcclusionStrength: 1
+      _Parallax: 0.005
+      _QueueControl: 0
+      _QueueOffset: -1
+      _ReceiveShadows: 1
+      _RevealAmount: 1
+      _Scale: 0.5
+      _SkyFogPosition: 1069.1
+      _SkyFogSoftness: 251.5
+      _SkyFogTextureInfluence: 299
+      _SkyFogdepthTexture: -300
+      _Smoothness: 0.5
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SphereUVScale: 0.01
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _Surface: 0
+      _TessEdgeLength: 16
+      _TessMax: 25
+      _TessMaxDisp: 25
+      _TessMin: 10
+      _TessPhongStrength: 0.5
+      _TessValue: 16
+      _TextureInfluenceAlpha: 0
+      _Textureamount: 1
+      _TriplanarScale: 0.2
+      _WorkflowMode: 1
+      _ZWrite: 1
+      __dirty: 1
+    m_Colors:
+      _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+      _CloseFogTightness: {r: 0.09166667, g: 0.9333333, b: 0, a: 0}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _DScroll: {r: -0.1, g: 0.1, b: 0, a: 0}
+      _DScroll1: {r: 0.5, g: 0, b: 0, a: 0}
+      _DistorttexMovement: {r: 0, g: -0.01, b: 0, a: 0}
+      _EdgeFadeTightness: {r: 0, g: 1, b: 0, a: 0}
+      _EdgeFadeTightness1: {r: 0, g: 1, b: 0, a: 0}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _FogAddColor: {r: 0.6596208, g: 0.764151, b: 0.7445516, a: 0.49019608}
+      _FogCenter: {r: -16.194582, g: 303.44037, b: 103.67557, a: 0}
+      _FogNoiseMovement: {r: 0, g: 0.01, b: 0, a: 0}
+      _FogTightness: {r: 0.28333333, g: 0.46250036, b: 0, a: 0}
+      _FogheightDensity: {r: 0, g: 0, b: 0, a: 0}
+      _FogtintColor: {r: 0.72067463, g: 0.7391309, b: 0.745283, a: 0}
+      _FrostSmoothness: {r: 0.5737705, g: 0.8852459, b: 0, a: 0}
+      _InFogTightness: {r: 0.2249999, g: 0.9999999, b: 0, a: 0}
+      _Insidefognoisemovement: {r: 0.005, g: 0.01, b: 0, a: 0}
+      _MountainOffset: {r: 0.44, g: 0.22, b: 0, a: 0}
+      _Remap: {r: 0, g: 0.097661525, b: 0, a: 0}
+      _Scroll: {r: 0.1, g: 0.05, b: 0, a: 0}
+      _Scroll1: {r: 0, g: 0, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _UVSwapDist: {r: 11.7, g: 40.16, b: 0, a: 0}
+      _Vector1: {r: 0, g: -8.45, b: 3, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

@@ -1,0 +1,28 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/MOD/PeakChatOpsUI.uss?fileID=7433441132597879392&amp;guid=ef2e9ae872e17324e91283449311a5d2&amp;type=3#PeakChatOpsUI" />
+    <engine:VisualElement name="chat-container" class="chat-container fade-in" style="top: 19px; left: 20px; background-color: rgba(208, 200, 167, 0.75); border-top-color: rgba(189, 141, 160, 0.8); border-right-color: rgba(200, 160, 100, 0.8); border-left-color: rgba(200, 160, 100, 0.8); height: 557px;">
+        <engine:VisualElement class="top-glow" />
+        <engine:VisualElement name="chat-header" tabindex="0" class="chat-header" style="border-bottom-color: rgba(220, 58, 57, 0.5); background-image: url(&quot;project://database/Assets/Texture2D/UI_OutlineMask.png?fileID=2800000&amp;guid=2ccfa5a5c1ea68e468fb441eb5d40bb1&amp;type=3#UI_OutlineMask&quot;); background-color: rgba(75, 73, 73, 0); height: 46px; -unity-background-scale-mode: stretch-to-fill; overflow: visible; opacity: 0.99; -unity-text-align: upper-left;">
+            <engine:VisualElement class="title-container">
+                <engine:Label text="Peak Chat Ops" class="chat-title" style="background-color: rgba(21, 22, 21, 0); padding-top: initial; padding-bottom: initial; color: rgb(12, 13, 13);" />
+            </engine:VisualElement>
+            <engine:VisualElement focusable="false" class="header-buttons" style="-unity-background-scale-mode: stretch-to-fill; opacity: 1; transition-property: opacity;">
+                <engine:Button name="minimize-button" text="-" class="header-btn minimize-btn" style="overflow: hidden; opacity: 1; -unity-text-align: middle-center; white-space: pre-wrap; color: rgba(38, 7, 4, 0.9);" />
+                <engine:Button name="close-button" text="×" class="header-btn close-btn" style="-unity-text-align: middle-center; white-space: pre; align-items: auto; align-content: auto; align-self: auto; color: rgba(11, 29, 29, 0.9);" />
+            </engine:VisualElement>
+        </engine:VisualElement>
+        <engine:ScrollView name="message-area" vertical-scroller-visibility="Auto" class="message-area" style="background-image: url(&quot;project://database/Assets/Texture2D/Logo@4x.png?fileID=2800000&amp;guid=074c5090cbadb6c42a605712575fa9ba&amp;type=3#Logo@4x&quot;); background-repeat: no-repeat no-repeat; -unity-background-scale-mode: scale-to-fit; background-color: rgba(130, 101, 76, 0.05);">
+            <engine:VisualElement name="message-list" class="message-list">
+                <engine:VisualElement class="message-item slide-in" style="border-left-color: rgba(26, 95, 6, 0.7); background-image: url(&quot;project://database/Assets/Texture2D/LandCrab_0.png?fileID=2800000&amp;guid=6f848bee69079f444a8aec8292237530&amp;type=3#LandCrab_0&quot;); background-repeat: no-repeat no-repeat; -unity-background-scale-mode: scale-to-fit;">
+                    <engine:Label text="System" class="message-sender" style="color: rgb(218, 119, 67);" />
+                    <engine:Label text="Welcome to PEAK Chat!" class="message-content" />
+                    <engine:Label text="12:34" class="message-time" style="height: 21px; text-shadow: 0 0 0 rgba(21, 17, 17, 0);" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+        </engine:ScrollView>
+        <engine:VisualElement name="input-area" focusable="true" class="input-area" style="-unity-font-style: bold; font-size: 10px; -unity-text-align: middle-center; padding-top: 5px; padding-bottom: 0;">
+            <engine:TextField name="message-input" placeholder-text="Type a message..." vertical-scroller-visibility="Auto" auto-correction="true" hide-placeholder-on-focus="false" password="false" focusable="true" class="message-input" style="background-image: url(&quot;project://database/Assets/Texture2D/UI_Blur.png?fileID=2800000&amp;guid=6010e85a1af3eb14c8ac08209a02962a&amp;type=3#UI_Blur&quot;); -unity-font-style: bold; font-size: 11px; flex-direction: row; align-items: auto; justify-content: space-between; align-self: auto; width: auto; height: auto; margin-right: 2px; margin-left: 2px; padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px;" />
+            <engine:Button name="send-button" text="Send" icon-image="project://database/Assets/Texture2D/IC_Curse.png?fileID=2800000&amp;guid=825166c7914cf1d44a17e387f09467bb&amp;type=3#IC_Curse" class="send-button" style="-unity-text-align: lower-center; background-image: url(&quot;project://database/Assets/Texture2D/Guidebook_Peak.png?fileID=2800000&amp;guid=f9c11709f67099d469f182dac8a7db54&amp;type=3#Guidebook_Peak&quot;); background-repeat: no-repeat no-repeat; -unity-background-scale-mode: scale-to-fit; width: 82px; align-items: stretch; flex-direction: row-reverse; justify-content: space-around; align-self: center;" />
+        </engine:VisualElement>
+    </engine:VisualElement>
+</engine:UXML>

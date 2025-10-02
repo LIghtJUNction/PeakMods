@@ -67,7 +67,7 @@ public class AICommand
 
             // 只负责路由，不做AI接口调用
             var aiMsg = new AIChatMessageEvent(
-                sender: PeakChatOpsPlugin.aiModel?.Value ?? "ollama",
+                sender: PeakChatOpsPlugin.config.AiModel?.Value ?? "ollama",
                 message: prompt,
                 userId: evt.UserId,
                 role: AIChatRole.user,

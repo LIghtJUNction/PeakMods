@@ -70,7 +70,7 @@ public class CharacterStatsPatches
                     "sander://self",
                     new ChatMessageEvent(
                         PhotonNetwork.LocalPlayer.NickName,
-                        PeakChatOpsPlugin.DeathMessage.Value,
+                        PeakChatOpsPlugin.config.DeathMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: true,
                         extra: CreateExtraForEvent(new CharacterStateInfo { died = true })
@@ -89,7 +89,7 @@ public class CharacterStatsPatches
                     "sander://self",
                     new ChatMessageEvent(
                         PhotonNetwork.LocalPlayer.NickName,
-                        PeakChatOpsPlugin.ReviveMessage.Value,
+                        PeakChatOpsPlugin.config.ReviveMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: false,
                         extra: CreateExtraForEvent(new CharacterStateInfo { revived = true })
@@ -107,7 +107,7 @@ public class CharacterStatsPatches
                     "sander://self",
                     new ChatMessageEvent(
                         PhotonNetwork.LocalPlayer.NickName,
-                        PeakChatOpsPlugin.PassOutMessage.Value,
+                        PeakChatOpsPlugin.config.PassOutMessage.Value,
                         PhotonNetwork.LocalPlayer.UserId,
                         isDead: false,
                         extra: CreateExtraForEvent(new CharacterStateInfo { passedOut = true })

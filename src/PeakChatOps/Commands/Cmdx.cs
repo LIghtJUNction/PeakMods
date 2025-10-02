@@ -17,7 +17,7 @@ namespace PeakChatOps.Commands;
      // 静态保存所有命令元数据，供Help等调用
      public static readonly List<PCOCommandAttribute> CommandMetas = new List<PCOCommandAttribute>();
     // 全局命令前缀（用于外部引用）
-    public static string Prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+    public static string Prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
     public Cmdx()
     {
         // 当通过中央路由发送到 cmd://cmdx 时，Cmdx 的 Handle 会被调用

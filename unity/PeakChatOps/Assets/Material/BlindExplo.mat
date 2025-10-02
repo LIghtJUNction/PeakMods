@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BlindExplo
+  m_Shader: {fileID: 4800000, guid: 89306c7828a418b428ff1548b8973168, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _FLIP_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3019
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+      _DistortionTexture:
+        m_Texture: {fileID: 2800000, guid: cea8b3bb515015246a59564cf466f3b5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      _Textureu:
+        m_Texture: {fileID: 2800000, guid: cea8b3bb515015246a59564cf466f3b5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+      unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: {}
+    m_Floats:
+      _AddPrecomputedVelocity: 0
+      _Alpha: 1
+      _AlphaClip: 0
+      _AlphaCutoff: 0.5
+      _AlphaToMask: 0
+      _Blend: 0
+      _BlendModePreserveSpecular: 1
+      _BumpScale: 1
+      _ClampAlpha: 1
+      _ClearCoatMask: 0
+      _ClearCoatSmoothness: 0
+      _Cull: 2
+      _Cutoff: 0.5
+      _DepthFadeDistance: 2
+      _DetailAlbedoMapScale: 1
+      _DetailNormalMapScale: 1
+      _Distortion: 0.02
+      _DistortionScale: 15
+      _DstBlend: 0
+      _DstBlendAlpha: 0
+      _EnvironmentReflections: 1
+      _Flip: 1
+      _GlossMapScale: 0
+      _Glossiness: 0
+      _GlossyReflections: 0
+      _Metallic: 0
+      _OcclusionStrength: 1
+      _Opacity: 1
+      _Parallax: 0.005
+      _QueueControl: 0
+      _QueueOffset: 19
+      _ReceiveShadows: 1
+      _Roundness: 1.12
+      _RoundnessExp: 1.86
+      _ShadowStr: 0.48
+      _SkyBrightnessValue: 0.97
+      _Smoothness: 0.5
+      _SmoothnessTextureChannel: 0
+      _SpecularHighlights: 1
+      _SphereScale: 0
+      _SrcBlend: 1
+      _SrcBlendAlpha: 1
+      _SunContribute: 0.66
+      _SunGlowLighting: 1
+      _Surface: 0
+      _TessEdgeLength: 16
+      _TessMax: 25
+      _TessMaxDisp: 25
+      _TessMin: 10
+      _TessPhongStrength: 0.5
+      _TessValue: 16
+      _TextureInfluence: 0.27
+      _TextureRotateSpeed: 0.05
+      _WorkflowMode: 1
+      _ZWrite: 1
+    m_Colors:
+      _AlphaRemap: {r: 0, g: 1, b: 0, a: 0}
+      _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+      _Color: {r: 1, g: 1, b: 1, a: 1}
+      _Color2: {r: 111.43049, g: 111.43049, b: 111.43049, a: 0}
+      _Color2Remap: {r: 0.08139536, g: 0.27906987, b: 0, a: 0}
+      _Color3: {r: 1, g: 1, b: 1, a: 0}
+      _Color3Remap: {r: 0.23255813, g: 0.9244187, b: 0, a: 0}
+      _DistortionScroll: {r: 0, g: -0.01, b: -3.3, a: 0}
+      _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+      _FinalAlphaRemap: {r: 0.28497407, g: 0.33678755, b: 0, a: 0}
+      _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+      _TexScroll: {r: 0, g: -0.05, b: 0, a: 0}
+      _Tint: {r: 1, g: 1, b: 1, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 0

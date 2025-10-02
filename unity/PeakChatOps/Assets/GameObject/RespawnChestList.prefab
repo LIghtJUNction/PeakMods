@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1130575573293810
+GameObject:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Component:
+  - component: {fileID: 4373357299825281}
+  - component: {fileID: 114247702328983907}
+  m_Layer: 0
+  m_Name: RespawnChestList
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4373357299825281
+Transform:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130575573293810}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+--- !u!114 &114247702328983907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130575573293810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0721f4cb7f1d93f3fb7a11b1ef007243, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  items:
+  - prefab: {fileID: 1793572630148134, guid: d48ff5cf7d9e5a14a8eb61cb5d509abc, type: 2}
+    weight: 100
+    percentageOdds: 7.2
+  - prefab: {fileID: 1467942337436661, guid: 4b35869e6d125db45a7c031b77f2a0fc, type: 2}
+    weight: 80
+    percentageOdds: 5.8
+  - prefab: {fileID: 1091494803436805, guid: 3eac0f5885a86ec4bb2273b6e31fb2a0, type: 2}
+    weight: 80
+    percentageOdds: 5.8
+  - prefab: {fileID: 1818076085088755, guid: 629acdef2fbce5d409fc074c783b17f6, type: 2}
+    weight: 200
+    percentageOdds: 14.5
+  - prefab: {fileID: 1081768603069042, guid: a2a227d463bd4b84ea6be51c92bcdd68, type: 2}
+    weight: 100
+    percentageOdds: 7.2
+  - prefab: {fileID: 1518834887268520, guid: 773240cfa1257504db79b6f2d468b423, type: 2}
+    weight: 100
+    percentageOdds: 7.2
+  - prefab: {fileID: 1869724892413452, guid: 4325a318e84dd874b84333d862dc0df4, type: 2}
+    weight: 10
+    percentageOdds: 0.7
+  - prefab: {fileID: 1431737738799415, guid: 25e0084abf024104fabe787300436334, type: 2}
+    weight: 200
+    percentageOdds: 14.5
+  - prefab: {fileID: 1846974929181489, guid: 87ddd202dff94094e833889886a18ece, type: 2}
+    weight: 100
+    percentageOdds: 7.2
+  - prefab: {fileID: 1202297753143515, guid: 520f099a9e5e3644cb5331da6909fcf0, type: 2}
+    weight: 200
+    percentageOdds: 14.5
+  - prefab: {fileID: 1500984034907314, guid: 096e87b281b25234b93575b070263a25, type: 2}
+    weight: 200
+    percentageOdds: 14.5

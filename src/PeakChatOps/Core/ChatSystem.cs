@@ -73,6 +73,7 @@ public class ChatSystem : MonoBehaviour
         }
     }
 
+    // 接收远程玩家消息的入口
     private void HandleChatEvent(EventData photonEvent)
     {
         DevLog.File($"[ChatSystem] HandleChatEvent code={photonEvent.Code} sender={photonEvent.Sender}");
@@ -114,50 +115,17 @@ public class ChatSystem : MonoBehaviour
         );
         // Photon 回调是同步的；以 fire-and-forget 的方式启动异步处理
         DevLog.File($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}");
-        ReceiveChatMessageAsync(msg).Forget();
+
     }
 
-    // 异步版本：处理接收到的消息并发布到事件总线
-    public async UniTask ReceiveChatMessageAsync(MessageData msg)
-    {
-        var evt = new ChatMessageEvent(
-            msg.Nickname,
-            msg.Message,
-            msg.UserId,
-            msg.IsDead,
-            msg.Extra
-        );
-        await EventBusRegistry.ChatMessageBus.Publish("sander://other", evt);
-    }
-
-    // Convert Photon Hashtable to Dictionary<string, object>, handling nested Hashtables
-    private static Dictionary<string, object> ConvertHashtableToDictionary(ExitGames.Client.Photon.Hashtable ht)
-    {
-        if (ht == null) return null;
-        var dict = new Dictionary<string, object>();
-        foreach (DictionaryEntry de in ht)
-        {
-            var key = de.Key?.ToString() ?? string.Empty;
-            var val = de.Value;
-            if (val is ExitGames.Client.Photon.Hashtable nestedHt)
-            {
-                dict[key] = ConvertHashtableToDictionary(nestedHt);
-            }
-            else
-            {
-                dict[key] = val;
-            }
-        }
-        return dict;
-    }
-
+    // 本地发送消息的入口
     // 异步版本的发送实现，负责发布到 ChatMessageBus（以及网络发送）
     public async UniTask SendChatMessageAsync(string message, Dictionary<string, object> extra)
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         DevLog.UI($"[ChatSystem.SendChatMessageAsync] called, message={message}");
         DevLog.File($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra==null?0:extra.Count)}");
-        string prefix = PeakChatOpsPlugin.CmdPrefix.Value;
+        string prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
         bool isDead = false;
         if (!string.IsNullOrEmpty(prefix) && message.StartsWith(prefix))
         {
@@ -192,38 +160,31 @@ public class ChatSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// 将发送请求加入静态缓存队列，以防 ChatSystem 实例尚未就绪。
-    /// UI 可以在无法直接调用实例时使用此方法。
+    /// 将 Photon Hashtable 转换为 Dictionary&lt;string, object&gt;
     /// </summary>
-    public static void EnqueuePendingSend(string message, Dictionary<string, object> extra)
+    private static Dictionary<string, object> ConvertHashtableToDictionary(ExitGames.Client.Photon.Hashtable hashtable)
     {
-        if (string.IsNullOrWhiteSpace(message)) return;
-        _staticPendingSends.Enqueue((message, extra ?? new Dictionary<string, object>()));
-         DevLog.File($"[ChatSystem] Enqueued pending send. queuedCount approx: {_staticPendingSends.Count}"); 
-    }
-
-    // 排空静态缓存并通过实例发送（在实例化后调用）
-    private async UniTaskVoid FlushStaticPendingSendsAsync()
-    {
-        try
+        if (hashtable == null) return null;
+        
+        var dictionary = new Dictionary<string, object>();
+        foreach (DictionaryEntry entry in hashtable)
         {
-            while (_staticPendingSends.TryDequeue(out var item))
+            if (entry.Key != null)
             {
-                try
-                {
-                    DevLog.File($"[ChatSystem] Flushing queued send: message='{item.message}'");
-                    await SendChatMessageAsync(item.message, item.extra);
-                }
-                catch (Exception ex)
-                {
-                    DevLog.UI($"[ChatSystem.FlushStaticPendingSendsAsync] failed to send: {ex.Message}");
-                }
+                dictionary[entry.Key.ToString()] = entry.Value;
             }
         }
-        catch (Exception ex)
-        {
-            DevLog.UI($"[ChatSystem.FlushStaticPendingSendsAsync] exception: {ex.Message}");
-        }
+        return dictionary;
     }
 
+    /// <summary>
+    /// 异步排空静态缓存队列中的待发送消息
+    /// </summary>
+    private async UniTaskVoid FlushStaticPendingSendsAsync()
+    {
+        while (_staticPendingSends.TryDequeue(out var pending))
+        {
+            await SendChatMessageAsync(pending.message, pending.extra);
+        }
+    }
 }
