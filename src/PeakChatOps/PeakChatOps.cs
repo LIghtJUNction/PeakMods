@@ -13,7 +13,10 @@ using PEAKLib.Core;
 using PeakChatOps.UI;
 using System.Linq;
 using TMPro;
+using PeakChatOps.core;
+using System.IO;
 #nullable enable
+
 namespace PeakChatOps;
 
 [BepInAutoPlugin]
@@ -22,6 +25,8 @@ namespace PeakChatOps;
 partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
     public static PeakChatOpsPlugin Instance { get; private set; } = null!;
+
+    public static readonly string PluginPath = Path.Combine(Paths.PluginPath, "PeakChatOps");
     internal static new ManualLogSource Logger = null!;
     private Harmony _harmony = null!;
     public static PConfig config = null!;
@@ -45,8 +50,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
             return _darumaFontAsset;
         }
     }
-    
-    
+
     private void Awake()
     {
         // Plugin startup logic
@@ -54,9 +58,6 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         Instance = this;
         // 其他步骤
         Logger.LogInfo($"PeakChatOps is loaded!");
-
-        config = new PConfig(Config);
-
         // 加载 UXML/Prefab 资源（优先尝试 UIDocument prefab）
         this.LoadBundleWithName(
             "PeakChatOpsUI.peakbundle",
@@ -73,18 +74,19 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
             }
         );
-
-        // 初始化UI类
-        PeakChatOpsUI.Help();
-
         _harmony = new Harmony("com.lightjunction.peakchatops");
 
         _harmony.PatchAll(typeof(GUIManagerPatch));
         _harmony.PatchAll(typeof(CharacterStatsPatches));
         _harmony.PatchAll(typeof(InputBlockingPatches));
-        // 加载自定义本地化文本
-        _harmony.PatchAll(typeof(LocalizationPatches));
 
+        // 初始化本地化类
+        PLocalizedText.Init();
+
+        // 初始化UI类，测试本地化
+        PeakChatOpsUI.Help();
+
+        config = new PConfig(Config);
         // 聊天系统初始化：自动挂载 ChatSystem
         if (GameObject.Find("ChatSystem") == null)
         {
@@ -99,7 +101,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
         // AI世界观设置
         AIChatContextLogger.Instance?.LogSystem(
-            LocalizedText.GetText("AI_CONTEXT_PEAK_WORLD_PROMPT_SYSTEM"),
+            PLocalizedText.GetText("AI_CONTEXT_PEAK_WORLD_PROMPT_SYSTEM"),
             sender: "System",
             userId: "system",
             pinned: true

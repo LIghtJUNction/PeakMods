@@ -114,11 +114,23 @@ public class EchoCommand
 }
 ```
 
+
+## API Key 安全提示
+
+- **API Key 已安全储存在本地，请放心使用。**
+- **如果不放心，建议使用 ollama 提供的云模型。**
+
+> **API Key is securely stored locally. You can use it with confidence.**
+> **If you have concerns, it is recommended to use the cloud model provided by ollama.**
+
+
 ## Build
 
 ```bash
 dotnet build -c Release -target:PackTS -v d
 ```
+
+
 
 ## Credits (in no particular order)
 - [PeakTextChat](https://github.com/borealityy/PeakTextChat) (Inspiration)

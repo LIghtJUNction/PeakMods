@@ -1,10 +1,25 @@
 using BepInEx.Configuration;
 using UnityEngine;
+using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using PeakChatOps.core;
 namespace PeakChatOps;
 
 
 public class PConfig
 {
+    private static readonly string ApiKeyFolder = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "PeakChatOps"
+    );
+    private static readonly string ApiKeyFilePath = Path.Combine(ApiKeyFolder, "api_keys.dat");
+    
+    // 内存中的 hash -> key 映射
+    private static readonly Dictionary<string, string> _keyCache = new Dictionary<string, string>();
 
     public ConfigEntry<KeyCode> Key = null!;
     public ConfigEntry<UIAlignment> Pos = null!;
@@ -28,80 +43,219 @@ public class PConfig
     public PConfig(ConfigFile config)
     {
         Key = config.Bind(
-            "Display", "ChatKey", KeyCode.Y, LocalizedText.GetText("CHAT_KEY_DESCRIPTION"));
+            "Display", "ChatKey", KeyCode.Y, PLocalizedText.GetText("CHAT_KEY_DESCRIPTION"));
         Pos = config.Bind(
-            "Display", "ChatPosition", UIAlignment.TopLeft, LocalizedText.GetText("CHAT_POSITION_DESCRIPTION"));
+            "Display", "ChatPosition", UIAlignment.TopLeft, PLocalizedText.GetText("CHAT_POSITION_DESCRIPTION"));
 
         CmdPrefix = config.Bind(
-            "Commands", "CommandPrefix", "/", LocalizedText.GetText("COMMAND_PREFIX_DESCRIPTION"));
+            "Commands", "CommandPrefix", "/", PLocalizedText.GetText("COMMAND_PREFIX_DESCRIPTION"));
 
         DeathMessage = config.Bind(
             "preset", "DeathMessage",
-            LocalizedText.GetText("DEATH_MESSAGE"),
-            LocalizedText.GetText("DEATH_MESSAGE_DESCRIPTION")
+            PLocalizedText.GetText("DEATH_MESSAGE"),
+            PLocalizedText.GetText("DEATH_MESSAGE_DESCRIPTION")
         );
 
         ReviveMessage = config.Bind(
             "preset", "ReviveMessage",
-            LocalizedText.GetText("REVIVE_MESSAGE"),
-            LocalizedText.GetText("REVIVE_MESSAGE_DESCRIPTION")
+            PLocalizedText.GetText("REVIVE_MESSAGE"),
+            PLocalizedText.GetText("REVIVE_MESSAGE_DESCRIPTION")
         );
         
         
         PassOutMessage = config.Bind(
             "preset", "PassOutMessage",
-            LocalizedText.GetText("PASS_OUT_MESSAGE"),
-            LocalizedText.GetText("PASS_OUT_MESSAGE_DESCRIPTION")
+            PLocalizedText.GetText("PASS_OUT_MESSAGE"),
+            PLocalizedText.GetText("PASS_OUT_MESSAGE_DESCRIPTION")
         );
 
         // AI 配置（Ollama/OpenAI 兼容）
         AiModel = config.Bind(
             "AI", "Model", "gpt-oss:120b-cloud",
-            LocalizedText.GetText("AI_MODEL_DESCRIPTION")
+            PLocalizedText.GetText("AI_MODEL_DESCRIPTION")
         );
 
-        //Environment.SpecialFolder.ApplicationData
+        // AI API Key：从 ApplicationData 加载映射，配置文件中存储 hash
+        string defaultApiKeyHash = LoadApiKeyFromFile();
         AiApiKey = config.Bind(
-            "AI", "ApiKey", "ollama",
-            LocalizedText.GetText("AI_APIKEY_DESCRIPTION")
+            "AI", "ApiKey", defaultApiKeyHash,
+            PLocalizedText.GetText("AI_APIKEY_DESCRIPTION")
         );
+        
+        // 监听配置变化：用户输入明文 key 时，自动 hash 并保存
+        AiApiKey.SettingChanged += (_, _) => SaveApiKeyToFile(AiApiKey.Value);
 
         AiEndpoint = config.Bind(
             "AI", "Endpoint", "http://localhost:11434/v1",
-            LocalizedText.GetText("AI_ENDPOINT_DESCRIPTION")
+            PLocalizedText.GetText("AI_ENDPOINT_DESCRIPTION")
         );
 
         AiContextMaxCount = config.Bind(
-            "AI", "ContextMaxCount", 30, LocalizedText.GetText("AI_CONTEXT_MAX_COUNT_DESCRIPTION")
+            "AI", "ContextMaxCount", 30, PLocalizedText.GetText("AI_CONTEXT_MAX_COUNT_DESCRIPTION")
         );
 
         // AI 推理内容显示
         AiShowResponse = config.Bind(
-            "AI", "ShowResponse", true, LocalizedText.GetText("AI_SHOW_RESPONSE_DESCRIPTION")
+            "AI", "ShowResponse", true, PLocalizedText.GetText("AI_SHOW_RESPONSE_DESCRIPTION")
         );
 
         // AI 自动翻译 配置
         AiAutoTranslate = config.Bind(
             "AI", "AutoTranslate", false,
-            LocalizedText.GetText("AI_AUTOTRANSLATE_DESCRIPTION")
+            PLocalizedText.GetText("AI_AUTOTRANSLATE_DESCRIPTION")
         );
 
         // Prompt 配置
         PromptTranslate = config.Bind(
             "prompt", "Prompt_Translate",
-            LocalizedText.GetText("TRANSLATE_PROMPT"),
-            LocalizedText.GetText("PROMPT_TRANSLATE_DESCRIPTION")
+            PLocalizedText.GetText("TRANSLATE_PROMPT"),
+            PLocalizedText.GetText("PROMPT_TRANSLATE_DESCRIPTION")
         );
 
 
         // /ai @action AI助手指令提示词配置
         PromptSend = config.Bind(
             "prompt", "Prompt_Send",
-            LocalizedText.GetText("PROMPT_SEND"),
-            LocalizedText.GetText("PROMPT_SEND_DESCRIPTION")
+            PLocalizedText.GetText("PROMPT_SEND"),
+            PLocalizedText.GetText("PROMPT_SEND_DESCRIPTION")
         );
+    }
 
+    /// <summary>
+    /// 计算字符串的 SHA256 hash 值（前16位）
+    /// </summary>
+    private static string ComputeHash(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        
+        using (var sha256 = SHA256.Create())
+        {
+            byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+            return BitConverter.ToString(hashBytes).Replace("-", "").Substring(0, 16);
+        }
+    }
 
+    /// <summary>
+    /// 从 ApplicationData 文件夹加载所有 hash->key 映射
+    /// </summary>
+    private static void LoadApiKeysFromFile()
+    {
+        _keyCache.Clear();
+        
+        try
+        {
+            if (File.Exists(ApiKeyFilePath))
+            {
+                var lines = File.ReadAllLines(ApiKeyFilePath);
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(new[] { '=' }, 2);
+                    if (parts.Length == 2)
+                    {
+                        string hash = parts[0].Trim();
+                        string key = parts[1].Trim();
+                        _keyCache[hash] = key;
+                    }
+                }
+                
+                Debug.Log($"[PeakChatOps] Loaded {_keyCache.Count} API key(s) from: {ApiKeyFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[PeakChatOps] Failed to load API keys from file: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 从配置中获取 API Key hash，并返回对应的实际 key
+    /// </summary>
+    private static string LoadApiKeyFromFile()
+    {
+        // 首次加载文件
+        LoadApiKeysFromFile();
+        
+        // 如果有缓存的 key，返回第一个（用于初始化）
+        if (_keyCache.Count > 0)
+        {
+            string firstKey = _keyCache.Values.First();
+            string hash = ComputeHash(firstKey);
+            Debug.Log($"[PeakChatOps] Using API Key with hash: {hash}");
+            return hash; // 返回 hash 作为配置的默认值
+        }
+        
+        return "ollama"; // 默认值
+    }
+
+    /// <summary>
+    /// 保存或更新 API Key
+    /// </summary>
+    private static void SaveApiKeyToFile(string input)
+    {
+        try
+        {
+            // 如果输入已经是一个 hash（16位十六进制），可能是从配置文件读取的
+            if (IsHashValue(input))
+            {
+                Debug.Log($"[PeakChatOps] Input is already a hash: {input}");
+                return; // 已经是 hash，不需要处理
+            }
+
+            // 计算新 key 的 hash
+            string hash = ComputeHash(input);
+            
+            // 更新内存缓存
+            _keyCache[hash] = input;
+            
+            // 确保目录存在
+            if (!Directory.Exists(ApiKeyFolder))
+            {
+                Directory.CreateDirectory(ApiKeyFolder);
+            }
+
+            // 保存所有映射到文件（格式：hash=key）
+            var lines = _keyCache.Select(kvp => $"{kvp.Key}={kvp.Value}");
+            File.WriteAllLines(ApiKeyFilePath, lines);
+            
+            Debug.Log($"[PeakChatOps] API Key saved with hash: {hash} -> {ApiKeyFilePath}");
+            
+            // 更新配置文件中的值为 hash（如果不是从配置变化事件触发的）
+            if (PeakChatOpsPlugin.config != null && PeakChatOpsPlugin.config.AiApiKey != null && 
+                PeakChatOpsPlugin.config.AiApiKey.Value != hash)
+            {
+                PeakChatOpsPlugin.config.AiApiKey.Value = hash;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[PeakChatOps] Failed to save API Key: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 判断字符串是否是 hash 值（16位十六进制）
+    /// </summary>
+    private static bool IsHashValue(string input)
+    {
+        if (string.IsNullOrEmpty(input) || input.Length != 16) return false;
+        return input.All(c => (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
+    }
+
+    /// <summary>
+    /// 根据 hash 获取实际的 API Key
+    /// </summary>
+    public static string GetActualApiKey(string hashOrKey)
+    {
+        if (string.IsNullOrEmpty(hashOrKey)) return "ollama";
+        
+        // 如果是 hash，从缓存中查找
+        if (IsHashValue(hashOrKey) && _keyCache.ContainsKey(hashOrKey))
+        {
+            return _keyCache[hashOrKey];
+        }
+        
+        // 否则直接返回（可能是明文 key 或默认值）
+        return hashOrKey;
     }
 }
 

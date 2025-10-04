@@ -31,6 +31,11 @@ public class PeakChatOpsUI : EditorWindow
         {
             m_VisualTreeAsset.CloneTree(root);
             Debug.Log("[Editor] UXML instantiated");
+            
+            // 确保根容器设置正确
+            root.style.position = Position.Absolute;
+            root.style.width = new StyleLength(new Length(100, LengthUnit.Percent));
+            root.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
         }
         else
         {
@@ -200,17 +205,22 @@ public class PeakChatOpsUI : EditorWindow
         var chatPanel = rootVisualElement.Q("chat-panel");
         if (chatPanel != null)
         {
+            // 检查当前状态
             bool wasMinimized = chatPanel.ClassListContains("minimized");
+            
+            // 清除所有大小状态类
             chatPanel.RemoveFromClassList("minimized");
             chatPanel.RemoveFromClassList("maximized");
             
             if (!wasMinimized)
             {
+                // 如果之前不是最小化状态，则最小化
                 chatPanel.AddToClassList("minimized");
                 Debug.Log("[Editor] Panel minimized");
             }
             else
             {
+                // 如果之前是最小化状态，则恢复普通模式（不添加任何类）
                 Debug.Log("[Editor] Panel restored to normal");
             }
         }
@@ -221,17 +231,22 @@ public class PeakChatOpsUI : EditorWindow
         var chatPanel = rootVisualElement.Q("chat-panel");
         if (chatPanel != null)
         {
+            // 检查当前状态
             bool wasMaximized = chatPanel.ClassListContains("maximized");
+            
+            // 清除所有大小状态类
             chatPanel.RemoveFromClassList("minimized");
             chatPanel.RemoveFromClassList("maximized");
             
             if (!wasMaximized)
             {
+                // 如果之前不是最大化状态，则最大化
                 chatPanel.AddToClassList("maximized");
                 Debug.Log("[Editor] Panel maximized");
             }
             else
             {
+                // 如果之前是最大化状态，则恢复普通模式（不添加任何类）
                 Debug.Log("[Editor] Panel restored to normal");
             }
         }
@@ -257,6 +272,9 @@ public class PeakChatOpsUI : EditorWindow
         panel.style.paddingLeft = new StyleLength(new Length(5f, LengthUnit.Pixel));
         panel.style.paddingRight = new StyleLength(new Length(5f, LengthUnit.Pixel));
         panel.style.paddingTop = new StyleLength(new Length(5f, LengthUnit.Pixel));
+        
+        // 确保 pointer-events 为 auto
+        panel.style.display = DisplayStyle.Flex;
     }
 
     private void ApplyButtonStyle(Button button, Color bgColor, Color hoverColor)

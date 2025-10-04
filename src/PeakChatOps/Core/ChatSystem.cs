@@ -62,19 +62,21 @@ public class ChatSystem : MonoBehaviour
 
     public void OnEvent(EventData photonEvent)
     {
-        DevLog.UI($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
+        // 使用 File 而不是 UI，避免循环调用 AddMessage
+        // DevLog.File($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
+        
         if (eventHandlers.TryGetValue(photonEvent.Code, out var handler))
         {
             handler(photonEvent);
         }
         else
         {
-            DevLog.UI($"事件[ChatSystem.OnEvent]：未注册的事件类型");
+            // DevLog.File($"事件[ChatSystem.OnEvent]：未注册的事件类型");
         }
     }
 
     // 接收远程玩家消息的入口
-    private void HandleChatEvent(EventData photonEvent)
+    internal void HandleChatEvent(EventData photonEvent)
     {
         DevLog.File($"[ChatSystem] HandleChatEvent code={photonEvent.Code} sender={photonEvent.Sender}");
         var data = (object[])photonEvent.CustomData;
@@ -115,7 +117,34 @@ public class ChatSystem : MonoBehaviour
         );
         // Photon 回调是同步的；以 fire-and-forget 的方式启动异步处理
         DevLog.File($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}");
-
+        
+        // 将接收到的消息发布到 ChatMessageBus 的 "sander://other" 频道
+        var chatEvent = new ChatMessageEvent(
+            msg.Nickname,
+            msg.Message,
+            msg.UserId,
+            msg.IsDead,
+            msg.Extra
+        );
+        
+        // 使用 fire-and-forget 方式发布事件
+        PublishRemoteMessageAsync(chatEvent).Forget();
+    }
+    
+    /// <summary>
+    /// 异步发布远程玩家消息到事件总线
+    /// </summary>
+    private async UniTaskVoid PublishRemoteMessageAsync(ChatMessageEvent evt)
+    {
+        try
+        {
+            await EventBusRegistry.ChatMessageBus.Publish("sander://other", evt);
+            DevLog.File($"[ChatSystem] Published remote message to bus: sender={evt.Sender}");
+        }
+        catch (Exception ex)
+        {
+            DevLog.File($"[ChatSystem] Failed to publish remote message: {ex.Message}");
+        }
     }
 
     // 本地发送消息的入口

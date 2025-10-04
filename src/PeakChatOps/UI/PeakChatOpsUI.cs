@@ -1,5 +1,5 @@
 using System;
-
+using PeakChatOps.core;
 using PeakChatOps.Core;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,13 +20,11 @@ public class PeakChatOpsUI : MonoBehaviour
     {
         if (Instance != null)
         {
-            DevLog.File("PeakChatOpsUI instance already exists, destroying duplicate.");
             Destroy(this);
             return;
         }
 
         Instance = this;
-        DevLog.File("PeakChatOpsUI instance created.");
     }
 
     public void BindUIEvents(GameObject uiGO)
@@ -86,43 +84,30 @@ public class PeakChatOpsUI : MonoBehaviour
 
         DevLog.File("All UI events bound successfully.");
 
-        // 处理message-list
+        // ⚡ 性能优化：配置 message-list
         var messageList = root.Q<ListView>("message-list");
         if (messageList != null)
         {
-            DevLog.File("Found message-list ListView.");
-            
-            // ✅ 关键修复：启用动态高度，避免消息重叠
             messageList.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
-            
-            
-            // ✅ 设置选择模式（单选或不可选）
             messageList.selectionType = SelectionType.None;
-            
-            // ✅ 确保 ListView 本身的样式正确
             messageList.style.flexGrow = 1;
             
-            // 先清空并添加欢迎消息
+            // 初始化消息列表
             messages.Clear();
-            messages.Add(LocalizedText.GetText("PEAKCHATOPSWELCOME"));
+            messages.Add(PLocalizedText.GetText("PEAKCHATOPSWELCOME"));
             
-            // 绑定到全局列表
             messageList.itemsSource = messages;
             messageList.makeItem = MakeItem();
             messageList.bindItem = BindItem();
-            
-            DevLog.File($"[ListView] Configured: DynamicHeight, Non-reorderable, {messages.Count} messages");
         }
 
-        // 获取 chat-panel 并清除所有默认样式类
+        // 清除默认位置样式类
         var chatPanel = root.Q("chat-panel");
         if (chatPanel != null)
         {
-            // 移除 UXML 中可能设置的所有位置相关类
             chatPanel.RemoveFromClassList("pos-topleft");
             chatPanel.RemoveFromClassList("pos-topright");
             chatPanel.RemoveFromClassList("pos-center");
-            DevLog.File("[BindUIEvents] Cleared all position classes from chat-panel");
         }
 
         var pos = PeakChatOpsPlugin.config?.Pos.Value ?? UIAlignment.TopLeft;
@@ -177,30 +162,15 @@ public class PeakChatOpsUI : MonoBehaviour
     /// </summary>
     void EnterInputMode()
     {
-        if (isBlockingInput)
-        {
-            DevLog.File("Already in input mode, ignoring EnterInputMode call.");
-            return; // 已经在输入模式中
-        }
+        if (isBlockingInput) return;
 
-        DevLog.File("Entering input mode...");
-        
-        // 1. 首先设置输入阻塞标志（InputBlockingPatches 会响应此标志）
         isBlockingInput = true;
-
-        
-        // 3. 显示UI
         ShowNow();
         
-        // 4. 聚焦输入框
         if (messageInputField != null)
         {
             messageInputField.Focus();
-
-            DevLog.File("TextField focused.");
         }
-        
-        DevLog.File("Input mode activated - game input blocked, cursor released.");
     }
 
     /// <summary>
@@ -208,39 +178,25 @@ public class PeakChatOpsUI : MonoBehaviour
     /// </summary>
     void ExitInputMode()
     {
-        if (!isBlockingInput)
-        {
-            DevLog.File("Not in input mode, ignoring ExitInputMode call.");
-            return; // 没有在输入模式中
-        }
-
-        DevLog.File("Exiting input mode...");
+        if (!isBlockingInput) return;
         
-        // 1. 失焦输入框
         if (messageInputField != null)
         {
             messageInputField.Blur();
-            DevLog.File("TextField blurred.");
         }
 
-        // 2. 取消聊天框中所有选择（特别是滚动区域的选中）
+        // 清除 ListView 选择
         if (uIDocument != null)
         {
             var root = uIDocument.rootVisualElement;
             var messageListView = root.Q<ListView>("message-list");
-            if (messageListView != null)
-            {
-                // 清除 ListView 的选择
-                messageListView.ClearSelection();
-                DevLog.File("ListView selection cleared.");
-
-            }
+            messageListView?.ClearSelection();
         }
 
         isBlockingInput = false;
     }
 
-    // 转发至 ChatSystem
+    // ⚡ 性能优化：异步发送消息
     async void OnSendMessage()
     {
         if (uIDocument == null) return;
@@ -252,84 +208,48 @@ public class PeakChatOpsUI : MonoBehaviour
         {
             string msg = messageInput.value;
             messageInput.value = "";
-            
-            // 立即退出输入模式（在发送之前）
             ExitInputMode();
             
-            DevLog.File($"[PeakChatOpsUI] Sending message via ChatSystem: {msg}");
-            
-            // 通过 ChatSystem 发送消息以接入命令系统
+            // 通过 ChatSystem 发送消息
             if (ChatSystem.Instance != null)
             {
                 try
                 {
                     await ChatSystem.Instance.SendChatMessageAsync(msg, null);
-                    DevLog.File($"[PeakChatOpsUI] Message sent successfully via ChatSystem");
                 }
                 catch (Exception ex)
                 {
                     DevLog.File($"[PeakChatOpsUI] Error sending message: {ex.Message}");
                 }
             }
-            else
-            {
-                DevLog.File("[PeakChatOpsUI] ChatSystem.Instance is null, cannot send message");
-            }
         }
     }
 
     public void OnTopLeft()
     {
-        var root = uIDocument?.rootVisualElement;
-        if (root == null)
-        {
-            DevLog.File("OnTopLeft: uIDocument.rootVisualElement is null");
-            return;
-        }
-        var chatPanel = root.Q("chat-panel");
-        if (chatPanel == null)
-        {
-            DevLog.File("OnTopLeft: chat-panel not found in UI document");
-            return;
-        }
+        var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
+        if (chatPanel == null) return;
+        
         chatPanel.RemoveFromClassList("pos-topright");
         chatPanel.RemoveFromClassList("pos-center");
         chatPanel.AddToClassList("pos-topleft");
-
     }
 
     public void OnTopRight()
     {
-        var root = uIDocument?.rootVisualElement;
-        if (root == null)
-        {
-            DevLog.File("OnTopRight: uIDocument.rootVisualElement is null");
-            return;
-        }
-        var chatPanel = root.Q("chat-panel");
-        if (chatPanel == null)
-        {
-            DevLog.File("OnTopRight: chat-panel not found in UI document");
-            return;
-        }
+        var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
+        if (chatPanel == null) return;
+        
         chatPanel.RemoveFromClassList("pos-topleft");
         chatPanel.RemoveFromClassList("pos-center");
         chatPanel.AddToClassList("pos-topright");
     }
+    
     public void OnCenter()
     {
-        var root = uIDocument?.rootVisualElement;
-        if (root == null)
-        {
-            DevLog.File("OnCenter: uIDocument.rootVisualElement is null");
-            return;
-        }
-        var chatPanel = root.Q("chat-panel");
-        if (chatPanel == null)
-        {
-            DevLog.File("OnCenter: chat-panel not found in UI document");
-            return;
-        }
+        var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
+        if (chatPanel == null) return;
+        
         chatPanel.RemoveFromClassList("pos-topright");
         chatPanel.RemoveFromClassList("pos-topleft");
         chatPanel.AddToClassList("pos-center");
@@ -340,143 +260,99 @@ public class PeakChatOpsUI : MonoBehaviour
 
     public void AddMessage(string sender, string content)
     {
-        if (uIDocument == null)
-        {
-            DevLog.File("[AddMessage] ERROR: uIDocument is null");
-            return;
-        }
+        if (uIDocument == null) return;
 
         var root = uIDocument.rootVisualElement;
         var messageListView = root.Q<ListView>("message-list");
 
-        if (messageListView == null)
-        {
-            DevLog.File("[AddMessage] ERROR: messageListView not found");
-            return;
-        }
+        if (messageListView == null) return;
 
-        // ✅ 简单逻辑：1. 添加到列表
-        var message = $"[{sender}] {content}";
+        // ⚡ 性能优化：减少字符串拼接和日志
+        var message = string.IsNullOrEmpty(sender) 
+            ? content 
+            : $"[{sender}] {content}";
+        
         messages.Add(message);
-        DevLog.File($"[AddMessage] Added '{message}', total: {messages.Count}");
         
-        // ✅ 简单逻辑：2. 刷新 ListView
-        messageListView.RefreshItems();
-        DevLog.File($"[AddMessage] RefreshItems() called");
+        // ⚡ 性能优化：使用 Rebuild() 而不是 RefreshItems()
+        // Rebuild() 只更新数据源变化，RefreshItems() 会刷新所有可见项
+        messageListView.Rebuild();
         
-        // ✅ 简单逻辑：3. 延迟滚动到最新（等待布局更新）
-        messageListView.schedule.Execute(() =>
+        // ⚡ 性能优化：减少延迟时间到 50ms，提升响应速度
+        if (messages.Count > 0)
         {
-            if (messages.Count > 0)
+            messageListView.schedule.Execute(() =>
             {
-                var lastIndex = messages.Count - 1;
-                messageListView.ScrollToItem(lastIndex);
-                DevLog.File($"[AddMessage] Scrolled to item {lastIndex}");
-            }
-        }).StartingIn(100); // 延迟100ms确保动态高度计算完成
-        
-        // 不在输入状态时添加高亮效果
-        if (!isBlockingInput)
-        {
-            var chatPanel = root.Q("chat-panel");
-            if (chatPanel != null)
-            {
-                chatPanel.AddToClassList("highlight");
-                chatPanel.schedule.Execute(() => chatPanel.RemoveFromClassList("highlight")).StartingIn(500);
-            }
+                messageListView.ScrollToItem(messages.Count - 1);
+            }).StartingIn(50);
         }
+        
+        // ⚡ 性能优化：移除高亮效果（减少 DOM 操作）
+        // 高亮动画会触发额外的样式计算和重绘
     }
 
 
     public void RefreshUI()
     {
-        DevLog.File("RefreshUI called");
-        
-        if (uIDocument != null)
-        {
-            var root = uIDocument.rootVisualElement;
-            root.Clear();
-
-        }
+        uIDocument?.rootVisualElement?.Clear();
     }
 
     public void HideNow()
     {
-        DevLog.File("HideNow called");
-        
         if (uIDocument != null)
         {
-            var root = uIDocument.rootVisualElement;
-            root.style.display = DisplayStyle.None;
+            uIDocument.rootVisualElement.style.display = DisplayStyle.None;
+            ExitInputMode();
         }
     }
     
     public void ShowNow()
     {
-        DevLog.File("ShowNow called");
-        
         if (uIDocument != null)
         {
-            var root = uIDocument.rootVisualElement;
-            root.style.display = DisplayStyle.Flex;
+            uIDocument.rootVisualElement.style.display = DisplayStyle.Flex;
+            EnterInputMode();
         }
     }
     
     void MinimizeUI()
     {
-        var root = uIDocument.rootVisualElement;
-        var chatPanel = root.Q<VisualElement>("chat-panel");
-        if (chatPanel != null)
+        var chatPanel = uIDocument?.rootVisualElement?.Q<VisualElement>("chat-panel");
+        if (chatPanel == null) return;
+
+        bool wasMinimized = chatPanel.ClassListContains("minimized");
+        chatPanel.RemoveFromClassList("minimized");
+        chatPanel.RemoveFromClassList("maximized");
+
+        if (!wasMinimized)
         {
-            // 先清除所有大小状态类
-            bool wasMinimized = chatPanel.ClassListContains("minimized");
-            chatPanel.RemoveFromClassList("minimized");
-            chatPanel.RemoveFromClassList("maximized");
-            
-            if (!wasMinimized)
-            {
-                // 如果之前不是最小化状态，则最小化
-                chatPanel.AddToClassList("minimized");
-                DevLog.File("[MinimizeUI] Panel minimized");
-            }
-            else
-            {
-                // 如果之前是最小化状态，则恢复普通模式
-                DevLog.File("[MinimizeUI] Panel restored to normal");
-            }
+            chatPanel.AddToClassList("minimized");
         }
+        
+        ExitInputMode();
     }
 
     void MaximizeUI()
     {
-        var root = uIDocument.rootVisualElement;
-        var chatPanel = root.Q<VisualElement>("chat-panel");
-        if (chatPanel != null)
+        var chatPanel = uIDocument?.rootVisualElement?.Q<VisualElement>("chat-panel");
+        if (chatPanel == null) return;
+
+        bool wasMaximized = chatPanel.ClassListContains("maximized");
+        chatPanel.RemoveFromClassList("minimized");
+        chatPanel.RemoveFromClassList("maximized");
+
+        if (!wasMaximized)
         {
-            // 先清除所有大小状态类
-            bool wasMaximized = chatPanel.ClassListContains("maximized");
-            chatPanel.RemoveFromClassList("minimized");
-            chatPanel.RemoveFromClassList("maximized");
-            
-            if (!wasMaximized)
-            {
-                // 如果之前不是最大化状态，则最大化
-                chatPanel.AddToClassList("maximized");
-                DevLog.File("[MaximizeUI] Panel maximized");
-            }
-            else
-            {
-                // 如果之前是最大化状态，则恢复普通模式
-                DevLog.File("[MaximizeUI] Panel restored to normal");
-            }
+            chatPanel.AddToClassList("maximized");
         }
+        
+        EnterInputMode();
     }
 
     public static void Help()
     {
-        DevLog.File("PeakChatOpsUI help called");
         // 国际化组件测试
-        PeakChatOpsPlugin.Logger.LogInfo($"'{LocalizedText.GetText("PEAKCHATOPSWELCOME")}'");
+        PeakChatOpsPlugin.Logger.LogInfo($"Localization test: '{PLocalizedText.GetText("PEAKCHATOPSWELCOME")}'");
         
     }
 
@@ -529,6 +405,8 @@ public class MessageLabel : Label
         // ✅ 启用文本选择
         selection.isSelectable = true;
         
+        // ✅ 文本换行设置（最重要！）
+        style.whiteSpace = WhiteSpace.Normal;        // 允许文本自动换行
         
         // ✅ Flex 布局设置
         style.flexShrink = 0;                        // 不压缩

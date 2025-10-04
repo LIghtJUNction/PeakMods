@@ -87,7 +87,17 @@ public static class CentralCmdRouter
             if (handlerToCall != null)
             {
                 DevLog.UI($"[DebugUI] RouteCommandAsync -> invoking handler for channel '{matchedChannel}'");
-                await handlerToCall(evt);
+                try
+                {
+                    await handlerToCall(evt);
+                    DevLog.UI($"[DebugUI] RouteCommandAsync -> handler completed successfully");
+                }
+                catch (Exception handlerEx)
+                {
+                    DevLog.UI($"[DebugUI] RouteCommandAsync -> handler threw exception: {handlerEx.Message}");
+                    DevLog.File($"[DebugUI] Handler exception details:\nType: {handlerEx.GetType().Name}\nMessage: {handlerEx.Message}\nStackTrace:\n{handlerEx.StackTrace}");
+                    throw; // 重新抛出以便外层catch处理
+                }
             }
             else
             {
@@ -99,6 +109,7 @@ public static class CentralCmdRouter
         catch (Exception ex)
         {
             DevLog.UI($"[DebugUI] RouteCommandAsync -> exception invoking handler: {ex.Message}");
+            DevLog.File($"[DebugUI] Exception details:\nType: {ex.GetType().Name}\nMessage: {ex.Message}\nStackTrace:\n{ex.StackTrace}");
             var err = new CmdExecResultEvent(evt?.Command ?? string.Empty, evt?.Args ?? Array.Empty<string>(), evt?.UserId ?? string.Empty, stdout: null, stderr: ex.Message, success: false);
             await EventBusRegistry.CmdExecResultBus.Publish("cmd://", err);
         }

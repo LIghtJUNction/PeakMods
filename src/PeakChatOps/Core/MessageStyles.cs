@@ -125,7 +125,7 @@ public static class MessageStyles
     /// <summary>生成翻译标签</summary>
     public static string TranslateLabel()
     {
-        return Label("[翻译]", ColorTranslate);
+        return Label("[T]", ColorTranslate);
     }
     
     /// <summary>生成玩家标签</summary>

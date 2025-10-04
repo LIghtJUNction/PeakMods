@@ -8,7 +8,7 @@
     <!-- This is the display name of your mod. Example: BepInEx Template -->
     <AssemblyTitle>PeakChatOps</AssemblyTitle>
     <!-- This is the version number of your mod. -->
-    <Version>1.2.0</Version>
+    <Version>1.2.2</Version>
     <!-- Disable nullable reference type warnings for now -->
     <Nullable>disable</Nullable>
     <Configurations>Debug;Release</Configurations>

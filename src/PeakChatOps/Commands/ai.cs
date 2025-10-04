@@ -4,6 +4,7 @@ using PeakChatOps.API;
 using PeakChatOps.API.AI;
 using Cysharp.Threading.Tasks;
 using PeakChatOps.Core;
+using PeakChatOps.core;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -37,7 +38,7 @@ public class AICommand
             DevLog.UI("[AI] Step 1: Handler entered");
             if (evt.Args == null || evt.Args.Length == 0 || evt.Args.All(string.IsNullOrWhiteSpace))
             {
-                var msg = LocalizedText.GetText("AI_COMMAND_INPUT_HINT");
+                var msg = PLocalizedText.GetText("AI_COMMAND_INPUT_HINT");
                 var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: msg, stderr: null, success: false);
                 await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
                 return;

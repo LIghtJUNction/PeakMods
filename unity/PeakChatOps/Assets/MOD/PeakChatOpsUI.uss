@@ -1,10 +1,10 @@
-/* 基础聊天面板样式 */
 #chat-panel {
-    width: 400px;
-    min-width: 350px;
-    max-width: 600px;
+    width: auto;
+    min-width: 450px;
+    max-width: 40%;
     height: auto;
-    max-height: 500px;
+    min-height: 350px;
+    max-height: 70%;
     background-color: rgba(30, 30, 30, 0.95);
     border-radius: 8px;
     padding: 5px;
@@ -12,75 +12,117 @@
     flex-direction: column;
     border-width: 1px;
     border-color: rgba(100, 100, 100, 0.5);
-}
-
-/* 最小化状态 */
-.minimized {
-    opacity: 0.5;
-    height: 50px;
-    overflow: hidden;
+    transition-property: opacity, width, height, top, left, right, translate;
     transition-duration: 0.3s;
+    overflow: visible;
 }
 
-/* 最大化状态 */
-.maximized {
-    width: 80%;
-    max-width: 1200px;
-    height: 80%;
-    max-height: 800px;
-    transition-duration: 0.3s;
-}
-
-/* 位置：左上角 */
 .pos-topleft {
     top: 20px;
     left: 20px;
+    right: auto;
 }
 
-/* 位置：右上角 */
 .pos-topright {
     top: 20px;
     right: 20px;
+    left: auto;
 }
 
-/* 位置：居中 */
 .pos-center {
     top: 50%;
     left: 50%;
-    /* Unity不支持translate，需要在C#代码中处理居中 */
+    right: auto;
+    translate: -50% -50%;
 }
 
-/* 高亮效果（新消息提醒） */
+#chat-panel.minimized {
+    opacity: 0.65;
+    width: 20%;
+    min-width: 400px;
+    max-width: 400px;
+    height: 30px;
+    min-height: 250px;
+    max-height: 350px;
+    display: flex;
+}
+
+#chat-panel.maximized {
+    opacity: 1;
+    width: 85%;
+    min-width: 800px;
+    max-width: 1400px;
+    height: 70%;
+    min-height: 500px;
+    max-height: 900px;
+}
+
 .highlight {
     border-color: rgb(255, 255, 0);
     border-width: 3px;
     transition-duration: 0.5s;
 }
 
-/* 消息列表样式 */
 #message-list {
     flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 150px;
     background-color: rgba(40, 40, 40, 0.8);
     border-width: 1px;
     border-color: rgba(80, 80, 80, 0.5);
     border-radius: 4px;
     margin: 5px 0;
     padding: 5px;
+    overflow: scroll;
 }
 
-/* 输入框样式 */
+.message-item {
+    white-space: normal;
+    flex-shrink: 0;
+    flex-grow: 1;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    -unity-text-align: upper-left;
+    color: rgb(230, 230, 230);
+}
+
 #message-input {
-    background-color: rgba(50, 50, 50, 0.9);
-    border-width: 1px;
-    border-color: rgba(100, 100, 100, 0.5);
+    background-color: rgba(30, 30, 30, 0.95);
+    border-width: 2px;
+    border-color: rgba(100, 140, 180, 0.8);
     border-radius: 4px;
     margin-top: 5px;
-    padding: 5px;
+    padding: 8px;
     -unity-font-style: normal;
-    color: rgb(220, 220, 220);
+    color: rgb(255, 255, 255);
 }
 
-/* 发送按钮样式 */
+#message-input:focus {
+    border-color: rgb(80, 140, 200);
+    background-color: rgb(20, 20, 20);
+}
+
+#message-input .unity-text-element {
+    color: rgb(255, 255, 255);
+}
+
+#message-input .unity-base-text-field__input {
+    color: rgb(255, 255, 255);
+    background-color: transparent;
+}
+
+#message-input > .unity-base-text-field__input--single-line:placeholder {
+    color: rgba(180, 180, 180, 0.6);
+}
+
+#message-input > .unity-base-text-field__input--multiline:placeholder {
+    color: rgba(180, 180, 180, 0.6);
+}
+
 #send-button {
     background-color: rgba(60, 120, 180, 0.9);
     border-radius: 4px;
@@ -92,9 +134,9 @@
 }
 
 #send-button:hover {
-    background-color: rgba(80, 140, 200, 1);
+    background-color: rgb(80, 140, 200);
 }
 
 #send-button:active {
-    background-color: rgba(40, 100, 160, 1);
+    background-color: rgb(40, 100, 160);
 }
