@@ -101,7 +101,7 @@ public class PConfig
 
         // AI 自动翻译 配置
         AiAutoTranslate = config.Bind(
-            "AI", "AutoTranslate", false,
+            "AI", "AutoTranslate",  true,
             PLocalizedText.GetText("AI_AUTOTRANSLATE_DESCRIPTION")
         );
 

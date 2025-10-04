@@ -104,6 +104,7 @@ namespace PeakChatOps.Commands;
         TryInstantiate(typeof(AICommand));
         TryInstantiate(typeof(WhisperCommand));
         TryInstantiate(typeof(InviteCommand));
+        TryInstantiate(typeof(ClearCommand));
 
         #endregion
 

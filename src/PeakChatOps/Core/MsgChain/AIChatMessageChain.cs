@@ -219,74 +219,134 @@ public static class AIChatMessageChain
 
     private static async UniTask HandleAiTranslateMessageAsync(AIChatMessageEvent evt)
     {
+        string translationReply;
+        bool hasError = false;
         try
         {
             DevLog.File($"[Translate] 开始翻译: {evt.Message}");
-            
             var apiKeyHash = PeakChatOpsPlugin.config.AiApiKey?.Value;
             var apiKey = PConfig.GetActualApiKey(apiKeyHash);
             var endpoint = PeakChatOpsPlugin.config.AiEndpoint?.Value;
-            
             if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(endpoint))
             {
-                PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel("翻译错误"), 
-                    MessageStyles.ErrorContent("未配置 API Key 或 Endpoint"));
-                return;
+                translationReply = "未配置 API Key 或 Endpoint，请先在设置中填写。";
+                hasError = true;
             }
-
-            using var client = new OpenAIClient(apiKey, endpoint);
-            var chatApi = new API.AI.Apis.OpenAIChatApi(client);
-            
-            var systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.PromptTranslate?.Value)
-                ? PLocalizedText.GetText("TRANSLATE_PROMPT")
-                : PeakChatOpsPlugin.config.PromptTranslate.Value;
-
-            var messages = new List<Dictionary<string, object>>
+            else
             {
-                new Dictionary<string, object>
+                var systemPrompt = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.PromptTranslate?.Value)
+                    ? PLocalizedText.GetText("TRANSLATE_PROMPT")
+                    : PeakChatOpsPlugin.config.PromptTranslate.Value;
+
+                var model = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.AiModel?.Value)
+                    ? "gpt-oss:120b-cloud"
+                    : PeakChatOpsPlugin.config.AiModel.Value;
+                var maxTokens = PeakChatOpsPlugin.config.AiMaxTokens?.Value ?? 1024;
+                var temperature = PeakChatOpsPlugin.config.AiTemperature?.Value ?? 0.9;
+                var topP = PeakChatOpsPlugin.config.AiTopP?.Value ?? 1.0;
+                var n = PeakChatOpsPlugin.config.AiN?.Value ?? 1;
+
+                var logger = AIChatContextLogger.Instance;
+                List<Dictionary<string, object>> messages;
+                if (logger != null)
                 {
-                    { "role", "system" },
-                    { "content", systemPrompt }
-                },
-                new Dictionary<string, object>
-                {
-                    { "role", "user" },
-                    { "content", evt.Message }
+                    // 先构造 system 消息，再拼接上下文
+                    messages = new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            { "role", "system" },
+                            { "content", systemPrompt }
+                        }
+                    };
+                    var contextMessages = logger.BuildContextMessages(evt.Message, evt.UserId);
+                    messages.AddRange(contextMessages);
+                    DevLog.File($"[Translate] 构建上下文消息数: {messages.Count}");
                 }
-            };
+                else
+                {
+                    messages = new List<Dictionary<string, object>>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            { "role", "system" },
+                            { "content", systemPrompt }
+                        },
+                        new Dictionary<string, object>
+                        {
+                            { "role", "user" },
+                            { "content", ("Translation Mode:") + evt.Message + (PeakChatOpsPlugin.config.PromptTranslate?.Value ?? "") }
+                        }
+                    };
+                    DevLog.File("[Translate] ⚠️ AIChatContextLogger.Instance 为 null，使用默认消息列表");
+                }
 
-            var model = string.IsNullOrWhiteSpace(PeakChatOpsPlugin.config.AiModel?.Value)
-                ? "gpt-oss:120b-cloud"
-                : PeakChatOpsPlugin.config.AiModel.Value;
+                DevLog.File($"[Translate] 发送请求到 {endpoint} | Model: {model} | MaxTokens: {maxTokens}");
 
-            DevLog.File($"[Translate] 发送请求到 {endpoint} | Model: {model}");
-            
-            var response = await chatApi.CreateChatCompletionAsync(model, messages, 256);
-            
-            if (response == null)
-            {
-                DevLog.File("[Translate] ❌ API 返回 null 响应");
-                PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel("翻译错误"), 
-                    MessageStyles.ErrorContent("API 返回空响应"));
-                return;
+                using var client = new OpenAIClient(apiKey, endpoint, maxTokens, temperature, topP, n);
+                var chatApi = new API.AI.Apis.OpenAIChatApi(client);
+                var response = await chatApi.CreateChatCompletionAsync(model, messages, maxTokens);
+
+                if (response == null)
+                {
+                    DevLog.File("[Translate] ❌ API 返回 null 响应");
+                    translationReply = "AI API 返回空响应，请检查网络连接或 API 配置";
+                    hasError = true;
+                }
+                else
+                {
+                    var (tContent, tReasoning) = AIChatContextLogger.ParseOpenAICompletionResponseWithReasoning(response);
+                    string displayText;
+                    if (tContent != null && tReasoning != null)
+                    {
+                        var reasoningFormatted = MessageStyles.ReasoningText(tReasoning);
+                        var reasoningLabel = MessageStyles.SecondaryText("[R]");
+                        displayText = tContent + "\n" + reasoningLabel + ": " + reasoningFormatted;
+                    }
+                    else if (tContent != null)
+                    {
+                        displayText = tContent;
+                    }
+                    else if (tReasoning != null)
+                    {
+                        displayText = MessageStyles.ReasoningText(tReasoning);
+                    }
+                    else
+                    {
+                        DevLog.File("[Translate] ⚠️ tContent 和 tReasoning 都为 null");
+                        displayText = PLocalizedText.GetText("AI_NO_RESPONSE");
+                        hasError = true;
+                    }
+
+                    if (tContent == null && tReasoning != null)
+                    {
+                        var preview = tReasoning.Substring(0, Math.Min(200, tReasoning.Length));
+                        DevLog.File($"[Translate] Reply taken from reasoning field (not sent). Preview: {preview}");
+                    }
+
+                    translationReply = displayText;
+                }
             }
-
-            var (tContent, tReasoning) = AIChatContextLogger.ParseOpenAICompletionResponseWithReasoning(response);
-            
-            var contentPreview = tContent != null ? tContent.Substring(0, Math.Min(50, tContent.Length)) : "null";
-            var reasoningPreview = tReasoning != null ? tReasoning.Substring(0, Math.Min(50, tReasoning.Length)) : "null";
-            DevLog.File($"[Translate] 解析结果 - Content: {contentPreview} | Reasoning: {reasoningPreview}");
-            
-            var translation = tContent ?? tReasoning ?? PLocalizedText.GetText("AI_NO_RESPONSE");
-
-            PeakChatOpsUI.Instance.AddMessage(MessageStyles.TranslateLabel(), 
-                MessageStyles.TranslateContent(translation));
         }
         catch (Exception ex)
         {
-            PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel("翻译异常"), 
-                MessageStyles.ErrorContent(ex.Message));
+            translationReply = $"翻译异常: {ex.Message}";
+            hasError = true;
             DevLog.File($"[Translate] Exception: {ex}");
+        }
+
+        // 显示翻译结果
+        if (!string.IsNullOrWhiteSpace(translationReply))
+        {
+            var prefix = hasError ? MessageStyles.ErrorLabel("翻译错误") : MessageStyles.TranslateLabel();
+            var coloredReply = hasError ? MessageStyles.ErrorContent(translationReply) : MessageStyles.TranslateContent(translationReply);
+            PeakChatOpsUI.Instance.AddMessage(prefix, coloredReply);
+        }
+        else
+        {
+            DevLog.File("[Translate] ⚠️ translationReply 为空或 null");
+            PeakChatOpsUI.Instance.AddMessage(MessageStyles.WarningLabel("翻译"), 
+                MessageStyles.WarningContent("没有收到任何响应"));
         }
     }
 }
