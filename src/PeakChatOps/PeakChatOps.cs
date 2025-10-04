@@ -1,5 +1,4 @@
-﻿using System.IO;
-using BepInEx;
+﻿using BepInEx;
 using System;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -13,7 +12,8 @@ using PEAKLib.Core;
 
 using PeakChatOps.UI;
 using System.Linq;
-
+using TMPro;
+#nullable enable
 namespace PeakChatOps;
 
 [BepInAutoPlugin]
@@ -28,6 +28,24 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
     // Unity 中的 Prefab 资源 在代码里是以 GameObject 表示
     public static GameObject PeakChatOpsUIPrefab = null!;
+
+    // 获取游戏字体
+    private static TMP_FontAsset? _darumaFontAsset;
+    public static TMP_FontAsset? DarumaDropOneFont
+    {
+        get
+        {
+            if (_darumaFontAsset == null)
+            {
+                var assets = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
+                _darumaFontAsset = assets.FirstOrDefault(fontAsset =>
+                    fontAsset.faceInfo.familyName == "Daruma Drop One"
+                );
+            }
+            return _darumaFontAsset;
+        }
+    }
+    
     
     private void Awake()
     {
@@ -57,7 +75,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         );
 
         // 初始化UI类
-        PeakChatOpsUI.help();
+        PeakChatOpsUI.Help();
 
         _harmony = new Harmony("com.lightjunction.peakchatops");
 
@@ -79,6 +97,14 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         // AI上下文记录器初始化
         AIChatContextLogger.CreateGlobalInstance(config.AiContextMaxCount.Value);
 
+        // AI世界观设置
+        AIChatContextLogger.Instance?.LogSystem(
+            LocalizedText.GetText("AI_CONTEXT_PEAK_WORLD_PROMPT_SYSTEM"),
+            sender: "System",
+            userId: "system",
+            pinned: true
+        );
+
         // Ensure message handler chain is initialized (subscribe buses, start runners)
         try
         {
@@ -92,14 +118,11 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 
     }
 
-
     private void OnDestroy()
     {
-    
         // 卸载补丁
         _harmony.UnpatchSelf();
 
         Logger.LogInfo("PeakChatOps is unloaded!");
     }
 }
-

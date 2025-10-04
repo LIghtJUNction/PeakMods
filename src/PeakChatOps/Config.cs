@@ -5,14 +5,9 @@ namespace PeakChatOps;
 
 public class PConfig
 {
-    public ConfigEntry<float> FontSize = null!;
-    public ConfigEntry<string> ChatSize = null!;
-    public ConfigEntry<float> FadeDelay = null!;
-    public ConfigEntry<float> HideDelay = null!;
+
     public ConfigEntry<KeyCode> Key = null!;
     public ConfigEntry<UIAlignment> Pos = null!;
-    public ConfigEntry<float> BgOpacity = null!;
-    public ConfigEntry<bool> FrameVisible = null!;
     public ConfigEntry<string> CmdPrefix = null!;
     public ConfigEntry<string> DeathMessage = null!;
     public ConfigEntry<string> ReviveMessage = null!;
@@ -33,106 +28,77 @@ public class PConfig
     public PConfig(ConfigFile config)
     {
         Key = config.Bind(
-            "Display", "ChatKey", KeyCode.Y, "The key that activates typing in chat");
+            "Display", "ChatKey", KeyCode.Y, LocalizedText.GetText("CHAT_KEY_DESCRIPTION"));
         Pos = config.Bind(
-            "Display", "ChatPosition", UIAlignment.TopLeft, "The position of the text chat");
-        ChatSize = config.Bind(
-            "Display", "ChatSize", "500:300", "The size of the text chat (formatted X:Y)");
-        FontSize = config.Bind(
-            "Display", "ChatFontSize", 20f, "Size of the chat's text");
-        BgOpacity = config.Bind(
-            "Display", "ChatBackgroundOpacity", 0.3f, "Opacity of the chat's background/shadow");
-        FrameVisible = config.Bind(
-            "Display", "ChatFrameVisible", true, "Whether the frame of the chat box is visible");
-        FadeDelay = config.Bind(
-            "Display", "ChatFadeDelay", 15f, "How long before the chat fades out (a negative number means never)");
-        HideDelay = config.Bind(
-            "Display", "ChatHideDelay", 40f,
-            "How long before the chat hides completely (a negative number means never)");
+            "Display", "ChatPosition", UIAlignment.TopLeft, LocalizedText.GetText("CHAT_POSITION_DESCRIPTION"));
+
         CmdPrefix = config.Bind(
-            "Commands", "CommandPrefix", "/", "The prefix that starts a command");
+            "Commands", "CommandPrefix", "/", LocalizedText.GetText("COMMAND_PREFIX_DESCRIPTION"));
 
         DeathMessage = config.Bind(
             "preset", "DeathMessage",
-            "<color=#FF4040>没想到我也有死的这一天！</color>\n" +
-            "<color=#FFA500>I never thought I'd see the day I die!</color>\n" +
-            "<color=#40A0FF>まさか自分が死ぬ日が来るとは！</color>\n" +
-            "<color=#A040FF>내가 죽는 날이 올 줄이야!</color>\n" +
-            "<color=#00C080>Не думал, что и я умру!</color>\n" +
-            "<color=#FFD700>Ich hätte nie gedacht, dass ich auch sterben würde!</color>\n" +
-            "<color=#00BFFF>Tak pernah terpikir aku akan mati!</color>\n" +
-            "<color=#FF69B4>Mi neniam pensis, ke mi ankaŭ mortos!</color>",
-            "系统消息：角色死亡时的提示文本，支持变量。每行一种语言，顺序：中/英/日/韩/俄/德/印尼/世界语。"
+            LocalizedText.GetText("DEATH_MESSAGE"),
+            LocalizedText.GetText("DEATH_MESSAGE_DESCRIPTION")
         );
+
         ReviveMessage = config.Bind(
             "preset", "ReviveMessage",
-            "<color=#7CFC00>太好了我复活啦！非常感谢！</color>\n" +
-            "<color=#00BFFF>Great, I'm revived! Thank you so much!</color>\n" +
-            "<color=#FF69B4>やった！生き返った！本当にありがとう！</color>\n" +
-            "<color=#FFD700>살았다! 정말 고마워!</color>\n" +
-            "<color=#FFA500>Ура, я ожил! Огромное спасибо!</color>\n" +
-            "<color=#FF4040>Super, ich lebe wieder! Vielen Dank!</color>\n" +
-            "<color=#40A0FF>Hebat, aku hidup lagi! Terima kasih banyak!</color>\n" +
-            "<color=#A040FF>Bonege, mi reviviĝis! Koran dankon!</color>",
-            "系统消息：角色复活时的提示文本，支持变量。每行一种语言，顺序：中/英/日/韩/俄/德/印尼/世界语。"
+            LocalizedText.GetText("REVIVE_MESSAGE"),
+            LocalizedText.GetText("REVIVE_MESSAGE_DESCRIPTION")
         );
+        
+        
         PassOutMessage = config.Bind(
             "preset", "PassOutMessage",
-            "<color=#FFD700>好晕！快来救我！</color>\n" +
-            "<color=#FF4040>I'm so dizzy! Please help me!</color>\n" +
-            "<color=#00BFFF>くらくらする！助けて！</color>\n" +
-            "<color=#7CFC00>어지러워! 도와줘!</color>\n" +
-            "<color=#A040FF>Голова кружится! Помогите!</color>\n" +
-            "<color=#FFA500>Mir ist schwindlig! Hilf mir!</color>\n" +
-            "<color=#FF69B4>Pusing! Tolong aku!</color>\n" +
-            "<color=#40A0FF>Mi tre kapturniĝas! Helpu min!</color>",
-            "系统消息：角色晕倒时的提示文本，支持变量。每行一种语言，顺序：中/英/日/韩/俄/德/印尼/世界语。"
+            LocalizedText.GetText("PASS_OUT_MESSAGE"),
+            LocalizedText.GetText("PASS_OUT_MESSAGE_DESCRIPTION")
         );
 
         // AI 配置（Ollama/OpenAI 兼容）
         AiModel = config.Bind(
             "AI", "Model", "gpt-oss:120b-cloud",
-            "Ollama本地模型名称，使用http://localhost:11434/v1/models查询"
+            LocalizedText.GetText("AI_MODEL_DESCRIPTION")
         );
 
         //Environment.SpecialFolder.ApplicationData
         AiApiKey = config.Bind(
             "AI", "ApiKey", "ollama",
-            "Ollama本地API无需密钥，请检查http://localhost:11434，如果没有输出Ollama is running，请在终端输入ollama serve启动本地服务器"
+            LocalizedText.GetText("AI_APIKEY_DESCRIPTION")
         );
 
         AiEndpoint = config.Bind(
             "AI", "Endpoint", "http://localhost:11434/v1",
-            "Ollama本地API端点（OpenAI兼容），如 http://localhost:11434/v1。云端OpenAI为 https://api.openai.com/v1。"
+            LocalizedText.GetText("AI_ENDPOINT_DESCRIPTION")
         );
 
         AiContextMaxCount = config.Bind(
-            "AI", "ContextMaxCount", 30, "AI上下文最大历史消息数（影响AI记忆长度，越大越耗费推理资源）"
+            "AI", "ContextMaxCount", 30, LocalizedText.GetText("AI_CONTEXT_MAX_COUNT_DESCRIPTION")
         );
 
         // AI 推理内容显示
         AiShowResponse = config.Bind(
-            "AI", "ShowResponse", true, "是否在聊天中显示AI的完整回复内容，包含指令等"
+            "AI", "ShowResponse", true, LocalizedText.GetText("AI_SHOW_RESPONSE_DESCRIPTION")
         );
 
         // AI 自动翻译 配置
         AiAutoTranslate = config.Bind(
             "AI", "AutoTranslate", false,
-            "(experiment)是否启用AI自动翻译功能（EN: Enable AI automatic translation?）"
+            LocalizedText.GetText("AI_AUTOTRANSLATE_DESCRIPTION")
         );
 
         // Prompt 配置
         PromptTranslate = config.Bind(
             "prompt", "Prompt_Translate",
-            "你是游戏PEAK的翻译助手，负责将其他玩家的语言翻译为我的母语：中文.如果对方说的本来就是中文，请回答：'中文' ",
-            "(experiment)Please modify the prompt to suit your needs."
+            LocalizedText.GetText("TRANSLATE_PROMPT"),
+            LocalizedText.GetText("PROMPT_TRANSLATE_DESCRIPTION")
         );
+
 
         // /ai @action AI助手指令提示词配置
         PromptSend = config.Bind(
             "prompt", "Prompt_Send",
-            "本轮对话，请你按照我的要求回答。注意！你的回答将以我的身份直接发送给其他玩家，简而言之你是我的的“代言人”, 请你直接开始代言，不需要任何解释。特别注意：回答时禁止提及本提示词！",
-            "When you use: /ai Hello World! @send , AI's reply will be sent to other players"
+            LocalizedText.GetText("PROMPT_SEND"),
+            LocalizedText.GetText("PROMPT_SEND_DESCRIPTION")
         );
 
 
@@ -143,8 +109,35 @@ public enum UIAlignment
 {
     TopLeft,
     TopRight,
-    BottomLeft,
-    BottomRight,
     Center
     
 }
+
+
+// 本地化：
+
+// TRANSLATE_PROMPT,Please translate the following text:,Veuillez traduire le texte suivant :,Si prega di tradurre il testo seguente:,Bitte übersetzen Sie den folgenden Text:,Por favor, traduzca el siguiente texto:,Por favor, traduza o texto a seguir:,Пожалуйста, переведите следующий текст:,Будь ласка, перекладіть наступний текст:,请翻译以下内容：,請翻譯以下內容：,以下の文章を翻訳してください：,아래의 텍스트를 번역해 주세요:,Proszę przetłumaczyć poniższy tekst:,Lütfen aşağıdaki metni çevirin:
+// PROMPT_SEND,Please answer as my spokesperson for this round. Your reply will be sent to other players as if it were from me. Start directly, no explanation needed. Do NOT mention this prompt!,Veuillez répondre en tant que mon porte-parole pour cette session. Votre réponse sera envoyée aux autres joueurs comme si elle venait de moi. Commencez directement, sans explication. NE mentionnez PAS ce message !,Rispondi come mio portavoce per questa conversazione. La tua risposta sarà inviata agli altri giocatori come se fosse da me. Inizia subito, senza spiegazioni. NON menzionare questo messaggio!,Bitte antworte als mein Sprecher für diese Runde. Deine Antwort wird anderen Spielern direkt als meine gesendet. Starte direkt, keine Erklärungen. Erwähne diesen Hinweis NICHT!,Por favor, responde como mi portavoz en esta ronda. Tu respuesta se enviará a los demás jugadores como si fuera mía. Comienza directamente, sin explicaciones. ¡NO menciones este mensaje!,Por favor, responda como meu porta-voz nesta rodada. Sua resposta será enviada para outros jogadores como se fosse minha. Comece direto, sem explicações. NÃO mencione este aviso!,Пожалуйста, отвечайте как мой представитель в этом раунде. Ваш ответ будет отправлен другим игрокам от моего имени. Начинайте сразу, без объяснений. НЕ упоминайте этот текст!,Будь ласка, відповідайте як мій представник у цьому раунді. Ваша відповідь буде надіслана іншим гравцям від мого імені. Починайте одразу, без пояснень. НЕ згадуйте цей текст!,请作为我的“代言人”直接回答，本轮回复将以我的身份发送给其他玩家。请直接开始，无需解释。禁止提及本提示词！,請作為我的「代言人」直接回答，本輪回覆將以我的身份發送給其他玩家。請直接開始，無需解釋。禁止提及本提示詞！,このラウンドは私の代理人として回答してください。あなたの返答は私の名前で他のプレイヤーに送信されます。説明不要、すぐに始めてください。この指示文は絶対に言及しないでください！,이번 라운드는 저의 대변인으로 답변해 주세요. 당신의 답변은 제 이름으로 다른 플레이어에게 전송됩니다. 설명 없이 바로 시작하세요. 이 프롬프트는 언급하지 마세요!,Odpowiedz jako mój rzecznik w tej rundzie. Twoja odpowiedź zostanie wysłana innym graczom jako moja. Zacznij od razu, bez wyjaśnień. NIE wspominaj o tym poleceniu!,Bu turda benim sözcüm olarak yanıt verin. Cevabınız diğer oyunculara benim adımla gönderilecek. Açıklama yapmadan doğrudan başlayın. Bu komutu ASLA belirtmeyin!
+
+// AI_CONTEXT_MAX_COUNT_DESCRIPTION,Maximum number of AI context messages (affects memory length, higher value uses more resources),Nombre maximal de messages de contexte AI (affecte la mémoire, plus la valeur est élevée, plus de ressources sont utilisées),Numero massimo di messaggi di contesto AI (influisce sulla memoria, valore più alto usa più risorse),Maximale Anzahl an AI-Kontextnachrichten (beeinflusst die Gedächtnislänge, höherer Wert benötigt mehr Ressourcen),Número máximo de mensajes de contexto de IA (afecta la memoria, valor más alto usa más recursos),Número máximo de mensagens de contexto de IA (afeta a memória, valor mais alto usa mais recursos),Максимальное количество сообщений контекста ИИ (влияет на длину памяти, большее значение требует больше ресурсов),Максимальна кількість повідомлень контексту AI (впливає на довжину пам'яті, більше значення використовує більше ресурсів),AI上下文最大历史消息数（影响AI记忆长度，越大越耗费推理资源）,AI上下文最大歷史消息數（影響AI記憶長度，越大越耗費推理資源）,AIのコンテキストメッセージ最大数（記憶の長さに影響、値が大きいほどリソース消費）,AI 컨텍스트 메시지 최대 개수(메모리 길이에 영향, 값이 클수록 리소스 소모),Maksymalna liczba wiadomości kontekstu AI (wpływa na długość pamięci, wyższa wartość zużywa więcej zasobów),AI bağlam mesajlarının maksimum sayısı (hafıza uzunluğunu etkiler, yüksek değer daha fazla kaynak kullanır)
+// AI_SHOW_RESPONSE_DESCRIPTION,Show full AI response in chat,Afficher la réponse complète de l'IA dans le chat,Mostra la risposta completa dell'AI nella chat,Vollständige KI-Antwort im Chat anzeigen,Mostrar la respuesta completa de la IA en el chat,Mostrar resposta completa da IA no chat,Показывать полный ответ ИИ в чате,Показувати повну відповідь AI у чаті,是否在聊天中显示AI的完整回复内容，包含指令等,是否在聊天中顯示AI的完整回覆內容，包含指令等,チャットにAIの完全な返答を表示する,채팅에 AI의 전체 응답을 표시,Wyświetl pełną odpowiedź AI na czacie,Sohbette tam AI yanıtını göster
+// PASS_OUT_MESSAGE,I'm so dizzy! Please help me!,J'ai la tête qui tourne ! Aidez-moi !,Mi gira la testa! Aiutatemi!,Mir ist schwindlig! Hilf mir!,¡Estoy mareado! ¡Ayúdame!,Estou tonto! Por favor, me ajude!,Мне очень плохо! Помогите!,Мені дуже зле! Допоможіть!,好晕！快来救我！,好暈！快來救我！,くらくらする！助けて！,어지러워! 도와줘!,Kręci mi się w głowie! Pomóżcie!,Başım dönüyor! Lütfen yardım edin!
+// PASS_OUT_MESSAGE_DESCRIPTION,Message shown when the character passes out.,Message affichée lorsque le personnage s'évanouit.,Messaggio mostrato quando il personaggio sviene.,Nachricht, die angezeigt wird, wenn der Charakter ohnmächtig wird.,Mensaje mostrado cuando el personaje se desmaya.,Mensagem exibida quando o personagem desmaia.,Сообщение, отображаемое при обмороке персонажа.,Повідомлення, що показується, коли персонаж втрачає свідомість。,角色晕倒时的提示文本。,角色暈倒時的提示文本。,キャラクターが気絶した時のメッセージ。,캐릭터가 기절할 때 표시되는 메시지。,Wiadomość wyświetlana, gdy postać mdleje.,Karakter bayıldığında gösterilen mesaj.
+
+// REVIVE_MESSAGE,Great, I'm revived! Thank you so much!,Super, ich lebe wieder! Vielen Dank!,やった！生き返った！本当にありがとう！,살았다! 정말 고마워!,Ура, я ожил! Огромное спасибо!,Hebat, aku hidup lagi! Terima kasih banyak!,Mi neniam pensis, ke mi ankaŭ mortos!,太好了我复活啦！非常感谢！,太好了我復活啦！非常感謝！,やった！生き返った！本当にありがとう！,살았다! 정말 고마워!,Super, ich lebe wieder! Vielen Dank!,Bonege, mi reviviĝis! Koran dankon!
+// REVIVE_MESSAGE_DESCRIPTION,Message shown when the character is revived.,Message affichée lorsque le
+
+// DEATH_MESSAGE,I never thought I'd see the day I die!,Je n'aurais jamais pensé voir le jour où je mourrais !,Non avrei mai pensato di vedere il giorno in cui morivo!,Ich hätte nie gedacht, dass ich auch sterben würde!,¡Nunca pensé que vería el día en que muero!,Nunca pensei que veria o dia em que morro!,Я никогда не думал, что увижу день своей смерти!,Я ніколи не думав, що побачу день своєї смерті!,没想到我也有死的这一天！,沒想到我也有死的這一天！,まさか自分が死ぬ日が来るとは！,내가 죽는 날이 올 줄이야!,Nigdy nie myślałem, że doczekam dnia swojej śmierci!,Öleceğim günü göreceğimi hiç düşünmemiştim!
+// DEATH_MESSAGE_DESCRIPTION,Message shown when the character dies.,Message affichée lorsque le personnage
+
+// CHAT_KEY_DESCRIPTION,The key that activates typing in chat,La touche qui active la saisie dans le chat,Il tasto che attiva la digitazione nella chat,Die Taste, die das Tippen im Chat aktiviert,La tecla que activa la escritura en el chat,A tecla que ativa a digitação no chat,Клавиша, которая активирует ввод в чате,Клавіша, яка активує введення в чаті,激活聊天输入的按键,啟動聊天輸入的按鍵,チャット入力を有効にするキー,채팅 입력을 활성화하는 키,Czy klawisz aktywuje pisanie na czacie?,Sohbette yazmayı etkinleştiren tuş
+// CHAT_POSITION_DESCRIPTION,The position of the chat window,La position de la fenêtre de chat,La posizione della finestra di chat,Die Position des Chat-Fensters,La posición de la ventana de chat,A posição da janela de chat,Положение окна чата,Положення вікна чату,聊天窗口的位置,聊天視窗的位置,チャットウィンドウの位置,채팅 창의 위치,Polożenie okna czatu,Sohbet penceresinin konumu
+// COMMAND_PREFIX_DESCRIPTION,Prefix to identify commands in chat,Préfixe pour identifier les commandes
+
+// AI_MODEL_DESCRIPTION,AI model to use for chat (Ollama/OpenAI compatible),Modèle d'IA à utiliser pour le chat (compatible Ollama/OpenAI),Modello di IA da utilizzare per la chat (compatibile con Ollama/OpenAI),KI-Modell für den Chat (Ollama/OpenAI-kompatibel),Modelo de IA para usar en el chat (compatible con Ollama/OpenAI),Modelo de IA para usar no chat (compatível com Ollama/OpenAI),Модель ИИ для использования в чате (совместима с Ollama/OpenAI),Модель ШІ для використання в чаті (сумісна з Ollama/OpenAI),用于聊天的AI模型（兼容Ollama/OpenAI）,用於聊天的AI模型（相容Ollama/OpenAI）,チャットに使用するAIモデル（Ollama/OpenAI互換）,채팅에 사용할 AI 모델(Ollama/OpenAI 호환),Model AI do użycia w czacie (kompatybilny z Ollama/OpenAI),Sohbette kullanılacak AI modeli (Ollama/OpenAI uyumlu)
+// AI_APIKEY_DESCRIPTION,API key or path to API key file for AI service,Clé API ou chemin vers le fichier de clé API pour le service d'IA,Chiave API o percorso del file della chiave API per il servizio AI,API-Schlüssel oder Pfad zur API-Schlüsseldatei für den KI-Dienst,Clave API o ruta al archivo de clave API para el servicio de IA,Chave API ou caminho para o arquivo de chave API para o serviço de IA,API-ключ или путь к файлу ключа API для сервиса ИИ,API-ключ або шлях до файлу ключа API для сервісу ШІ,AI服务的API密钥或API密钥文件路径,AI服務的API密鑰或API密鑰檔案路徑,AIサービスのAPIキーまたはAPIキー ファイルへのパス,AI 서비스용 API 키 또는 API 키 파일 경로,Klucz API lub ścieżka do pliku klucza API dla usługi AI,AI hizmeti için API anahtarı veya API anahtar dosyasının yolu
+// AI_ENDPOINT_DESCRIPTION,Endpoint URL for AI service,URL du point de terminaison pour le service d'IA,URL endpoint per il servizio AI,Endpunkt-URL für den KI-Dienst,URL del endpoint para el servicio de IA,URL do endpoint para o serviço de IA,URL конечной точки для сервиса ИИ,URL кінцевої точки для сервісу ШІ,AI服务的端点URL,AI服務的端點URL,AIサービスのエンドポイントURL,AI 서비스용 엔드포인트 URL,Adres URL punktu końcowego usługi AI,AI hizmeti için uç nokta URL'si
+
+// AI_AUTOTRANSLATE_DESCRIPTION,Automatically translate incoming messages to English for AI processing,Traduire automatiquement les messages entrants en anglais pour le traitement par l'IA,Traduci automaticamente i messaggi in arrivo in inglese per l'elaborazione AI,Eingehende Nachrichten automatisch ins Englische übersetzen für die KI-Verarbeitung,Traducir automáticamente los mensajes entrantes al inglés para el procesamiento de IA,Traduzir automaticamente as mensagens recebidas para o inglês para processamento de IA,Автоматически переводить входящие сообщения на английский для обработки ИИ,Автоматично перекладати вхідні повідомлення англійською для обробки ШІ,自动将收到的消息翻译成英文以供AI处理,自動將收到的訊息翻譯成英文以供AI處理,受信メッセージをAI処理のために自動的に英語に翻訳する,수신 메시지를 AI 처리를 위해 자동으로 영어로 번역,Automatycznie tłumacz przychodzące wiadomości na angielski do przetwarzania przez AI,Gelen mesajları AI işlemesi için otomatik olarak İngilizceye çevir
+// PROMPT_TRANSLATE_DESCRIPTION,Prompt used for translation requests,Invite utilisé pour les demandes de traduction,Prompt utilizzato per le richieste di traduzione,Eingabeaufforderung für Übersetzungsanfragen,Indicador utilizado para solicitudes de traducción,Prompt usado para solicitações de tradução,Подсказка, используемая для запросов на перевод,Підказка, що використовується для запитів на переклад,用于翻译请求的提示词,用於翻譯請求的提示詞,翻訳リクエストに使用されるプロンプト,번역 요청에 사용되는 프롬프트,Polecenie używane do żądań tłumaczenia,Tercüme istekleri için kullanılan istem
+// PROMPT_SEND_DESCRIPTION,Prompt used for AI chat messages,Invite utilisé pour les messages de chat IA,Prompt utilizzato per i messaggi di chat AI,Eingabeaufforderung für KI-Chat-Nachrichten,Indicador utilizado para mensajes de chat de IA,Prompt usado para mensagens de chat de IA,Подсказка, используемая для сообщений чата ИИ,Підказка, що використовується для повідомлень чату ШІ,用于AI聊天消息的提示词,用於AI聊天訊息的提示詞,AIチャットメッセージに使用されるプロンプト,AI 채팅 메시지에 사용되는 프롬프트,Polecenie używane do wiadomości czatu AI,AI sohbet mesajları için kullanılan istem

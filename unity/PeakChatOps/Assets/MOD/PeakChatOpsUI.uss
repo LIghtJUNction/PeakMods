@@ -1,243 +1,100 @@
-.chat-container {
-    position: absolute;
-    left: 20px;
-    top: 20px;
+/* 基础聊天面板样式 */
+#chat-panel {
     width: 400px;
-    height: 500px;
-    background-color: rgba(255, 250, 230, 0.95);
-    border-radius: 16px;
-    border-width: 3px;
-    border-color: rgba(100, 200, 200, 0.8);
-    overflow: hidden;
-    flex-direction: column;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.fade-in {
-    animation-name: fade-in;
-    animation-duration: 0.5s;
-    animation-timing-function: ease-out;
-}
-
-.top-glow {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 40px;
-    background: linear-gradient(180deg, rgba(100, 200, 200, 0.3) 0, transparent 100%);
-    align-items: auto;
-    align-content: auto;
-}
-
-.bottom-shadow {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: linear-gradient(0, rgba(0, 0, 0, 0.1) 0, transparent 100%);
-}
-
-.chat-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, rgba(100, 200, 200, 0.25) 0, rgba(80, 180, 180, 0.2) 100%);
-    padding: 10px 15px;
-    border-bottom-width: 2px;
-    border-bottom-color: rgba(100, 200, 200, 0.5);
-    min-height: 45px;
-}
-
-.title-container {
-    flex-direction: row;
-    align-items: center;
-}
-
-.chat-emoji {
-    font-size: 20px;
-    margin-right: 8px;
-}
-
-.chat-title {
-    font-size: 16px;
-    -unity-font-style: bold;
-    color: rgb(60, 140, 140);
-    letter-spacing: 1px;
-    -unity-text-align: middle-left;
-}
-
-.header-buttons {
-    flex-direction: row;
-}
-
-.header-btn {
-    width: 28px;
-    height: 28px;
-    margin-left: 6px;
-    background-color: rgba(100, 200, 200, 0.2);
-    border-radius: 6px;
-    border-width: 1px;
-    border-color: rgba(100, 200, 200, 0.4);
-    font-size: 18px;
-    -unity-font-style: bold;
-    color: rgba(60, 140, 140, 0.9);
-    transition-duration: 0.2s;
-    transition-property: background-color, scale;
-}
-
-.header-btn:hover {
-    background-color: rgba(100, 200, 200, 0.4);
-    scale: 1.1;
-    border-color: rgba(100, 200, 200, 0.7);
-}
-
-.header-btn:active {
-    scale: 0.95;
-}
-
-.minimize-btn:hover {
-    background-color: rgba(255, 200, 100, 0.5);
-    color: rgb(180, 100, 20);
-}
-
-.close-btn:hover {
-    background-color: rgba(255, 120, 120, 0.6);
-    color: rgb(200, 50, 50);
-    border-color: rgba(255, 100, 100, 0.8);
-}
-
-.message-area {
-    flex-grow: 1;
-    background-color: rgba(205, 175, 175, 0.3);
+    min-width: 350px;
+    max-width: 600px;
+    height: auto;
+    max-height: 500px;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-radius: 8px;
     padding: 5px;
-    display: flex;
-}
-
-.message-list {
-    padding: 10px;
-}
-
-.message-item {
-    padding: 10px 14px;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, rgba(100, 200, 200, 0.12) 0, rgba(120, 220, 220, 0.08) 100%);
-    border-radius: 10px;
-    border-left-width: 3px;
-    border-left-color: rgba(100, 200, 200, 0.7);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition-duration: 0.2s;
-    transition-property: background-color, translate;
-}
-
-.message-item:hover {
-    background: linear-gradient(135deg, rgba(100, 200, 200, 0.18) 0, rgba(120, 220, 220, 0.14) 100%);
-    translate: 2px 0;
-}
-
-.slide-in {
-    animation-name: slide-in;
-    animation-duration: 0.4s;
-    animation-timing-function: ease-out;
-}
-
-.message-sender {
-    font-size: 12px;
-    -unity-font-style: bold;
-    color: rgb(60, 140, 140);
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-}
-
-.message-content {
-    font-size: 14px;
-    color: rgba(50, 50, 50, 0.9);
-    white-space: normal;
-    line-height: 1.4;
-}
-
-.message-time {
-    font-size: 10px;
-    color: rgba(120, 120, 120, 0.7);
-    margin-top: 4px;
-    -unity-text-align: upper-right;
-}
-
-.input-area {
-    flex-direction: row;
-    padding: 12px;
-    background: linear-gradient(180deg, rgba(100, 200, 200, 0.15) 0, rgba(120, 220, 220, 0.1) 100%);
-    border-top-width: 2px;
-    border-top-color: rgba(100, 200, 200, 0.5);
-    align-items: center;
-}
-
-.message-input {
-    flex-grow: 1;
-    height: 50px;
-    margin-right: 10px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    border-width: 2px;
-    border-color: rgba(100, 200, 200, 0.4);
-    padding-left: 16px;
-    padding-right: 16px;
-    color: rgb(50, 50, 50);
-    font-size: 14px;
-    transition-duration: 0.3s;
-    transition-property: border-color, background-color, scale;
-    flex-wrap: wrap;
+    position: absolute;
     flex-direction: column;
-    justify-content: flex-start;
-    align-items: auto;
-    align-content: auto;
+    border-width: 1px;
+    border-color: rgba(100, 100, 100, 0.5);
 }
 
-.message-input:hover {
-    border-color: rgba(100, 200, 200, 0.6);
-    background-color: rgba(255, 255, 255, 0.95);
+/* 最小化状态 */
+.minimized {
+    opacity: 0.5;
+    height: 50px;
+    overflow: hidden;
+    transition-duration: 0.3s;
 }
 
-.message-input:focus {
-    border-color: rgb(100, 200, 200);
-    border-width: 2px;
-    background-color: rgb(255, 255, 255);
-    scale: 1.02;
+/* 最大化状态 */
+.maximized {
+    width: 80%;
+    max-width: 1200px;
+    height: 80%;
+    max-height: 800px;
+    transition-duration: 0.3s;
 }
 
-.send-button {
-    width: 80px;
-    height: 38px;
-    background: linear-gradient(135deg, rgba(100, 200, 200, 0.9) 0, rgba(80, 180, 180, 0.95) 100%);
-    border-radius: 20px;
-    border-width: 2px;
-    border-color: rgb(100, 200, 200);
-    font-size: 13px;
+/* 位置：左上角 */
+.pos-topleft {
+    top: 20px;
+    left: 20px;
+}
+
+/* 位置：右上角 */
+.pos-topright {
+    top: 20px;
+    right: 20px;
+}
+
+/* 位置：居中 */
+.pos-center {
+    top: 50%;
+    left: 50%;
+    /* Unity不支持translate，需要在C#代码中处理居中 */
+}
+
+/* 高亮效果（新消息提醒） */
+.highlight {
+    border-color: rgb(255, 255, 0);
+    border-width: 3px;
+    transition-duration: 0.5s;
+}
+
+/* 消息列表样式 */
+#message-list {
+    flex-grow: 1;
+    background-color: rgba(40, 40, 40, 0.8);
+    border-width: 1px;
+    border-color: rgba(80, 80, 80, 0.5);
+    border-radius: 4px;
+    margin: 5px 0;
+    padding: 5px;
+}
+
+/* 输入框样式 */
+#message-input {
+    background-color: rgba(50, 50, 50, 0.9);
+    border-width: 1px;
+    border-color: rgba(100, 100, 100, 0.5);
+    border-radius: 4px;
+    margin-top: 5px;
+    padding: 5px;
+    -unity-font-style: normal;
+    color: rgb(220, 220, 220);
+}
+
+/* 发送按钮样式 */
+#send-button {
+    background-color: rgba(60, 120, 180, 0.9);
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(80, 140, 200, 0.8);
+    color: rgb(255, 255, 255);
     -unity-font-style: bold;
-    color: rgb(0, 0, 0);
-    transition-duration: 0.2s;
-    transition-property: background-color, scale, box-shadow;
-    box-shadow: 0 4px 12px rgba(100, 200, 200, 0.3);
-    -unity-text-align: upper-center;
-    background-image: url("project://database/Assets/Texture2D/Egg.png?fileID=2800000&guid=0053e47a428246548a8f095f585d82dc&type=3#Egg");
-    -unity-font-definition: url("project://database/Assets/Font/Tetsubin%20Gothic.otf?fileID=12800000&guid=c00b0b0612a38034e95040517a4824ca&type=3#Tetsubin Gothic");
+    padding: 5px 10px;
 }
 
-.send-button:hover {
-    background: linear-gradient(135deg, rgb(120, 220, 220) 0, rgb(100, 200, 200) 100%);
-    scale: 1.05;
-    box-shadow: 0 6px 16px rgba(100, 200, 200, 0.5);
+#send-button:hover {
+    background-color: rgba(80, 140, 200, 1);
 }
 
-.send-button:active {
-    scale: 0.95;
-    box-shadow: 0 2px 8px rgba(100, 200, 200, 0.4);
-}
-
-.send-icon {
-    font-size: 15px;
-    -unity-font-style: bold;
-    margin-left: 4px;
-    display: flex;
+#send-button:active {
+    background-color: rgba(40, 100, 160, 1);
 }

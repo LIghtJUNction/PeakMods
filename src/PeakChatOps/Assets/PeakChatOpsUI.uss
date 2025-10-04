@@ -1,0 +1,46 @@
+.minimized {
+    display: flex;
+    opacity: 0.3;
+    transition-property: opacity;
+    transition-duration: 3s;
+    transition-delay: 1s;
+    visibility: visible;
+    width: auto;
+    height: auto;
+    padding-right: 90%;
+    padding-bottom: 90px;
+}
+
+.maximized {
+    width: 333%;
+    height: auto;
+    translate: 0 0;
+    transform-origin: left top;
+    align-items: stretch;
+    max-width: none;
+    min-height: 250%;
+}
+
+.minimized {
+    display: flex;
+    opacity: 0.3;
+    transition-property: opacity;
+    transition-duration: 3s;
+    transition-delay: 1s;
+    visibility: visible;
+    width: auto;
+    height: auto;
+    padding-right: 90%;
+    padding-bottom: 90px;
+}
+
+.pos-topright {
+    translate: 70% 0;
+}
+
+.pos-topleft {
+}
+
+.pos-center {
+    translate: 35% 0;
+}

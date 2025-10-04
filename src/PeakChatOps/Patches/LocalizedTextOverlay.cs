@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 using HarmonyLib;
 using BepInEx;
-using UnityEngine;
-using Newtonsoft.Json;
 
 namespace PeakChatOps.Patches;
 
@@ -32,7 +28,6 @@ public static class LocalizationPatches
 
         
     }
-    
     public static void LoadModTable(string csvPath)
     {
 

@@ -46,9 +46,8 @@ public class WhisperCommand
         string richMsg = $"<color=#FFD700>[Whisper]</color> <b>{myName}</b> -> <b>{targetName}</b>: {message}";
 
         // Prepare typed WhisperExtra
-        var whisperExtra = new PeakChatOps.Core.MsgChain.WhisperExtra
+        var whisperExtra = new Core.MsgChain.WhisperExtra
         {
-            CmdName = "whisper",
             UserActorNumber = Photon.Pun.PhotonNetwork.LocalPlayer?.ActorNumber ?? -1,
             TargetActors = new int[] { actorNumber },
             TargetNames = new string[] { targetName }

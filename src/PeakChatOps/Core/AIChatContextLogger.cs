@@ -2,6 +2,10 @@
 using System;
 using System.Collections.Generic;
 using PeakChatOps.API;
+using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
+using System.Linq;
 
 #nullable enable
 namespace PeakChatOps.Core;
@@ -11,6 +15,24 @@ namespace PeakChatOps.Core;
 /// </summary>
 public class AIChatContextLogger
 {
+
+    /// <summary>
+    /// 消息条目包装类，包含消息和固定标记
+    /// </summary>
+    private sealed class MessageEntry
+    {
+        public AIChatMessageEvent Message { get; }
+        public Dictionary<string, object> Payload { get; }
+        public bool IsPinned { get; }
+
+        public MessageEntry(AIChatMessageEvent message, Dictionary<string, object> payload, bool isPinned)
+        {
+            Message = message;
+            Payload = payload;
+            IsPinned = isPinned;
+        }
+    }
+
     /// <summary>
     /// 导出当前聊天记录到本地文件（覆盖上一次的文件）
     /// </summary>
@@ -20,43 +42,54 @@ public class AIChatContextLogger
         try
         {
             var lines = new List<string>();
-            foreach (var msg in _history)
+            foreach (var entry in _history)
             {
-                lines.Add($"[{msg.Role}] {msg.Sender}({msg.UserId}): {msg.Message}");
+                var msg = entry.Message;
+                var pinMark = entry.IsPinned ? " [PINNED]" : "";
+                lines.Add($"[{msg.Role}] {msg.Sender}({msg.UserId}): {msg.Message}{pinMark}");
             }
             System.IO.File.WriteAllLines(filePath, lines);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             PeakChatOpsPlugin.Logger.LogError($"[AIContext] 导出聊天记录到文件失败: {filePath}，错误信息: {ex.Message}");
         }
     }
-   /// <summary>
+    /// <summary>
     /// 记录一条系统消息到上下文
     /// </summary>
     /// <param name="message">消息内容</param>
     /// <param name="sender">发送者名称,仅用于显示在UI上</param>
     /// <param name="userId">用户ID</param>
-    public void LogSystem(string message, string sender = "system", string userId = "system")
+    /// <param name="pinned">是否固定此消息，固定后不参与历史裁剪</param>
+    public void LogSystem(string message, string sender = "system", string userId = "system", bool pinned = false)
     {
-        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.system));
+        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.system), pinned);
     }
 
 
     /// <summary>
     /// 记录一条用户消息到上下文
     /// </summary>
-    public void LogUser(string message, string sender = "PlayerName", string userId = "uuid-user")
+    /// <param name="message">消息内容</param>
+    /// <param name="sender">发送者名称</param>
+    /// <param name="userId">用户ID</param>
+    /// <param name="pinned">是否固定此消息，固定后不参与历史裁剪</param>
+    public void LogUser(string message, string sender = "PlayerName", string userId = "uuid-user", bool pinned = false)
     {
-        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.user));
+        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.user), pinned);
     }
 
     /// <summary>
     /// 记录一条AI助手消息到上下文
     /// </summary>
-    public void LogAssistant(string message, string sender = "ModelName", string userId = "assistant")
+    /// <param name="message">消息内容</param>
+    /// <param name="sender">发送者名称</param>
+    /// <param name="userId">用户ID</param>
+    /// <param name="pinned">是否固定此消息，固定后不参与历史裁剪</param>
+    public void LogAssistant(string message, string sender = "ModelName", string userId = "assistant", bool pinned = false)
     {
-        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.assistant));
+        Add(new AIChatMessageEvent(sender, message, userId, AIChatRole.assistant), pinned);
     }
 
     /// <summary>
@@ -72,9 +105,10 @@ public class AIChatContextLogger
         Instance = new AIChatContextLogger(maxHistory);
     }
 
-    private readonly LinkedList<AIChatMessageEvent> _history = new();
-    private readonly List<Dictionary<string, object>> _messages = new();
+    private readonly LinkedList<MessageEntry> _history = new();
+    private readonly List<MessageEntry> _messages = new();
     private int _maxHistory;
+    private int _nonPinnedCount; // 跟踪非固定消息数量
 
     public AIChatContextLogger(int maxHistory = 30)
     {
@@ -84,61 +118,91 @@ public class AIChatContextLogger
     /// <summary>
     /// 运行时同步配置的最大历史条数
     /// </summary>
-    public void SyncMaxHistoryFromConfig()
-    {
-        int configVal = 30;
-        try { configVal = PeakChatOpsPlugin.config.AiContextMaxCount?.Value ?? 30; } catch { }
-        if (configVal > 0) _maxHistory = configVal;
-    }
+        public void SyncMaxHistoryFromConfig()
+        {
+            int configVal = 30;
+            try
+            {
+                configVal = PeakChatOpsPlugin.config.AiContextMaxCount?.Value ?? 30;
+            }
+            catch (Exception ex)
+            {
+                PeakChatOpsPlugin.Logger.LogDebug($"[AIContext] SyncMaxHistoryFromConfig failed to read config: {ex.Message}");
+            }
+            if (configVal > 0)
+            {
+                _maxHistory = configVal;
+                TrimExcess(); // 同步后立即裁剪
+            }
+        }
 
     /// <summary>
     /// 追加一条AI聊天消息到上下文
     /// </summary>
-    public void Add(AIChatMessageEvent msg)
+    /// <param name="msg">消息事件</param>
+    /// <param name="pinned">是否固定此消息，固定后不参与历史裁剪</param>
+    public void Add(AIChatMessageEvent msg, bool pinned = false)
     {
-        _history.AddLast(msg);
-        _messages.Add(new Dictionary<string, object>
+        var payload = new Dictionary<string, object>
         {
             ["role"] = msg.Role.ToString(),
             ["content"] = msg.Message,
             ["name"] = msg.UserId
-        });
-        // 保证两者长度一致
-        while (_history.Count > _maxHistory)
+        };
+
+        var entry = new MessageEntry(msg, payload, pinned);
+        _history.AddLast(entry);
+        _messages.Add(entry);
+
+        if (!pinned)
         {
-            _history.RemoveFirst();
+            _nonPinnedCount++;
         }
-        while (_messages.Count > _history.Count)
-        {
-            _messages.RemoveAt(0);
-        }
+
+        // 只裁剪非固定消息
+        TrimExcess();
     }
 
     /// <summary>
-    /// 获取当前上下文历史（OpenAI兼容消息字典列表，适合直接用作messages参数）
+    /// 裁剪多余的非固定消息，保持非固定消息数量不超过 _maxHistory
     /// </summary>
-    public List<Dictionary<string, object>> GetHistory()
+    private void TrimExcess()
     {
-        return new List<Dictionary<string, object>>(_messages);
+        // 只有当非固定消息数超过限制时才裁剪
+        while (_nonPinnedCount > _maxHistory)
+        {
+            var node = _history.First;
+            while (node != null)
+            {
+                if (!node.Value.IsPinned)
+                {
+                    _history.Remove(node);
+                    _messages.Remove(node.Value);
+                    _nonPinnedCount--;
+                    break;
+                }
+                node = node.Next;
+            }
+        }
     }
 
     /// <summary>
-    /// 构建OpenAI兼容的消息字典列表（历史+当前用户输入）
+    /// 构建OpenAI兼容的消息字典列表（返回已记录的历史消息）
+    /// 注意：调用此方法前应先调用 LogUser 记录用户输入
     /// </summary>
-    /// <param name="userPrompt">当前用户输入</param>
-    /// <param name="userName">用户名（可选）</param>
-    /// <returns>OpenAI chat/messages格式的历史+当前输入</returns>
+    /// <param name="userPrompt">当前用户输入（已废弃，保留仅为兼容旧代码）</param>
+    /// <param name="userName">用户名（已废弃，保留仅为兼容旧代码）</param>
+    /// <returns>OpenAI chat/messages格式的历史消息列表</returns>
     public List<Dictionary<string, object>> BuildContextMessages(string userPrompt, string userName = "玩家")
     {
-        // 历史消息深拷贝，防止外部修改
-        var messages = new List<Dictionary<string, object>>(_messages);
-        // 追加当前用户输入
-        messages.Add(new Dictionary<string, object>
+        // 历史消息浅拷贝（复制payload引用），防止外部修改列表本身
+        var messages = new List<Dictionary<string, object>>(_messages.Count);
+        foreach (var entry in _messages)
         {
-            ["role"] = "user",
-            ["content"] = userPrompt,
-            ["name"] = userName
-        });
+            messages.Add(entry.Payload);
+        }
+        
+        DevLog.UI($"[AIContext] BuildContextMessages: total messages count = {messages.Count}\n 最近4条: {string.Join(", ", messages.TakeLast(4).Select(m => m["content"]))}");
         return messages;
     }
 
@@ -149,6 +213,7 @@ public class AIChatContextLogger
     {
         _history.Clear();
         _messages.Clear();
+        _nonPinnedCount = 0;
     }
 
     /// <summary>
@@ -190,26 +255,56 @@ public class AIChatContextLogger
     }
 
     /// <summary>
-    /// 向后兼容的单字符串解析器：优先返回 content，其次 reasoning，再回退到原始 choices 输出或错误信息。
+    /// 构建房间环境信息的一行提示词，包含房间名、玩家列表、房主与可选房间种子等（便于 AI 上下文使用）。
+    /// 示例："room[MyRoom] players=3 [Alice|id=uid1|actor=1|local=false|master=true;Bob|id=uid2|actor=2|local=true|master=false] host=Alice,mapSeed=2025-10-04,time=1696464000"
     /// </summary>
-    public static string ParseOpenAICompletionResponse(string response)
+    /// <param name="includeTimestamp">是否包含当前 UTC 时间戳</param>
+    /// <returns>单行房间提示词</returns>
+    public string BuildRoomEnvironmentPrompt(bool includeTimestamp = true)
     {
         try
         {
-            var (content, reasoning) = ParseOpenAICompletionResponseWithReasoning(response);
-            if (!string.IsNullOrWhiteSpace(content))
-                return content!;
-            if (!string.IsNullOrWhiteSpace(reasoning))
-                return reasoning!;
+            var room = PhotonNetwork.CurrentRoom;
+            var roomName = room?.Name ?? "unknown";
+            var players = PhotonNetwork.PlayerList ?? Array.Empty<Photon.Realtime.Player>();
+            var local = PhotonNetwork.LocalPlayer;
+            var master = PhotonNetwork.MasterClient;
 
-            var obj = Newtonsoft.Json.Linq.JObject.Parse(response);
-            var choices = obj["choices"] as Newtonsoft.Json.Linq.JArray;
-            return "(AI无回复, No response) 原始: " + (choices != null ? choices.ToString() : "null");
+            var parts = new List<string>();
+            foreach (var p in players)
+            {
+                var nick = !string.IsNullOrEmpty(p.NickName) ? p.NickName : $"Player{p.ActorNumber}";
+                var userId = !string.IsNullOrEmpty(p.UserId) ? p.UserId : "unknown";
+                var actor = p.ActorNumber;
+                var isLocal = p.Equals(local);
+                var isMaster = p.Equals(master);
+                parts.Add($"{nick}|id={userId}|actor={actor}|local={isLocal.ToString().ToLower()}|master={isMaster.ToString().ToLower()}");
+            }
+
+            string playersStr = parts.Count > 0 ? string.Join(";", parts) : string.Empty;
+            string seedVal = "none";
+            try
+            {
+                if (room?.CustomProperties != null && room.CustomProperties.ContainsKey("seed"))
+                    seedVal = room.CustomProperties["seed"]?.ToString() ?? "none";
+            }
+            catch (Exception ex)
+            {
+                PeakChatOpsPlugin.Logger.LogDebug($"[AIContext] BuildRoomEnvironmentPrompt read seed: {ex.Message}");
+            }
+
+            var hostName = master?.NickName ?? "unknown";
+            var timestamp = includeTimestamp ? $",time={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}" : string.Empty;
+
+            var prompt = $"room[{roomName}] players={players.Length} [{playersStr}] host={hostName},mapSeed={seedVal}{timestamp}";
+            return prompt;
         }
         catch (Exception ex)
         {
-            return $"(AI响应解析失败, Parse error: {ex.Message})";
+            PeakChatOpsPlugin.Logger.LogError($"[AIContext] BuildRoomEnvironmentPrompt failed: {ex.Message}");
+            return "room=unknown players=0";
         }
     }
+
 
 }

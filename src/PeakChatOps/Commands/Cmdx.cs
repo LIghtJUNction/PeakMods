@@ -8,7 +8,7 @@ using BepInEx;
 using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
 using PeakChatOps.Core;
-#nullable enable
+
 namespace PeakChatOps.Commands;
 
  [PCOCommand("cmdx", "命令执行器", "用法: /cmdx <cmd> <args>\n执行指定的命令。")]

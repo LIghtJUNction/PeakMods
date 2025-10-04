@@ -1,5 +1,4 @@
 // 命令自动注册接口（如未全局定义则本地定义，防止找不到类型报错）
-
 using System;
 using System.Collections.Generic;
 using PeakChatOps.API;

@@ -1,0 +1,7 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <engine:VisualElement name="window-toolbar" style="height: 40px; align-items: center; justify-content: flex-end; flex-direction: row; width: 100%; flex-shrink: 0;">
+        <engine:Button name="minimize-button" style="width: 40px; height: 40px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/Texture2D/check-dash.png?fileID=2800000&amp;guid=c6ade4a508a27e44189e0a4e976b8856&amp;type=3#check-dash&quot;);" />
+        <engine:Button name="maximize-button" style="width: 40px; height: 40px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/Texture2D/UI_Blur_Outlne_Thick%201.png?fileID=2800000&amp;guid=e7c55837d24fb10409a23cb8c63c2256&amp;type=3#UI_Blur_Outlne_Thick 1&quot;);" />
+        <engine:Button name="close-button" style="width: 40px; height: 40px; flex-shrink: 0; background-image: url(&quot;project://database/Assets/Texture2D/PipX.png?fileID=2800000&amp;guid=c08303e9a3e4c0e4b85fe8e787c27d57&amp;type=3#PipX&quot;);" />
+    </engine:VisualElement>
+</engine:UXML>

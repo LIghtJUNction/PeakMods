@@ -26,7 +26,7 @@ public static class GUIManagerPatch
             // 实例化 prefab 并挂载
             if (PeakChatOpsPlugin.PeakChatOpsUIPrefab != null)
             {
-                PeakChatOpsUIGO = UnityEngine.Object.Instantiate(PeakChatOpsPlugin.PeakChatOpsUIPrefab, parentTransform);
+                PeakChatOpsUIGO = Object.Instantiate(PeakChatOpsPlugin.PeakChatOpsUIPrefab, parentTransform);
                 PeakChatOpsUIGO.name = "PeakChatOpsUI";
                 DevLog.File("✅ PeakChatOpsUI prefab instantiated.");
                 
@@ -46,7 +46,6 @@ public static class GUIManagerPatch
             {
                 DevLog.File("⚠️ PeakChatOpsUIPrefab is null, skipping UI creation.");
             }
-
 
         }
         catch (System.Exception ex)

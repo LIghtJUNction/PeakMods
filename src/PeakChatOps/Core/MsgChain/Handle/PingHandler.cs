@@ -30,7 +30,7 @@ public static class PingHandler
                     var cmdName = dict.TryGetValue("CmdName", out var cnObj) ? cnObj as string : null;
                     var userActor = dict.TryGetValue("UserActorNumber", out var uaObj) && uaObj is int ua ? ua : -1;
                     var targetActors = dict.TryGetValue("TargetActors", out var taObj) && taObj is int[] tas ? tas : Array.Empty<int>();
-                    ping = new PingExtra { CmdName = cmdName ?? "ping", UserActorNumber = userActor, TargetActors = targetActors };
+                    ping = new PingExtra { UserActorNumber = userActor, TargetActors = targetActors };
                 }
                 catch
                 {
@@ -51,14 +51,12 @@ public static class PingHandler
             // 构造类型化的 ping 回复（PingExtra）并也构造 WhisperExtra 用于发送
             var pongPingExtra = new PingExtra
             {
-                CmdName = "ping",
                 UserActorNumber = myActorNumber,
                 TargetActors = new int[] { replyTo }
             };
 
             var whisperExtra = new WhisperExtra
             {
-                CmdName = "whisper",
                 UserActorNumber = myActorNumber,
                 TargetActors = new int[] { replyTo }
             };

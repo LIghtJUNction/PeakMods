@@ -9,24 +9,6 @@ namespace PeakChatOps.Commands;
 [PCOCommand("ping", "pong!", "用法: /ping\n使用同一模块的人会回答Pong!")]
 public class PingCommand
 {
-    // Typed payload for Ping extra
-    private class PingExtra
-    {
-        public string CmdName { get; set; } = "ping";
-        public int UserActorNumber { get; set; }
-        public int[] TargetActors { get; set; } = Array.Empty<int>();
-
-        // Helper to produce a dictionary representation for serialization/compatibility
-        public System.Collections.Generic.Dictionary<string, object> ToDictionary()
-        {
-            return new System.Collections.Generic.Dictionary<string, object>
-            {
-                ["CmdName"] = CmdName,
-                ["UserActorNumber"] = UserActorNumber,
-                ["TargetActors"] = TargetActors
-            };
-        }
-    }
     // 注册
     public PingCommand()
     {
@@ -43,9 +25,8 @@ public class PingCommand
         string userId = Photon.Pun.PhotonNetwork.LocalPlayer?.UserId ?? "?";
         var extra = new System.Collections.Generic.Dictionary<string, object>();
         // Use a top-level "Ping" object for easier parsing by message-chain handlers
-        var pingPayload = new PeakChatOps.Core.MsgChain.PingExtra
+        var pingPayload = new Core.MsgChain.PingExtra
         {
-            CmdName = "ping",
             UserActorNumber = myActorNumber
         };
         int[] targetActors;

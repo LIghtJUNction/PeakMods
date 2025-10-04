@@ -1,0 +1,42 @@
+/* Window Toolbar 样式 */
+#window-toolbar {
+    height: 40px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.63);
+    flex-shrink: 0;
+}
+
+/* 按钮基础样式 */
+#minimize-button,
+#maximize-button,
+#close-button {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* 按钮悬停效果 */
+#minimize-button:hover,
+#maximize-button:hover,
+#close-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 按钮按下效果 */
+#minimize-button:active,
+#maximize-button:active,
+#close-button:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 关闭按钮特殊悬停效果 */
+#close-button:hover {
+    background-color: rgba(255, 0, 0, 0.3);
+}

@@ -52,7 +52,10 @@ public static class CentralCmdRouter
             }
 
             // display a simple local UI line for the command (coloring moved to router level)
-            PeakChatOpsUI.Instance.AddMessage($"<color=#59A6FF>> {evt.Command}</color> ", $"{(evt.Args != null ? string.Join(" ", evt.Args) : string.Empty)}");
+            var cmdLabel = MessageStyles.CommandLabel($"> {evt.Command}");
+            var args = evt.Args != null ? string.Join(" ", evt.Args) : string.Empty;
+            var coloredArgs = MessageStyles.CommandContent(args);
+            PeakChatOpsUI.Instance.AddMessage(cmdLabel, coloredArgs);
 
             var raw = evt.Command.Trim();
             var candidates = new System.Collections.Generic.List<string>
@@ -107,19 +110,27 @@ public static class CentralCmdRouter
     private static UniTask HandleCmdExecResultAsync(CmdExecResultEvent evt)
     {
         DevLog.UI($"[DebugUI] HandleCmdExecResultAsync called. Command={(evt==null?"<null>":evt.Command)} Success={(evt==null?"<null>":evt.Success.ToString())}");
-        string colorHex = evt.Success ? "#32CD32" : "#FF4500"; // 成功为石灰绿，失败为橙红色
-        string statusText = evt.Success ? "Success" : "Error";
-        string richText = $"<color={colorHex}>[Cmd {statusText}]</color>: {evt.Stdout ?? evt.Stderr}";
-        DevLog.UI($"[DebugUI] HandleCmdExecResultAsync -> AddMessage: '{richText}'");
-        PeakChatOpsUI.Instance.AddMessage($"<color={colorHex}>[Cmd {statusText}]</color>",evt.Stdout ?? evt.Stderr);
-    return UniTask.CompletedTask;
+        
+        if (evt == null) return UniTask.CompletedTask;
+        
+        var label = evt.Success 
+            ? MessageStyles.SuccessLabel("Cmd") 
+            : MessageStyles.ErrorLabel("Cmd");
+        
+        var message = evt.Stdout ?? evt.Stderr ?? string.Empty;
+        var coloredMessage = evt.Success 
+            ? MessageStyles.SuccessContent(message) 
+            : MessageStyles.ErrorContent(message);
+        PeakChatOpsUI.Instance.AddMessage(label, coloredMessage);
+        
+        return UniTask.CompletedTask;
     }
 
     // diy 任何输出样式
     public static UniTask HandleAnyMessageAsync(string anyText)
     {
         DevLog.UI($"[DebugUI] HandleAnyMessageAsync -> AddMessage: '{anyText}'");
-        PeakChatOpsUI.Instance.AddMessage($"<color=#FFFFFF>[Any]</color>",anyText);
+        PeakChatOpsUI.Instance.AddMessage(MessageStyles.SystemLabel("Info"), MessageStyles.SystemContent(anyText));
         return UniTask.CompletedTask;
     }
 

@@ -1,10 +1,8 @@
-using System.IO;
-using BepInEx;
+using System;
+
 using PeakChatOps.Core;
-using Photon.Pun;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Cysharp.Threading.Tasks;
 
 namespace PeakChatOps.UI;
 
@@ -14,6 +12,9 @@ public class PeakChatOpsUI : MonoBehaviour
     public static UIDocument uIDocument;
     public bool isBlockingInput;
     private TextField messageInputField;
+
+    public static System.Collections.Generic.List<string> messages = new System.Collections.Generic.List<string>();
+
 
     void Start()
     {
@@ -44,7 +45,6 @@ public class PeakChatOpsUI : MonoBehaviour
         }
 
         var root = uIDocument.rootVisualElement;
-
         // 绑定发送按钮
         var sendButton = root.Q<Button>("send-button");
         if (sendButton != null)
@@ -57,7 +57,7 @@ public class PeakChatOpsUI : MonoBehaviour
         var closeButton = root.Q<Button>("close-button");
         if (closeButton != null)
         {
-            closeButton.clicked += () => HideNow();
+            closeButton.clicked += HideNow;
             DevLog.File("Bound close-button event.");
         }
 
@@ -69,6 +69,14 @@ public class PeakChatOpsUI : MonoBehaviour
             DevLog.File("Bound minimize-button event.");
         }
 
+        // 绑定最大化按钮
+        var maximizeButton = root.Q<Button>("maximize-button");
+        if (maximizeButton != null)
+        {
+            maximizeButton.clicked += MaximizeUI;
+            DevLog.File("Bound maximize-button event.");
+        }
+
         // 保存输入框引用（按键检测在 Update 中处理）
         messageInputField = root.Q<TextField>("message-input");
         if (messageInputField != null)
@@ -77,6 +85,62 @@ public class PeakChatOpsUI : MonoBehaviour
         }
 
         DevLog.File("All UI events bound successfully.");
+
+        // 处理message-list
+        var messageList = root.Q<ListView>("message-list");
+        if (messageList != null)
+        {
+            DevLog.File("Found message-list ListView.");
+            
+            // ✅ 关键修复：启用动态高度，避免消息重叠
+            messageList.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
+            
+            
+            // ✅ 设置选择模式（单选或不可选）
+            messageList.selectionType = SelectionType.None;
+            
+            // ✅ 确保 ListView 本身的样式正确
+            messageList.style.flexGrow = 1;
+            
+            // 先清空并添加欢迎消息
+            messages.Clear();
+            messages.Add(LocalizedText.GetText("PEAKCHATOPSWELCOME"));
+            
+            // 绑定到全局列表
+            messageList.itemsSource = messages;
+            messageList.makeItem = MakeItem();
+            messageList.bindItem = BindItem();
+            
+            DevLog.File($"[ListView] Configured: DynamicHeight, Non-reorderable, {messages.Count} messages");
+        }
+
+        // 获取 chat-panel 并清除所有默认样式类
+        var chatPanel = root.Q("chat-panel");
+        if (chatPanel != null)
+        {
+            // 移除 UXML 中可能设置的所有位置相关类
+            chatPanel.RemoveFromClassList("pos-topleft");
+            chatPanel.RemoveFromClassList("pos-topright");
+            chatPanel.RemoveFromClassList("pos-center");
+            DevLog.File("[BindUIEvents] Cleared all position classes from chat-panel");
+        }
+
+        var pos = PeakChatOpsPlugin.config?.Pos.Value ?? UIAlignment.TopLeft;
+        switch (pos)
+        {
+            case UIAlignment.TopLeft:
+                OnTopLeft();
+                break;
+            case UIAlignment.TopRight:
+                OnTopRight();
+                break;
+            case UIAlignment.Center:
+                OnCenter();
+                break;
+            default:
+                OnTopLeft();
+                break;
+        }
     }
 
     void Update()
@@ -105,6 +169,8 @@ public class PeakChatOpsUI : MonoBehaviour
             }
         }
     }
+
+
 
     /// <summary>
     /// 进入输入模式：显示UI、聚焦输入框、禁用游戏输入、释放鼠标
@@ -138,7 +204,7 @@ public class PeakChatOpsUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 退出输入模式：失焦输入框、恢复游戏输入、锁定鼠标
+    /// 退出输入模式：失焦输入框、取消选择、恢复游戏输入、锁定鼠标
     /// </summary>
     void ExitInputMode()
     {
@@ -157,8 +223,21 @@ public class PeakChatOpsUI : MonoBehaviour
             DevLog.File("TextField blurred.");
         }
 
-        isBlockingInput = false;
+        // 2. 取消聊天框中所有选择（特别是滚动区域的选中）
+        if (uIDocument != null)
+        {
+            var root = uIDocument.rootVisualElement;
+            var messageListView = root.Q<ListView>("message-list");
+            if (messageListView != null)
+            {
+                // 清除 ListView 的选择
+                messageListView.ClearSelection();
+                DevLog.File("ListView selection cleared.");
 
+            }
+        }
+
+        isBlockingInput = false;
     }
 
     // 转发至 ChatSystem
@@ -187,7 +266,7 @@ public class PeakChatOpsUI : MonoBehaviour
                     await ChatSystem.Instance.SendChatMessageAsync(msg, null);
                     DevLog.File($"[PeakChatOpsUI] Message sent successfully via ChatSystem");
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     DevLog.File($"[PeakChatOpsUI] Error sending message: {ex.Message}");
                 }
@@ -199,45 +278,112 @@ public class PeakChatOpsUI : MonoBehaviour
         }
     }
 
+    public void OnTopLeft()
+    {
+        var root = uIDocument?.rootVisualElement;
+        if (root == null)
+        {
+            DevLog.File("OnTopLeft: uIDocument.rootVisualElement is null");
+            return;
+        }
+        var chatPanel = root.Q("chat-panel");
+        if (chatPanel == null)
+        {
+            DevLog.File("OnTopLeft: chat-panel not found in UI document");
+            return;
+        }
+        chatPanel.RemoveFromClassList("pos-topright");
+        chatPanel.RemoveFromClassList("pos-center");
+        chatPanel.AddToClassList("pos-topleft");
+
+    }
+
+    public void OnTopRight()
+    {
+        var root = uIDocument?.rootVisualElement;
+        if (root == null)
+        {
+            DevLog.File("OnTopRight: uIDocument.rootVisualElement is null");
+            return;
+        }
+        var chatPanel = root.Q("chat-panel");
+        if (chatPanel == null)
+        {
+            DevLog.File("OnTopRight: chat-panel not found in UI document");
+            return;
+        }
+        chatPanel.RemoveFromClassList("pos-topleft");
+        chatPanel.RemoveFromClassList("pos-center");
+        chatPanel.AddToClassList("pos-topright");
+    }
+    public void OnCenter()
+    {
+        var root = uIDocument?.rootVisualElement;
+        if (root == null)
+        {
+            DevLog.File("OnCenter: uIDocument.rootVisualElement is null");
+            return;
+        }
+        var chatPanel = root.Q("chat-panel");
+        if (chatPanel == null)
+        {
+            DevLog.File("OnCenter: chat-panel not found in UI document");
+            return;
+        }
+        chatPanel.RemoveFromClassList("pos-topright");
+        chatPanel.RemoveFromClassList("pos-topleft");
+        chatPanel.AddToClassList("pos-center");
+    }
+
+
     #region API
 
     public void AddMessage(string sender, string content)
     {
-        if (uIDocument == null) return;
+        if (uIDocument == null)
+        {
+            DevLog.File("[AddMessage] ERROR: uIDocument is null");
+            return;
+        }
 
         var root = uIDocument.rootVisualElement;
-        var messageList = root.Q<VisualElement>("message-list");
+        var messageListView = root.Q<ListView>("message-list");
 
-        if (messageList == null) return;
-
-        // 创建消息卡片
-        var messageItem = new VisualElement();
-        messageItem.AddToClassList("message-item");
-        messageItem.AddToClassList("slide-in");
-
-        // 发送者
-        var senderLabel = new Label(sender);
-        senderLabel.AddToClassList("message-sender");
-        messageItem.Add(senderLabel);
-
-        // 内容
-        var contentLabel = new Label(content);
-        contentLabel.AddToClassList("message-content");
-        messageItem.Add(contentLabel);
-
-        // 时间
-        var timeLabel = new Label(System.DateTime.Now.ToString("HH:mm"));
-        timeLabel.AddToClassList("message-time");
-        messageItem.Add(timeLabel);
-
-        // 添加到列表
-        messageList.Add(messageItem);
-
-        // 自动滚动到底部
-        var scrollView = root.Q<ScrollView>("message-area");
-        if (scrollView != null)
+        if (messageListView == null)
         {
-            scrollView.schedule.Execute(() => scrollView.scrollOffset = new Vector2(0, float.MaxValue)).StartingIn(50);
+            DevLog.File("[AddMessage] ERROR: messageListView not found");
+            return;
+        }
+
+        // ✅ 简单逻辑：1. 添加到列表
+        var message = $"[{sender}] {content}";
+        messages.Add(message);
+        DevLog.File($"[AddMessage] Added '{message}', total: {messages.Count}");
+        
+        // ✅ 简单逻辑：2. 刷新 ListView
+        messageListView.RefreshItems();
+        DevLog.File($"[AddMessage] RefreshItems() called");
+        
+        // ✅ 简单逻辑：3. 延迟滚动到最新（等待布局更新）
+        messageListView.schedule.Execute(() =>
+        {
+            if (messages.Count > 0)
+            {
+                var lastIndex = messages.Count - 1;
+                messageListView.ScrollToItem(lastIndex);
+                DevLog.File($"[AddMessage] Scrolled to item {lastIndex}");
+            }
+        }).StartingIn(100); // 延迟100ms确保动态高度计算完成
+        
+        // 不在输入状态时添加高亮效果
+        if (!isBlockingInput)
+        {
+            var chatPanel = root.Q("chat-panel");
+            if (chatPanel != null)
+            {
+                chatPanel.AddToClassList("highlight");
+                chatPanel.schedule.Execute(() => chatPanel.RemoveFromClassList("highlight")).StartingIn(500);
+            }
         }
     }
 
@@ -278,29 +424,55 @@ public class PeakChatOpsUI : MonoBehaviour
     
     void MinimizeUI()
     {
-        DevLog.File("MinimizeUI called");
-        
-        if (uIDocument != null)
+        var root = uIDocument.rootVisualElement;
+        var chatPanel = root.Q<VisualElement>("chat-panel");
+        if (chatPanel != null)
         {
-            var mainPanel = uIDocument.rootVisualElement.Q("main-panel");
-            if (mainPanel != null)
+            // 先清除所有大小状态类
+            bool wasMinimized = chatPanel.ClassListContains("minimized");
+            chatPanel.RemoveFromClassList("minimized");
+            chatPanel.RemoveFromClassList("maximized");
+            
+            if (!wasMinimized)
             {
-                // 切换最小化状态
-                bool isMinimized = mainPanel.style.height.value.value < 100;
-                mainPanel.style.height = isMinimized ? 500 : 40;
-                
-                var contentArea = mainPanel.Q("content-area");
-                var actionBar = mainPanel.Q("action-bar");
-                
-                if (contentArea != null)
-                    contentArea.style.display = isMinimized ? DisplayStyle.Flex : DisplayStyle.None;
-                if (actionBar != null)
-                    actionBar.style.display = isMinimized ? DisplayStyle.Flex : DisplayStyle.None;
+                // 如果之前不是最小化状态，则最小化
+                chatPanel.AddToClassList("minimized");
+                DevLog.File("[MinimizeUI] Panel minimized");
+            }
+            else
+            {
+                // 如果之前是最小化状态，则恢复普通模式
+                DevLog.File("[MinimizeUI] Panel restored to normal");
             }
         }
     }
 
-    public static void help()
+    void MaximizeUI()
+    {
+        var root = uIDocument.rootVisualElement;
+        var chatPanel = root.Q<VisualElement>("chat-panel");
+        if (chatPanel != null)
+        {
+            // 先清除所有大小状态类
+            bool wasMaximized = chatPanel.ClassListContains("maximized");
+            chatPanel.RemoveFromClassList("minimized");
+            chatPanel.RemoveFromClassList("maximized");
+            
+            if (!wasMaximized)
+            {
+                // 如果之前不是最大化状态，则最大化
+                chatPanel.AddToClassList("maximized");
+                DevLog.File("[MaximizeUI] Panel maximized");
+            }
+            else
+            {
+                // 如果之前是最大化状态，则恢复普通模式
+                DevLog.File("[MaximizeUI] Panel restored to normal");
+            }
+        }
+    }
+
+    public static void Help()
     {
         DevLog.File("PeakChatOpsUI help called");
         // 国际化组件测试
@@ -308,6 +480,70 @@ public class PeakChatOpsUI : MonoBehaviour
         
     }
 
+    #endregion
+
+    #region 辅助方法
+
+    // ListView 生成单个消息项
+    Func<VisualElement> MakeItem()
+    {
+        return () => new MessageLabel();
+    }
+    // ListView 绑定数据到消息项
+    Action<VisualElement, int> BindItem()
+    {
+        return (element, i) =>
+        {
+
+            if (element is Label label)
+            {
+                // 获取消息文本
+                if (i >= 0 && i < messages.Count)
+                {
+                    label.text = messages[i];
+                }
+                else
+                {
+                    label.text = string.Empty;
+                }
+            }
+        };
+    }
+
 
     #endregion
+
+
+}
+
+/// <summary>
+/// 自定义消息 Label，封装所有消息项的默认配置
+/// </summary>
+public class MessageLabel : Label
+{
+    public MessageLabel()
+    {
+        // 添加样式类
+        AddToClassList("message-item");
+        
+        // ✅ 启用文本选择
+        selection.isSelectable = true;
+        
+        
+        // ✅ Flex 布局设置
+        style.flexShrink = 0;                        // 不压缩
+        style.flexGrow = 1;                          // 允许横向扩展填满容器
+        
+        // ✅ 设置内边距，避免内容贴边
+        style.paddingLeft = 8;
+        style.paddingRight = 8;
+        style.paddingTop = 4;
+        style.paddingBottom = 4;
+        style.marginTop = 1;
+        style.marginBottom = 1;                      // 消息之间的间距
+        
+        // ✅ 确保文本可见
+        style.unityTextAlign = TextAnchor.UpperLeft;
+        style.color = new Color(0.9f, 0.9f, 0.9f, 1f); // 浅灰色文本
+    }
 }

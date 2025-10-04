@@ -2,7 +2,9 @@
     "deepscan.enable": true,
     "cSpell.words": [
         "Behaviour",
+        "Cmdx",
         "Hashtable",
-        "ollama"
+        "ollama",
+        "reorderable"
     ]
 }

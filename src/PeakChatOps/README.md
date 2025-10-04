@@ -3,120 +3,122 @@
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 [![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
 
-# UI
+## Welcome to PeakChatOps
 
-The UI is being remade to solve lag issues and to expand more interfaces for better functionality.
-Please wait patiently.
-If you want me to update as soon as possible, please send an email to: lightjunction.me@gmail.com
+This mod is a chat enhancement mod with the following features:
+- Multiple extensible chat commands
+- Scrollable message history without lag, with text copying support
+- LLM integration for translation and other AI features
+- Localization support (commands not fully localized yet)
 
-PeakChatOps is a modified version based on PeakTextChat.
+## Usage Tips
 
-Retained from the original:
-- PeakTextChat's UI framework
-- Some patches from PeakTextChat
+- **Default key**: Press `Y` to open chat
+- **Commands**: Start with `/`
+- **Help**: `/help` to view available commands
+- **AI Chat**: `/ai HI` - Chat with AI (local display only)
+- **Translation**: `/ai translate 你好` - Translate to English, then `@send` to broadcast the AI response
+- **Command Learning**: `/ai how to use this cmd: whisper @whisper` - Learn how to use commands (useful for foreign language commands)
 
-Major changes:
-- Removed PeakTextChat's original chat message logic, replaced with a custom message handler chain
-- Added a new command system supporting custom commands (auto registration/hot reload)
-- Some components now use PeakLib implementations
-- Improved Chinese support
+- **Position**: `/pos T / R / C` - Change chat window position (Top/Right/Center)
 
-Features:
-- Chat box now supports paging! Use the mouse wheel to scroll up and down
-- Supports config hot-reload, changes take effect immediately
-- Minecraft-like command system! （支持内置命令和插件扩展）
-- **System messages now support multi-language and rich text color tags!**
-  - Each language line can have its own color, making notifications vibrant and easy to distinguish
-  - Default system messages (death, revive, pass out) are preset with colorful styles for all supported languages
+> **Note**: While typing, you can freely click on text to copy content
 
-## Features
-- Chat message sending/receiving and UI display
-- Supports custom commands (auto registration/hot reload)
-- Multi-language internationalization and dynamic switching
-- **System messages (death, revive, pass out) support multi-language and per-line color customization via Unity rich text tags**
-- Chat input box Tab completion and prediction
-- Supports config hot-reload
+## What
+'
+s New in 1.2.0 (vs 1.1.5)
 
-## Installation
-1. Recommended: Use a mod manager for installation
+I completely abandoned the old UI system and switched to Unity
+'
+s latest UXML/USS system, solving these issues:
 
-## AI Feature Guide
+1. **No more lag** when sending long texts - significantly improved experience
+2. **Smoother scrolling** throughout the interface
+3. **Better extensibility** for future features
 
-PeakChatOps supports AI chat assistant. We highly recommend using the free [Ollama](https://ollama.com/) cloud model (can be deployed on your own server or cloud VM).
+## Customizing Chat Styles
 
-### 1. Download and Install Ollama
+Here
+'
+s how to customize the chat appearance:
 
-- Visit [Ollama official site](https://ollama.com/) and download the installer for your OS.
-- Follow the instructions to install and start Ollama.
-- Optional: Run `ollama run llama3` or `ollama run qwen:7b` in your terminal to pre-download models.
-- You can also deploy Ollama on a cloud server (e.g. AWS, Azure, GCP, or any VPS) and expose the API endpoint for remote access.
+1. **Open the Unity Project**
+   - Navigate to the `unity` folder in this project
+   - Open with Unity (same version as the project)
 
-### 2. Configure AI Settings
+2. **Locate the UI Files**
+   - In the Mod folder, you
+'
+ll find prefab files
+   - Use UI Toolkit to open the `.uxml` files
 
-- In-game, open the PeakChatOps settings panel.
-- Set `AI Endpoint` to your Ollama server address, e.g. `http://localhost:11434` (local) or `http://your-cloud-ip:11434` (cloud).
-- Leave `API Key` empty (Ollama does not require a key by default).
-- Set `AI Model` to `llama3`, `qwen:7b`, or any model you have downloaded.
-- You can adjust `Max Tokens`, `Temperature`, `TopP` and other parameters to control response length and style.
+3. **Customize Styles**
+   - Edit the UXML/USS files to change appearance
+   - **Important**: Don
+'
+t change component names, or you
+'
+ll need to update the source code bindings
 
-### 3. Using the /ai Command
+4. **Build the Bundle**
+   - Enable Unity Addressable System
+   - Go to `Window → Asset Management → Addressables → Groups → Build`
+   - Click Build to generate the bundle
 
-- Type `/ai your question` in the chat box, e.g.:
- `/ai Translate this sentence`
-- The AI assistant will reply in the chat box.
-- Use `/ai prompt @send` to send the AI reply as a message.
-- Use `/ai @clear` to clear the AI context/history.
+5. **Deploy the Bundle**
+   - Find the largest bundle file in: `unity project / Libraries / com.unity.addressables / aa / standalonewindows64 /`
+   - Rename it to: `PeakChatOpsUI.peakbundle`
+   - Place it in the mod folder
 
-### 4. Customizing Prompts
+## Developing Custom Commands
 
-- In the settings panel, you can set a custom `AI Prompt` to define the assistant's behavior.
-- Example:
-	`You are a professional Unity developer assistant. Please answer in concise English.`
-- The prompt will be automatically appended to your AI requests.
+Here
+'
+s how to create your own commands. Example: `Echo.cs`
 
-### 5. Recommended Free Models
+```csharp
+using System;
+using PeakChatOps.API;
+using Cysharp.Threading.Tasks;
+using PeakChatOps.Core;
+#nullable enable
+namespace PeakChatOps.Commands;
 
-We personally recommend Ollama's cloud models for best compatibility and cost-free usage. Popular free models include:
+[PCOCommand("echo", "Echo input content", "Usage: /echo <content>\nReturns your input as-is.")]
+public class EchoCommand
+{
+    // New message-driven handler signature. Plugins/commands register handlers
+    // on EventBusRegistry.CmdMessageBus with channel "cmd://echo".
+    public EchoCommand()
+    {
+        EventBusRegistry.CmdMessageBus.Subscribe("cmd://echo", Handle);
+        DevLog.UI("[Cmd] EchoCommand subscribed to cmd://echo");
+    }
 
-- llama3 (general-purpose, fast)
-- qwen:7b (Chinese/English, strong reasoning)
-- phi3 (compact, efficient)
-- gemma (multilingual)
+    public static async UniTask Handle(CmdMessageEvent evt)
+    {
+        try
+        {
+            var args = evt.Args ?? Array.Empty<string>();
+            var res = args.Length == 0 ? "Please enter content to echo." : string.Join(" ", args);
+            var resultEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: res, stderr: null, success: true);
+            await EventBusRegistry.CmdExecResultBus.Publish("cmd://", resultEvt);
+        }
+        catch (Exception ex)
+        {
+            var errEvt = new CmdExecResultEvent(evt.Command, evt.Args ?? Array.Empty<string>(), evt.UserId, stdout: null, stderr: ex.Message, success: false);
+            await EventBusRegistry.CmdExecResultBus.Publish("cmd://", errEvt);
+        }
+        await UniTask.CompletedTask;
+    }
+}
+```
 
-You can find more models on the [Ollama model list](https://ollama.com/library) or via the command line.
+## Build
 
-### 6. Troubleshooting
-
-- If you cannot connect, make sure Ollama is running and listening on port 11434.
-- If AI replies are empty or error occurs, check if the model is downloaded and the endpoint is correct.
-
-For advanced usage and parameter details, refer to the Ollama documentation or the PeakChatOps settings panel.
-
----
-## Usage
-Chat: Press the configured hotkey (e.g. Y) to open the input box, type and press Enter to send
-Commands: Type `/help` to see all commands
-
-
-## Configuration
-- Chat box size, position, font, opacity, etc. can be adjusted in the config file
-- **System message templates can be customized for each language and color using Unity rich text `<color>` tags.**
-	- Example (default death message):
-		```
-		<color=#FF4040>没想到我也有死的这一天！</color>
-		<color=#FFA500>I never thought I'd see the day I die!</color>
-		<color=#40A0FF>まさか自分が死ぬ日が来るとは！</color>
-		...
-		```
-- Supports runtime hot-reload
-
-
-
-
-## build
-
-> dotnet build -c Release -target:PackTS -v d
-
+```bash
+dotnet build -c Release -target:PackTS -v d
+```
 
 ## Credits (in no particular order)
 - [PeakTextChat](https://github.com/borealityy/PeakTextChat) (Inspiration)
@@ -125,4 +127,3 @@ Commands: Type `/help` to see all commands
 
 ---
 For questions or suggestions, feel free to open an issue or PR!
-

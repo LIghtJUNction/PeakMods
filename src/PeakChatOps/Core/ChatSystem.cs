@@ -135,7 +135,7 @@ public class ChatSystem : MonoBehaviour
                 isDead = Character.localCharacter.data.dead;
             }
             var withoutPrefix = message.Substring(prefix.Length).Trim();
-            var parts = withoutPrefix.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            var parts = withoutPrefix.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var command = parts.Length > 0 ? parts[0] : string.Empty;
             var args = parts.Length > 1 ? parts[1..] : new string[0];
             var cmdEvt = new CmdMessageEvent(command, args, PhotonNetwork.LocalPlayer.UserId);

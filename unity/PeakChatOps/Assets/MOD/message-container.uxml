@@ -1,0 +1,9 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <engine:VisualElement name="message-container" class="message-container" style="min-width: 200px; min-height: 60px; flex-direction: row; padding: 8px; margin: 4px 0; width: auto;">
+        <engine:Button name="sender-button" text="PlayerName" class="sender-button" style="width: auto; min-width: 80px; max-width: 150px; flex-shrink: 0; margin: 0 8px 0 0; height: 36px; -unity-text-align: upper-center; white-space: pre;" />
+        <engine:VisualElement name="message-content-area" class="message-content-area" style="flex-grow: 1; flex-direction: column; min-width: 100px;">
+            <engine:Label name="message-text" text="111" class="message-text" style="white-space: normal; flex-grow: 1; width: 100%;" />
+            <engine:DropdownField label="action" choices="Copy,Delete,Metadata" style="width: 100%; max-width: none; min-width: 40px;" />
+        </engine:VisualElement>
+    </engine:VisualElement>
+</engine:UXML>
