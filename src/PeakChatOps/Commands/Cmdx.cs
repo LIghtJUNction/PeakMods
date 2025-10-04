@@ -120,7 +120,8 @@ namespace PeakChatOps.Commands;
             foreach (var dir in Directory.EnumerateDirectories(pluginsDir))
             {
                 var dirName = Path.GetFileName(dir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                if (string.Equals(dirName, "PeakChatOps", StringComparison.OrdinalIgnoreCase))
+                // 跳过当前插件自己的目录
+                if (Path.GetFullPath(dir) == Path.GetFullPath(PeakChatOpsPlugin.PluginPath))
                     continue;
                 if (!dirName.StartsWith("PeakChatOps", StringComparison.OrdinalIgnoreCase))
                     continue;

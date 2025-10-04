@@ -84,8 +84,12 @@ PLocalizedText.Reload();
 
 ### 文件位置
 ```
-BepInEx/plugins/PeakChatOps/Localization.csv
+BepInEx/plugins/[PluginFolder]/Localization.csv
 ```
+
+注意：插件文件夹名称可能因安装方式而异：
+- 本地开发：`PeakChatOps`
+- Thunderstore下载：`LIghtJUNction-PeakChatOps`
 
 ### 文件结构
 
@@ -241,11 +245,11 @@ PLocalizedText.Reload();
 
 ### Q: CSV 文件找不到怎么办？
 
-**A**: 确保文件路径正确：
+**A**: 确保文件路径正确。文件应该放在插件的根目录下：
 ```
-BepInEx/plugins/PeakChatOps/Localization.csv
+BepInEx/plugins/[PluginFolder]/Localization.csv
 ```
-检查日志中的错误信息。
+插件文件夹名称可能是 `PeakChatOps`（本地开发）或 `LIghtJUNction-PeakChatOps`（Thunderstore下载）。检查日志中的错误信息以确认实际路径。
 
 ### Q: 如何添加新的本地化键？
 
