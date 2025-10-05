@@ -21,7 +21,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d69f3f8af6cef8f4d8b947fdd67dd549
-    m_Address: Assets/ModDefinition.asset
+    m_Address: Assets/PeakChatOpsDef.asset
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
