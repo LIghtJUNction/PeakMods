@@ -26,7 +26,7 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
 {
     public static PeakChatOpsPlugin Instance { get; private set; } = null!;
 
-    public static readonly string PluginPath = Path.Combine(Paths.PluginPath, "PeakChatOps");
+    public static string PluginPath => Path.GetDirectoryName(Instance.Info.Location)!;
     internal static new ManualLogSource Logger = null!;
     private Harmony _harmony = null!;
     public static PConfig config = null!;
