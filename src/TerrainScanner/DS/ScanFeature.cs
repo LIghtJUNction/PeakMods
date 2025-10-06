@@ -124,6 +124,29 @@ namespace TerrainScanner {
         static Marks[] _marks;
         // double-buffered completed marks for rendering; swap in when a scan finishesza
         static Marks[] _marksForRender;
+    // player-marked road positions (store as integer grid keys) - thread-safe
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<long, byte> _playerRoads = new System.Collections.Concurrent.ConcurrentDictionary<long, byte>();
+    const float RoadGridSize = 0.5f; // same as gridStep
+
+        // Public API: mark a world position as road (player walked here)
+        public static void MarkRoadAt(Vector3 worldPos) {
+            int gx = Mathf.FloorToInt(worldPos.x / RoadGridSize);
+            int gz = Mathf.FloorToInt(worldPos.z / RoadGridSize);
+            long key = ((long)gx << 32) ^ (uint)gz;
+            _playerRoads.TryAdd(key, 1);
+            // logging removed per user request
+        }
+
+        public static void ClearRoadAt(Vector3 worldPos) {
+            int gx = Mathf.FloorToInt(worldPos.x / RoadGridSize);
+            int gz = Mathf.FloorToInt(worldPos.z / RoadGridSize);
+            long key = ((long)gx << 32) ^ (uint)gz;
+            _playerRoads.TryRemove(key, out _);
+        }
+
+        public static void ClearAllRoads() {
+            _playerRoads.Clear();
+        }
         const int horizontalCount = 70;
         const int verticalCount = 50;
         const float gridStep = 0.5f;
@@ -135,20 +158,17 @@ namespace TerrainScanner {
             float distanceToCamera01 = 1.0f;
             if (Camera.main != null) distanceToCamera01 = Vector3.Distance(position, Camera.main.transform.position) / 20 + 0.5f;
             GameObject prefab = index switch { 3 => _instance.settings.markParticle3, 2 => _instance.settings.markParticle2, _ => _instance.settings.markParticle1 };
-            if (prefab == null) {
-                TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ShootParticle: prefab index {index} is null.");
-                return;
-            }
+            if (prefab == null) { return; }
             GameObject instance = null;
-            try { instance = GameObject.Instantiate(prefab); } catch (Exception ex) { TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ShootParticle: Instantiate failed: {ex.Message}"); }
-            if (instance == null) { TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ShootParticle: instance null after Instantiate for index {index}."); return; }
+            try { instance = GameObject.Instantiate(prefab); } catch { }
+            if (instance == null) { return; }
             instance.transform.position = position;
             instance.transform.localScale = Random.Range(0.5f, 1.5f) * Vector3.one * distanceToCamera01;
             if (instance.transform.childCount > 0) instance.transform.GetChild(0).localScale = Random.Range(2f, 5f) * Vector3.one * distanceToCamera01;
             var ps = instance.GetComponentInChildren<ParticleSystem>();
             if (ps != null) {
-                try { ps.Play(); } catch (Exception ex) { TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ShootParticle: Play failed: {ex.Message}"); }
-            } else TerrainScannerPlugin.Logger.LogDebug($"[ScanFeature] ShootParticle: no ParticleSystem on prefab index {index}.");
+                try { ps.Play(); } catch { }
+            }
         }
 
         static async UniTask GenerateTerrainMarks(Transform player, int scanId) {
@@ -157,11 +177,11 @@ namespace TerrainScanner {
             int maskScanRoad = LayerMask.GetMask("Scan", "Road");
             int maskScan = LayerMask.GetMask("Scan");
             if (maskScanRoad == 0) {
-                if (DedupLog.ShouldLog("LayerMask.ScanRoad.Missing")) TerrainScannerPlugin.Logger.LogWarning("[ScanFeature] GenerateTerrainMarks: LayerMask.GetMask(\"Scan\", \"Road\") returned 0 - ensure layers exist and terrain objects assigned. Falling back to Physics.DefaultRaycastLayers.");
+                // LayerMask for Scan+Road missing; fall back to default raycast layers
                 maskScanRoad = Physics.DefaultRaycastLayers;
             }
             if (maskScan == 0) {
-                if (DedupLog.ShouldLog("LayerMask.Scan.Missing")) TerrainScannerPlugin.Logger.LogWarning("[ScanFeature] GenerateTerrainMarks: LayerMask.GetMask(\"Scan\") returned 0 - falling back to Physics.DefaultRaycastLayers.");
+                // LayerMask for Scan missing; fall back to default raycast layers
                 maskScan = Physics.DefaultRaycastLayers;
             }
 
@@ -180,6 +200,21 @@ namespace TerrainScanner {
                     var normal = hit.normal;
                     int computedCat = hit.collider != null ? (normal.y < Cos50 ? 3 : (normal.y < Cos30 ? 2 : 1)) : 0;
                     if (i < logRowLimit && rowSampleLogged < perRowSampleLimit) { /* debug sample log removed */ rowSampleLogged++; }
+                    // if this hit position was previously marked as player road, treat as flat (category 1)
+                    long cellKey = 0;
+                    var hitPoint = hit.point;
+                    if (hit.collider != null) {
+                        var gx = Mathf.FloorToInt(hitPoint.x / RoadGridSize);
+                        var gz = Mathf.FloorToInt(hitPoint.z / RoadGridSize);
+                        cellKey = ((long)gx << 32) ^ (uint)gz;
+                        if (_playerRoads.ContainsKey(cellKey)) {
+                            _marks[i * horizontalCount + j].markCategory = 1;
+                            _marks[i * horizontalCount + j].markPosition = hitPoint;
+                            rayCastPos += right * gridStep;
+                            continue;
+                        }
+                    }
+
                     if (hit.collider.isTrigger)
                     {
                         // 命中的是 Trigger：把该格记为类别 0（特殊/触发器），
@@ -194,15 +229,17 @@ namespace TerrainScanner {
                         // 类别 3：陡坡（坡度大于 50°，即 normal.y < cos(50°) ≈ 0.6428）
                         // 行为：将 markCategory 设为 3；以 10% 概率记录 markPosition 并发射粒子（使用 prefab index = 3）。
                         _marks[i * horizontalCount + j].markCategory = 3;
-                        if (Random.Range(0f, 1f) < _instance.settings.steepSpawnProb) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
+                        // use configured steep spawn probability (fallback to existing default if settings missing)
+                        if (Random.Range(0f, 1f) < (_instance?.settings?.steepSpawnProb ?? 0.1f)) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
                     }
                     else if (normal.y < Cos30)
                     {
                         // 类别 2：中等坡（坡度在 30°~50° 之间，即 cos(50°) ≤ normal.y < cos(30°））
-                        // 行为：将 markCategory 设为 2，始终记录 markPosition；以较大概率（0.7）发射粒子（index = 1）。
+                        // 行为：将 markCategory 设为 2，始终记录 markPosition；以较大概率（0.3）发射粒子（index = 1）。
                         _marks[i * horizontalCount + j].markCategory = 2;
                         _marks[i * horizontalCount + j].markPosition = hit.point;
-                        if (Random.Range(0f, 1f) < _instance.settings.midSpawnProb) ShootParticle(hit.point, normal, 1);
+                        // use configured mid spawn probability
+                        if (Random.Range(0f, 1f) < (_instance?.settings?.midSpawnProb ?? 0.3f)) ShootParticle(hit.point, normal, 1);
                     }
                     else
                     {
@@ -210,7 +247,8 @@ namespace TerrainScanner {
                         // 行为：将 markCategory 设为 1，始终记录 markPosition；以极小概率（0.0002）发射稀有粒子（index = 1）。
                         _marks[i * horizontalCount + j].markCategory = 1;
                         _marks[i * horizontalCount + j].markPosition = hit.point;
-                        if (Random.Range(0f, 1f) < _instance.settings.flatSpawnProb) ShootParticle(hit.point, normal, 1);
+                        // use configured flat spawn probability
+                        if (Random.Range(0f, 1f) < (_instance?.settings?.flatSpawnProb ?? 0.0002f)) ShootParticle(hit.point, normal, 1);
                     }
 
                     rayCastPos += right * gridStep;
@@ -336,70 +374,55 @@ namespace TerrainScanner {
                 RTHandle depthHdl = data.depthTarget;
                 Vector2 viewportScale = Vector2.one;
                 try { if (depthHdl != null && depthHdl.useScaling) viewportScale = new Vector2(depthHdl.rtHandleProperties.rtHandleScale.x, depthHdl.rtHandleProperties.rtHandleScale.y); } catch { }
-                if (!s_reportedDepthHandle) { s_reportedDepthHandle = true; if (DedupLog.ShouldLog("DepthHandle.Reported")) TerrainScannerPlugin.Logger.LogInfo(depthHdl == null ? "[ScanFeature] ExecutePass: depth RTHandle is null" : $"[ScanFeature] ExecutePass: depth RTHandle resolved; useScaling={depthHdl.useScaling}; viewportScale={viewportScale}"); }
+                if (!s_reportedDepthHandle) { s_reportedDepthHandle = true; }
                 if (depthHdl != null) { try { Blitter.BlitTexture(cmd, depthHdl, viewportScale, data.scanMaterial, 0); } catch (Exception ex) { TerrainScannerPlugin.Logger.LogError($"[ScanFeature] ExecutePass: BlitTexture failed: {ex}"); } }
 
                 if (data.localShowMark && data.markMaterial != null) {
                     if (data.computeBuffer == null || data.graphicsBuffer == null || data.commandData == null || data.mesh == null) {
-                        if (!s_reportedMarkState) { s_reportedMarkState = true; TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ExecutePass: skipping instanced draw because buffers/mesh missing"); }
+                        // buffers/mesh missing - skipping instanced draw
+                        s_reportedMarkState = true;
                         return;
                     }
-                    // extra diagnostics: log mesh bounds and compute buffer info
-                    try { if (DedupLog.ShouldLog("ExecDiag.MeshBounds")) TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass diagnostics: mesh.bounds={data.mesh.bounds} verts={data.mesh.vertexCount} indices={data.mesh.triangles.Length}"); } catch { }
-                    try { if (DedupLog.ShouldLog("ExecDiag.ComputeBuffer")) TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass diagnostics: computeBuffer count/stride={(data.computeBuffer != null ? data.computeBuffer.count.ToString() : "null")}/{(data.computeBuffer != null ? data.computeBuffer.stride.ToString() : "null")}" ); } catch { }
+                    // diagnostics removed
                     // read the latest completed marks published by GenerateTerrainMarks
                     var renderMarks = _marksForRender;
-                    if (renderMarks == null) {
-                        if (DedupLog.ShouldLog("ExecDiag.RenderMarks.Null")) TerrainScannerPlugin.Logger.LogInfo("[ScanFeature] ExecutePass: renderMarks is null (no published scan available)");
-                    }
-                    if (!s_reportedMarkState) {
-                        s_reportedMarkState = true; int filled = 0; if (renderMarks != null) for (int i = 0; i < renderMarks.Length; i++) if (renderMarks[i].markCategory != 0 || renderMarks[i].markPosition != Vector3.zero) filled++;
-                        if (DedupLog.ShouldLog("ExecDiag.MarkState")) TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass: markMaterial={(data.markMaterial!=null)}, localShowMark={data.localShowMark}, marksFilled={filled}");
-                    }
+                    // renderMarks diagnostics removed
                     var matProp = new MaterialPropertyBlock(); int validCount = 0; if (renderMarks != null) for (int i = 0; i < renderMarks.Length; i++) if (renderMarks[i].markCategory != 0 || renderMarks[i].markPosition != Vector3.zero) validCount++;
                     if (validCount <= 0) return;
                     var compact = new Marks[validCount]; int idx = 0; for (int i = 0; i < renderMarks.Length; i++) if (renderMarks[i].markCategory != 0 || renderMarks[i].markPosition != Vector3.zero) compact[idx++] = renderMarks[i];
                     // diagnostics: material shader and instancing support
                     try {
                         if (data.markMaterial != null) {
-                            if (DedupLog.ShouldLog("ExecDiag.MarkMaterialInfo")) TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass: markMaterial.shader={(data.markMaterial.shader!=null?data.markMaterial.shader.name:"null")}, enableInstancing={data.markMaterial.enableInstancing}");
+                            // mark material diagnostics removed
                         } else {
-                            if (DedupLog.ShouldLog("ExecDiag.MarkMaterialInfoNull")) TerrainScannerPlugin.Logger.LogInfo("[ScanFeature] ExecutePass: markMaterial is null");
+                            // mark material null diagnostic removed
                         }
                     } catch { }
 
                     // validate computeBuffer capacity vs data to upload
                     try {
-                        if (data.computeBuffer == null) { TerrainScannerPlugin.Logger.LogWarning("[ScanFeature] ExecutePass: computeBuffer null"); return; }
-                        if (data.computeBuffer.count < compact.Length) TerrainScannerPlugin.Logger.LogWarning($"[ScanFeature] ExecutePass: computeBuffer capacity {data.computeBuffer.count} < required {compact.Length}");
+                        if (data.computeBuffer == null) { return; }
+                        if (data.computeBuffer.count < compact.Length) { /* computeBuffer capacity insufficient */ }
                     } catch { }
 
                     // diagnostics: print first few compact entries to verify positions (deduped)
-                    try {
-                        if (DedupLog.ShouldLog("ExecDiag.CompactSample")) {
-                            int sampleN = Math.Min(3, compact.Length);
-                            for (int si = 0; si < sampleN; si++) TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass: compact[{si}] pos={compact[si].markPosition} cat={compact[si].markCategory}");
-                        }
-                    } catch { }
+                    // compact sample diagnostics removed
                     data.computeBuffer.SetData(compact);
                     matProp.SetBuffer("markBuffer", data.computeBuffer);
                     data.commandData[0].indexCountPerInstance = 6;
                     data.commandData[0].instanceCount = (uint)validCount;
                     data.graphicsBuffer.SetData(data.commandData);
                     // now log the indirect args we just wrote
-                    try {
-                        var args2 = data.commandData[0];
-                        TerrainScannerPlugin.Logger.LogInfo($"[ScanFeature] ExecutePass diagnostics: indirectArgs indexCountPerInstance={args2.indexCountPerInstance} instanceCount={args2.instanceCount} startIndex={args2.startIndex} startInstance={args2.startInstance}");
-                    } catch { }
+                    // indirect args diagnostics removed
                     // basic validation: nothing to draw -> skip
-                    if (data.commandData[0].instanceCount == 0) { TerrainScannerPlugin.Logger.LogInfo("[ScanFeature] ExecutePass: instanceCount==0, skipping draw"); return; }
+                    if (data.commandData[0].instanceCount == 0) { return; }
                     // ensure material has instancing enabled before draw
                     try { if (data.markMaterial != null) data.markMaterial.enableInstancing = true; } catch { }
                     // --- TEMP DEBUG: force material render queue & depth state to test visibility ---
                     int origQueue = -1; bool changedQueue = false;
                     var origZWrite = -1; var origZTest = -1; bool changedZ = false;
                     try {
-                        if (data.markMaterial != null && DedupLog.ShouldLog("ExecDiag.ForceMaterialState")) TerrainScannerPlugin.Logger.LogInfo("[ScanFeature] ExecutePass: Temporarily forcing markMaterial renderQueue=5000, ZTest=Always, ZWrite=Off for visibility test");
+                        // force material state diagnostic removed
                         if (data.markMaterial != null) {
                             try {
                                 origQueue = data.markMaterial.renderQueue; data.markMaterial.renderQueue = 5000; changedQueue = true;
