@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: TerrainScanner
   m_GUID: d032ad4009866e346a83c848ee368fc9
   m_SerializeEntries:
-  - m_GUID: 839516ae9a07ec04bbfbbdf7370a0f35
-    m_Address: Assets/MOD/TerrainScanMaterial.mat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e3cae8939b4248044bb7063d7ef87a0a
     m_Address: Assets/MOD/TerrainScannerDef.asset
     m_ReadOnly: 0

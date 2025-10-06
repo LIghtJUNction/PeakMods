@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Real Landscapes - Valley Forest/Scenes/URP/Demo_1_Main_URP.unity
     guid: 9c65734bb799f834397814f52a611863
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 3766e9e32fd3fd548a02e92ed504de9b,
+      type: 2}
+  m_UseUCBPForAssetBundles: 0

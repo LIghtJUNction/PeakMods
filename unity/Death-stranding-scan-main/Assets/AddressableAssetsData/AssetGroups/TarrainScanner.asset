@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: TarrainScanner
+  m_EditorClassIdentifier: 
+  m_GroupName: TarrainScanner
+  m_GUID: bfe76cf2ae0da8f4186120dae991bf49
+  m_SerializeEntries:
+  - m_GUID: 1ced48c14e62de54faf3277e563d5c8e
+    m_Address: Assets/Shader/ParticleShader.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 264c7f49fd4f8174f85ad20b4ad2ae06
+    m_Address: Assets/Material/Scan.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4da4696015585e6419ba8353ac41d053
+    m_Address: Assets/Material/ParticleTerrainMark.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e89c2fa8d187de43b678cee60de709b
+    m_Address: Assets/Particles/LightParticle1.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 529239097d02f9f42b0ddd436c6fcbb0
+    m_Address: Assets/Standard Assets/Effects/Projectors/Textures/Grid.psd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a20500e83584ad74d8c01a832f6f75b6
+    m_Address: Assets/MOD/TarrainScannerDef.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a53ee98cdc91c7b4da2b1ca06d55f9a7
+    m_Address: Assets/Shader/DrawMark.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cba092a2dd403434e809313b309153a4
+    m_Address: Assets/Material/ParticleTerrainMarkCenter.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce6eb860cecb89d4fbc50fe9d9dce211
+    m_Address: Assets/Particles/LightParticle3.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1809be261335e24398f58fcadbb85c4
+    m_Address: Assets/Particles/LightParticle2.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcbb96118fd82524d9c91111cefc67ca
+    m_Address: DOTweenSettings
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e71d235080bb1134bb7d7462c33303ad
+    m_Address: Assets/Shader/Scan.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 009b4c0080de1ca419b2b478887cce40, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b57f22bc504ba824f8e03debfce6d0d5, type: 2}
+    - {fileID: 11400000, guid: bab4c571627019844aaa0e46bb24120d, type: 2}
