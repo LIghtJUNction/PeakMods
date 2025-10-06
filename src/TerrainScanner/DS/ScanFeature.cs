@@ -38,6 +38,11 @@ namespace TerrainScanner {
             public GameObject markParticle3;
             public GameObject markParticle2;
             public GameObject markParticle1;
+            [Header("Particle probabilities")]
+            // 生成粒子的概率，可在 Inspector 中调整
+            public float steepSpawnProb = 0.1f;   // 对应陡坡 (category 3)
+            public float midSpawnProb = 0.3f;  // 对应中等坡 (category 2)
+            public float flatSpawnProb = 0.0002f; // 对应平地 (category 1)
         }
 
         public Settings settings = new Settings();
@@ -122,6 +127,9 @@ namespace TerrainScanner {
         const int horizontalCount = 70;
         const int verticalCount = 50;
         const float gridStep = 0.5f;
+    // angle thresholds (use cosine of angle for normal.y comparisons)
+    static readonly float Cos30 = Mathf.Cos(30f * Mathf.Deg2Rad); // ~0.8660254
+    static readonly float Cos50 = Mathf.Cos(50f * Mathf.Deg2Rad); // ~0.6427876
 
         static void ShootParticle(Vector3 position, Vector3 normal, int index = 3) {
             float distanceToCamera01 = 1.0f;
@@ -170,19 +178,41 @@ namespace TerrainScanner {
                     if (hit.collider == null) { rayCastPos += right * gridStep; continue; }
                     rowHits++; totalHits++;
                     var normal = hit.normal;
-                    int computedCat = hit.collider != null ? (normal.y < 0.75f ? 3 : (normal.y < 0.85f ? 2 : 1)) : 0;
+                    int computedCat = hit.collider != null ? (normal.y < Cos50 ? 3 : (normal.y < Cos30 ? 2 : 1)) : 0;
                     if (i < logRowLimit && rowSampleLogged < perRowSampleLimit) { /* debug sample log removed */ rowSampleLogged++; }
-                    if (hit.collider.isTrigger) {
+                    if (hit.collider.isTrigger)
+                    {
+                        // 命中的是 Trigger：把该格记为类别 0（特殊/触发器），
+                        // 尝试用 maskScan 做二次射线（以查找非触发器的真实表面），
+                        // 只有二次射线命中时才使用 hit.point，否则位置设为 Vector3.zero（无有效位置）。
                         Physics.Raycast(rayCastPos, Vector3.down, out hit, 300, maskScan);
                         _marks[i * horizontalCount + j].markCategory = 0;
-                        _marks[i * horizontalCount + j].markPosition = hit.point;
-                    } else if (normal.y < 0.75f) {
+                        _marks[i * horizontalCount + j].markPosition = hit.collider != null ? hit.point : Vector3.zero;
+                    }
+                    else if (normal.y < Cos50)
+                    {
+                        // 类别 3：陡坡（坡度大于 50°，即 normal.y < cos(50°) ≈ 0.6428）
+                        // 行为：将 markCategory 设为 3；以 10% 概率记录 markPosition 并发射粒子（使用 prefab index = 3）。
                         _marks[i * horizontalCount + j].markCategory = 3;
-                        if (Random.Range(0f, 1f) < 0.3f) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
-                    } else if (normal.y < 0.85f) {
-                        _marks[i * horizontalCount + j].markCategory = 2; _marks[i * horizontalCount + j].markPosition = hit.point;
-                        if (Random.Range(0f, 1f) < 0.0003) ShootParticle(hit.point, normal, 1);
-                    } else { _marks[i * horizontalCount + j].markCategory = 1; _marks[i * horizontalCount + j].markPosition = hit.point; if (Random.Range(0f, 1f) < 0.0002) ShootParticle(hit.point, normal, 1); }
+                        if (Random.Range(0f, 1f) < _instance.settings.steepSpawnProb) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
+                    }
+                    else if (normal.y < Cos30)
+                    {
+                        // 类别 2：中等坡（坡度在 30°~50° 之间，即 cos(50°) ≤ normal.y < cos(30°））
+                        // 行为：将 markCategory 设为 2，始终记录 markPosition；以较大概率（0.7）发射粒子（index = 1）。
+                        _marks[i * horizontalCount + j].markCategory = 2;
+                        _marks[i * horizontalCount + j].markPosition = hit.point;
+                        if (Random.Range(0f, 1f) < _instance.settings.midSpawnProb) ShootParticle(hit.point, normal, 1);
+                    }
+                    else
+                    {
+                        // 类别 1：平地 / 缓坡（坡度 ≤ 30°，即 normal.y ≥ cos(30°) ≈ 0.8660）
+                        // 行为：将 markCategory 设为 1，始终记录 markPosition；以极小概率（0.0002）发射稀有粒子（index = 1）。
+                        _marks[i * horizontalCount + j].markCategory = 1;
+                        _marks[i * horizontalCount + j].markPosition = hit.point;
+                        if (Random.Range(0f, 1f) < _instance.settings.flatSpawnProb) ShootParticle(hit.point, normal, 1);
+                    }
+
                     rayCastPos += right * gridStep;
                 }
                 _generateTerrainMarks.End();

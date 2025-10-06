@@ -34,6 +34,10 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
     public ConfigEntry<float> configHeadScanLineDistance;
     public ConfigEntry<string> configScanCenterWS;
     public ConfigEntry<float> configOutlineStarDistance;
+    // particle spawn probability config entries
+    public ConfigEntry<float> configSteepSpawnProb;
+    public ConfigEntry<float> configMidSpawnProb;
+    public ConfigEntry<float> configFlatSpawnProb;
 
     // track the active ScanFeature instance we created/configured
     ScanFeature activeScanFeature = null;
@@ -264,6 +268,10 @@ private void InitializeScanFeature()
         configHeadScanLineDistance = Config.Bind("Style", "HeadScanLineDistance", 8f, "Head scan line distance");
         configScanCenterWS = Config.Bind("Style", "ScanCenterWS", "123.05,36.3,147.86", "Scan center world-space as x,y,z");
         configOutlineStarDistance = Config.Bind("Style", "OutlineStarDistance", 30f, "Outline star distance");
+    // particle spawn probability defaults
+    configSteepSpawnProb = Config.Bind("Style", "SteepSpawnProb", 0.1f, "Probability to spawn particle on steep slopes (category 3)");
+    configMidSpawnProb = Config.Bind("Style", "MidSpawnProb", 0.3f, "Probability to spawn particle on mid slopes (category 2)");
+    configFlatSpawnProb = Config.Bind("Style", "FlatSpawnProb", 0.0002f, "Probability to spawn particle on flat slopes (category 1)");
 
     // subscribe to changes
     configScanColorHead.SettingChanged += ApplyStyleConfig;
@@ -278,6 +286,9 @@ private void InitializeScanFeature()
     configHeadScanLineDistance.SettingChanged += ApplyStyleConfig;
     configScanCenterWS.SettingChanged += ApplyStyleConfig;
     configOutlineStarDistance.SettingChanged += ApplyStyleConfig;
+    configSteepSpawnProb.SettingChanged += ApplyStyleConfig;
+    configMidSpawnProb.SettingChanged += ApplyStyleConfig;
+    configFlatSpawnProb.SettingChanged += ApplyStyleConfig;
 
     }
 
@@ -311,6 +322,10 @@ private void InitializeScanFeature()
             activeScanFeature.settings.headScanLineDistance = configHeadScanLineDistance.Value;
             activeScanFeature.settings.scanCenterWS = ParseVec3(configScanCenterWS.Value);
             activeScanFeature.settings.outlineStarDistance = configOutlineStarDistance.Value;
+            // apply particle probabilities
+            activeScanFeature.settings.steepSpawnProb = configSteepSpawnProb.Value;
+            activeScanFeature.settings.midSpawnProb = configMidSpawnProb.Value;
+            activeScanFeature.settings.flatSpawnProb = configFlatSpawnProb.Value;
         } catch { }
     }
 
@@ -338,6 +353,9 @@ private void InitializeScanFeature()
     if (configHeadScanLineDistance != null) configHeadScanLineDistance.SettingChanged -= ApplyStyleConfig;
     if (configScanCenterWS != null) configScanCenterWS.SettingChanged -= ApplyStyleConfig;
     if (configOutlineStarDistance != null) configOutlineStarDistance.SettingChanged -= ApplyStyleConfig;
+    if (configSteepSpawnProb != null) configSteepSpawnProb.SettingChanged -= ApplyStyleConfig;
+    if (configMidSpawnProb != null) configMidSpawnProb.SettingChanged -= ApplyStyleConfig;
+    if (configFlatSpawnProb != null) configFlatSpawnProb.SettingChanged -= ApplyStyleConfig;
     }
 
 
