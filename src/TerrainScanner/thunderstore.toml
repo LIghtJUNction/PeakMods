@@ -3,11 +3,10 @@ schemaVersion = "0.0.1"
 [general]
 repository = "https://thunderstore.io"
 
-
 [package]
 namespace = "LightPeak"
 name = "TerrainScanner"
-description = "TerrainScanner ，Fork From Foothood? "
+description = "TerrainScanner — Death Stranding style terrain scanner for PEAK. Provides persistent ground marks, scan outlines, and customizable visuals."
 websiteUrl = "https://github.com/LIghtJUNction/PeakMods"
 containsNsfwContent = false
 authors = ["LIghtJUNction"]
@@ -42,8 +41,6 @@ target = "/"
 [[build.copy]]
 source = "./Assets"
 target = "/Assets"
-
-
 
 # The following config options only apply when using TCLI to publish to Thunderstore directly:
 

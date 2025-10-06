@@ -40,6 +40,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a829b44202f57a47962bda94880a7a8
+    m_Address: Assets/Shader/TerrianMarks.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d3039039d5d1ae4e91977795e400ec0
+    m_Address: Assets/Image/Circle_gradient_0.25.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a20500e83584ad74d8c01a832f6f75b6
     m_Address: Assets/MOD/TarrainScannerDef.asset
     m_ReadOnly: 0
@@ -62,6 +72,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1809be261335e24398f58fcadbb85c4
     m_Address: Assets/Particles/LightParticle2.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d215c01b5c6dac14b83054ae062c587d
+    m_Address: Assets/Image/Circle_gradient_0.5.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

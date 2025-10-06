@@ -78,6 +78,13 @@ public class ScanFeature : ScriptableRendererFeature {
 		if( !canScan ) {
 			return;
 		}
+		// 防御性检查：确保实例存在
+		if (_instance == null) {
+			Debug.LogError("[ScanFeature] instance is null when starting scan.");
+			canScan = true;
+			return;
+		}
+
 		canScan = false;
 		showMark = true;
 
@@ -87,7 +94,10 @@ public class ScanFeature : ScriptableRendererFeature {
 
 		var material = _instance.settings.scanMaterial;
 		var markMaterial = _instance.settings.markMaterial;
-		material.SetVector( ScanCenterWs, scanCenter );
+
+		// 只有在材质不为空时才进行动画设置
+		if (material != null) {
+			material.SetVector( ScanCenterWs, scanCenter );
 
 		// 控制扫描线前进
 		material.SetFloat( HeadScanLineDistance, 4 );
@@ -113,13 +123,19 @@ public class ScanFeature : ScriptableRendererFeature {
 		material.DOFloat( 0, OutlineBrightness, 0.5f ).SetDelay( 2.25f ).SetEase( Ease.Linear );
 		material.DOFloat( 30, OutlineStarDistance, 1f ).SetEase( Ease.InCubic );
 
-		// 控制地形标记的透明度
-		markMaterial.SetFloat( ColorAlpha, 0 );
-		markMaterial.DOFloat( 1, ColorAlpha, 1f );
-		markTween = markMaterial.DOFloat( 0, ColorAlpha, 1f ).SetDelay( 7 );
-		markTween.onComplete += () => {
-			showMark = false;
-		};
+		} else {
+			Debug.LogWarning("[ScanFeature] scanMaterial is null — skipping material animation.");
+		}
+
+		// 控制地形标记的透明度（有可能 markMaterial 为空）
+		if (markMaterial != null) {
+			markMaterial.SetFloat( ColorAlpha, 0 );
+			markMaterial.DOFloat( 1, ColorAlpha, 1f );
+			markTween = markMaterial.DOFloat( 0, ColorAlpha, 1f ).SetDelay( 7 );
+			if (markTween != null) markTween.onComplete += () => { showMark = false; };
+		} else {
+			Debug.LogWarning("[ScanFeature] markMaterial is null — skipping mark animations.");
+		}
 
 		//生成地形标记
 		await GenerateTerrainMarks( player );
@@ -137,23 +153,31 @@ public class ScanFeature : ScriptableRendererFeature {
 	const float gridStep = 0.5f; // 两个点之间的距离
 
 	static void ShootParticle( Vector3 position, Vector3 normal, int index = 3 ) {
-		float distanceToCamera01 = Vector3.Distance( position, Camera.main.transform.position ) / 20 + 0.5f;
+		float distanceToCamera01 = 1.0f;
+		if (Camera.main != null) {
+			distanceToCamera01 = Vector3.Distance( position, Camera.main.transform.position ) / 20 + 0.5f;
+		}
 
-		GameObject instance;
+		GameObject prefab = null;
 		switch( index ) {
 			case 3:
-				instance = Instantiate( _instance.settings.markParticle3 );
+				prefab = _instance?.settings?.markParticle3;
 				break;
 			case 2:
-				instance = Instantiate( _instance.settings.markParticle2 );
+				prefab = _instance?.settings?.markParticle2;
 				break;
 			default:
-				instance = Instantiate( _instance.settings.markParticle1 );
+				prefab = _instance?.settings?.markParticle1;
 				break;
 		}
+		if (prefab == null) return;
+		GameObject instance = Instantiate( prefab );
+		if (instance == null) return;
 		instance.transform.position = position;
 		instance.transform.localScale = Random.Range( 0.5f, 1.5f ) * Vector3.one * distanceToCamera01;
-		instance.transform.GetChild( 0 ).localScale = Random.Range( 2f, 5f ) * Vector3.one * distanceToCamera01;
+		if (instance.transform.childCount > 0) {
+			instance.transform.GetChild( 0 ).localScale = Random.Range( 2f, 5f ) * Vector3.one * distanceToCamera01;
+		}
 	}
 
 	static async UniTask GenerateTerrainMarks( Transform player ) {
@@ -362,7 +386,11 @@ public class ScanFeature : ScriptableRendererFeature {
 		if( settings.scanMaterial == null ) return;
 		if( !Application.isPlaying ) return;
 
-		_marks = new Marks[horizentalCount * verticalCount];
+		// 确保 _marks 已正确分配（防御性）
+		int needed = horizentalCount * verticalCount;
+		if (_marks == null || _marks.Length != needed) {
+			_marks = new Marks[needed];
+		}
 		//初始化CustomRenderPass
 		_myPass = new CustomRenderPass( settings );
 		_instance = this;
