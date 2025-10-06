@@ -347,28 +347,11 @@ private void InitializeScanFeature()
     {
         // 配置 ScanFeature 的设置
         scanFeature.settings.scanMaterial = scanMaterial;
-        // 选择 markMaterial：优先使用 bundle 中的 TerrianMarks.mat（如果 shader 匹配），否则尝试本地回退
-        Material assignedMark = markMaterial;
-        bool bundleOk = false;
-        if (assignedMark != null && assignedMark.shader != null && assignedMark.shader.name == "TerrianMarks") bundleOk = true;
-        if (!bundleOk) {
-            // try local shader fallback and copy a few properties from bundle material if present
-            var localShader = Shader.Find("TerrianMarks");
-            if (localShader != null) {
-                var preferMat = new Material(localShader);
-                if (assignedMark != null) {
-                    if (assignedMark.HasProperty("_SafeColor")) try { preferMat.SetColor("_SafeColor", assignedMark.GetColor("_SafeColor")); } catch { }
-                    if (assignedMark.HasProperty("_WarningColor")) try { preferMat.SetColor("_WarningColor", assignedMark.GetColor("_WarningColor")); } catch { }
-                    if (assignedMark.HasProperty("_DangerColor")) try { preferMat.SetColor("_DangerColor", assignedMark.GetColor("_DangerColor")); } catch { }
-                    if (assignedMark.HasProperty("_IconSize")) try { preferMat.SetFloat("_IconSize", assignedMark.GetFloat("_IconSize")); } catch { }
-                }
-                preferMat.enableInstancing = true;
-                assignedMark = preferMat;
-            }
-        } else {
-            if (assignedMark != null) assignedMark.enableInstancing = true;
+        // 直接使用从 AssetBundle 加载的 markMaterial（bundle 中应包含 TerrianMarks.mat）
+        if (markMaterial != null) {
+            try { markMaterial.enableInstancing = true; } catch { }
         }
-        scanFeature.settings.markMaterial = assignedMark;
+        scanFeature.settings.markMaterial = markMaterial;
         scanFeature.settings.markParticle1 = markParticle1;
         scanFeature.settings.markParticle2 = markParticle2;
         scanFeature.settings.markParticle3 = markParticle3;
