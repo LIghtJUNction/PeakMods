@@ -9,54 +9,18 @@ using UnityEngine.Rendering.RenderGraphModule;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
-namespace TerrainScanner {
+namespace TerrainScanner;
+
     public class ScanFeature : ScriptableRendererFeature {
-        [Serializable]
-        public class Settings {
-            public RenderPassEvent renderEvent = RenderPassEvent.BeforeRenderingTransparents;
-            [FormerlySerializedAs("scanShader")]
-            public Material scanMaterial;
 
-            [Header("Static Settings")]
-            public Color scanColorHead = new Color(0.054901965f, 0.5686275f, 0.85098046f, 1f);
-            public Color scanColor = new Color(0.38823533f, 0.7372549f, 0.8705883f, 1f);
-            public float outlineWidth = 2.48f;
-            public float scanLineWidth = 1f;
-            public float scanLineInterval = 1f;
-            public float headScanLineWidth = 1f;
-
-            [Header("Dynamics Settings(control by code)")]
-            public float scanLineBrightness = 2.5f;
-            public float scanRange = 5f;
-            public float outlineBrightness = 1.32f;
-            public float headScanLineDistance = 13.2f;
-            public Vector3 scanCenterWS = new Vector3(123.05f, 36.3f, 147.86f);
-            public float outlineStarDistance = 30f;
-
-            [Header("Render Mark")]
-            public Material markMaterial;
-            public GameObject markParticle3;
-            public GameObject markParticle2;
-            public GameObject markParticle1;
-            [Header("Particle probabilities")]
-            // 生成粒子的概率，可在 Inspector 中调整
-            public float steepSpawnProb = 0.1f;   // 对应陡坡 (category 3)
-            public float midSpawnProb = 0.3f;  // 对应中等坡 (category 2)
-            public float flatSpawnProb = 0.0002f; // 对应平地 (category 1)
-        }
-
-        public Settings settings = new Settings();
+        // Use external ScanConfig (created in Config.cs) instead of nested Settings class.
+        public ScanConfig config = new ScanConfig();
 
         static ScanFeature _instance;
         CustomRenderPass _myPass;
 
         // diagnostics
-        static bool s_reportedDepthHandle = false;
-        static bool s_reportedMarkState = false;
         static int s_scanCounter = 0;
-        static int s_lastReportedScanId = -1;
-
-        // (DedupLog removed) only error logs are kept; lightweight diagnostics remain above.
 
         public static void ExecuteScan(Transform player) {
             StartScan(player).Forget();
@@ -75,11 +39,11 @@ namespace TerrainScanner {
                 TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature instance is null. Ensure it is properly initialized.");
                 return;
             }
-            if (_instance.settings == null) {
-                TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature settings is null.");
+            if (_instance.config == null) {
+                TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature config is null.");
                 return;
             }
-            if (_instance.settings.scanMaterial == null) {
+            if (_instance.config.scanMaterial == null) {
                 TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature scanMaterial is null. Assets may not be loaded yet.");
                 return;
             }
@@ -88,8 +52,8 @@ namespace TerrainScanner {
             markTween?.Kill();
 
             var scanCenter = player.position - player.forward * 2;
-            var material = _instance.settings.scanMaterial;
-            var markMaterial = _instance.settings.markMaterial;
+            var material = _instance.config.scanMaterial;
+            var markMaterial = _instance.config.markMaterial;
             if (material != null) {
                 material.SetVector(ScanCenterWs, scanCenter);
                 material.SetFloat(HeadScanLineDistance, 4);
@@ -159,8 +123,8 @@ namespace TerrainScanner {
                 float distanceToCamera01 = 1.0f;
                 if (Camera.main != null) distanceToCamera01 = Vector3.Distance(position, Camera.main.transform.position) / 20 + 0.5f;
                 GameObject prefab = null;
-                if (_instance != null && _instance.settings != null) {
-                    prefab = index switch { 3 => _instance.settings.markParticle3, 2 => _instance.settings.markParticle2, _ => _instance.settings.markParticle1 };
+                if (_instance != null && _instance.config != null) {
+                    prefab = index switch { 3 => _instance.config.markParticle3, 2 => _instance.config.markParticle2, _ => _instance.config.markParticle1 };
                 }
 
                 if (prefab == null) {
@@ -183,13 +147,14 @@ namespace TerrainScanner {
                 instance.transform.position = position;
                 instance.transform.localScale = Random.Range(0.5f, 1.5f) * Vector3.one * distanceToCamera01;
                 if (instance.transform.childCount > 0) {
-                    try { instance.transform.GetChild(0).localScale = Random.Range(2f, 5f) * Vector3.one * distanceToCamera01; } catch { }
+                    try { instance.transform.GetChild(0).localScale = Random.Range(2f, 5f) * Vector3.one * distanceToCamera01; }
+                    catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] Child scale adjust failed: {ex.Message}"); }
                 }
 
                 var ps = instance.GetComponentInChildren<ParticleSystem>();
                 if (ps == null) {
-                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: ParticleSystem not found in prefab '{prefab.name}' (index {index}). Destroying instance.");
-                    try { GameObject.Destroy(instance); } catch { }
+                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: ParticleSystem not found in prefab '{prefab?.name ?? "<null prefab>"}' (index {index}). Destroying instance.");
+                    try { GameObject.Destroy(instance); } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] Destroy instance failed: {ex.Message}"); }
                     return;
                 }
 
@@ -198,9 +163,9 @@ namespace TerrainScanner {
                 } catch (Exception ex) {
                     TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: ParticleSystem.Play() failed: {ex.Message}");
                 }
-            } catch (Exception ex) {
-                TerrainScannerPlugin.Logger?.LogError($"[ScanFeature] ShootParticle: unexpected exception: {ex}");
-            }
+                } catch (Exception ex) {
+                    TerrainScannerPlugin.Logger?.LogError($"[ScanFeature] ShootParticle: unexpected exception: {ex}");
+                }
         }
 
         static async UniTask GenerateTerrainMarks(Transform player, int scanId) {
@@ -217,7 +182,7 @@ namespace TerrainScanner {
                 maskScan = Physics.DefaultRaycastLayers;
             }
 
-            int totalHits = 0;
+            // totalHits removed - was unused
             int perRowSampleLimit = 3; int logRowLimit = 5;
             Vector3 startPos = player.position - forward * 2 + Vector3.up * 100;
             var rayCastPos = startPos - right * horizontalCount / 2 * gridStep - forward * (3 * gridStep);
@@ -228,18 +193,17 @@ namespace TerrainScanner {
                 for (int j = 0; j < horizontalCount; j++) {
                     Physics.Raycast(rayCastPos, Vector3.down, out RaycastHit hit, 300, maskScanRoad);
                     if (hit.collider == null) { rayCastPos += right * gridStep; continue; }
-                    rowHits++; totalHits++;
+                    rowHits++;
                     var normal = hit.normal;
-                    int computedCat = hit.collider != null ? (normal.y < Cos50 ? 3 : (normal.y < Cos30 ? 2 : 1)) : 0;
                     if (i < logRowLimit && rowSampleLogged < perRowSampleLimit) { /* debug sample log removed */ rowSampleLogged++; }
                     // if this hit position was previously marked as player road, treat as flat (category 1)
-                    long cellKey = 0;
+                    // cellKey not needed beyond road check; compute inline instead
                     var hitPoint = hit.point;
                     if (hit.collider != null) {
                         var gx = Mathf.FloorToInt(hitPoint.x / RoadGridSize);
                         var gz = Mathf.FloorToInt(hitPoint.z / RoadGridSize);
-                        cellKey = ((long)gx << 32) ^ (uint)gz;
-                        if (_playerRoads.ContainsKey(cellKey)) {
+                        long _cellKey = ((long)gx << 32) ^ (uint)gz;
+                        if (_playerRoads.ContainsKey(_cellKey)) {
                             _marks[i * horizontalCount + j].markCategory = 1;
                             _marks[i * horizontalCount + j].markPosition = hitPoint;
                             rayCastPos += right * gridStep;
@@ -262,7 +226,7 @@ namespace TerrainScanner {
                         // 行为：将 markCategory 设为 3；以 10% 概率记录 markPosition 并发射粒子（使用 prefab index = 3）。
                         _marks[i * horizontalCount + j].markCategory = 3;
                         // use configured steep spawn probability (fallback to existing default if settings missing)
-                        if (Random.Range(0f, 1f) < (_instance?.settings?.steepSpawnProb ?? 0.1f)) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
+                        if (Random.Range(0f, 1f) < (_instance?.config?.steepSpawnProb ?? 0.1f)) { _marks[i * horizontalCount + j].markPosition = hit.point; ShootParticle(hit.point, normal, 3); }
                     }
                     else if (normal.y < Cos30)
                     {
@@ -271,7 +235,7 @@ namespace TerrainScanner {
                         _marks[i * horizontalCount + j].markCategory = 2;
                         _marks[i * horizontalCount + j].markPosition = hit.point;
                         // use configured mid spawn probability
-                        if (Random.Range(0f, 1f) < (_instance?.settings?.midSpawnProb ?? 0.3f)) ShootParticle(hit.point, normal, 1);
+                        if (Random.Range(0f, 1f) < (_instance?.config?.midSpawnProb ?? 0.3f)) ShootParticle(hit.point, normal, 1);
                     }
                     else
                     {
@@ -280,7 +244,7 @@ namespace TerrainScanner {
                         _marks[i * horizontalCount + j].markCategory = 1;
                         _marks[i * horizontalCount + j].markPosition = hit.point;
                         // use configured flat spawn probability
-                        if (Random.Range(0f, 1f) < (_instance?.settings?.flatSpawnProb ?? 0.0002f)) ShootParticle(hit.point, normal, 1);
+                        if (Random.Range(0f, 1f) < (_instance?.config?.flatSpawnProb ?? 0.0002f)) ShootParticle(hit.point, normal, 1);
                     }
 
                     rayCastPos += right * gridStep;
@@ -291,10 +255,6 @@ namespace TerrainScanner {
                 if (i < 3 && rowHits > 0) { /* debug row hits log removed */ }
             }
 
-            if (s_lastReportedScanId != scanId) {
-                s_lastReportedScanId = scanId;
-                // debug summary removed
-            }
 
             // compact full result and publish atomically for render to consume
             if (_marks != null) {
@@ -336,9 +296,9 @@ namespace TerrainScanner {
             GraphicsBuffer.IndirectDrawIndexedArgs[] _commandData;
             ComputeBuffer _computeBuffer;
             Mesh mesh;
-            Settings settings;
+            ScanConfig settings;
             string _passName;
-            public CustomRenderPass(Settings settings) {
+            public CustomRenderPass(ScanConfig settings) {
                 _graphicsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, GraphicsBuffer.IndirectDrawIndexedArgs.size);
                 _commandData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
                 _computeBuffer = new ComputeBuffer(horizontalCount * verticalCount, sizeof(float) * 4);
@@ -405,14 +365,13 @@ namespace TerrainScanner {
                 var cmd = context.cmd;
                 RTHandle depthHdl = data.depthTarget;
                 Vector2 viewportScale = Vector2.one;
-                try { if (depthHdl != null && depthHdl.useScaling) viewportScale = new Vector2(depthHdl.rtHandleProperties.rtHandleScale.x, depthHdl.rtHandleProperties.rtHandleScale.y); } catch { }
-                if (!s_reportedDepthHandle) { s_reportedDepthHandle = true; }
+                try { if (depthHdl != null && depthHdl.useScaling) viewportScale = new Vector2(depthHdl.rtHandleProperties.rtHandleScale.x, depthHdl.rtHandleProperties.rtHandleScale.y); }
+                catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] depth handle read failed: {ex.Message}"); }
+
                 if (depthHdl != null) { try { Blitter.BlitTexture(cmd, depthHdl, viewportScale, data.scanMaterial, 0); } catch (Exception ex) { TerrainScannerPlugin.Logger.LogError($"[ScanFeature] ExecutePass: BlitTexture failed: {ex}"); } }
 
                 if (data.localShowMark && data.markMaterial != null) {
                     if (data.computeBuffer == null || data.graphicsBuffer == null || data.commandData == null || data.mesh == null) {
-                        // buffers/mesh missing - skipping instanced draw
-                        s_reportedMarkState = true;
                         return;
                     }
                     // diagnostics removed
@@ -429,13 +388,13 @@ namespace TerrainScanner {
                         } else {
                             // mark material null diagnostic removed
                         }
-                    } catch { }
+                    } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] mark material diagnostics failed: {ex.Message}"); }
 
                     // validate computeBuffer capacity vs data to upload
                     try {
                         if (data.computeBuffer == null) { return; }
                         if (data.computeBuffer.count < compact.Length) { /* computeBuffer capacity insufficient */ }
-                    } catch { }
+                    } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] computeBuffer check failed: {ex.Message}"); }
 
                     // diagnostics: print first few compact entries to verify positions (deduped)
                     // compact sample diagnostics removed
@@ -449,29 +408,27 @@ namespace TerrainScanner {
                     // basic validation: nothing to draw -> skip
                     if (data.commandData[0].instanceCount == 0) { return; }
                     // ensure material has instancing enabled before draw
-                    try { if (data.markMaterial != null) data.markMaterial.enableInstancing = true; } catch { }
+                    try { if (data.markMaterial != null) data.markMaterial.enableInstancing = true; } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] enableInstancing failed: {ex.Message}"); }
                     // --- TEMP DEBUG: force material render queue & depth state to test visibility ---
                     int origQueue = -1; bool changedQueue = false;
                     var origZWrite = -1; var origZTest = -1; bool changedZ = false;
                     try {
                         // force material state diagnostic removed
                         if (data.markMaterial != null) {
-                            try {
-                                origQueue = data.markMaterial.renderQueue; data.markMaterial.renderQueue = 5000; changedQueue = true;
-                            } catch { }
-                            try { origZWrite = data.markMaterial.HasProperty("_ZWrite") ? data.markMaterial.GetInt("_ZWrite") : -1; data.markMaterial.SetInt("_ZWrite", 0); changedZ = true; } catch { }
-                            try { origZTest = data.markMaterial.HasProperty("_ZTest") ? data.markMaterial.GetInt("_ZTest") : -1; data.markMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always); changedZ = true; } catch { }
+                            try { origQueue = data.markMaterial.renderQueue; data.markMaterial.renderQueue = 5000; changedQueue = true; } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] set renderQueue failed: {ex.Message}"); }
+                            try { origZWrite = data.markMaterial.HasProperty("_ZWrite") ? data.markMaterial.GetInt("_ZWrite") : -1; data.markMaterial.SetInt("_ZWrite", 0); changedZ = true; } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] set _ZWrite failed: {ex.Message}"); }
+                            try { origZTest = data.markMaterial.HasProperty("_ZTest") ? data.markMaterial.GetInt("_ZTest") : -1; data.markMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always); changedZ = true; } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] set _ZTest failed: {ex.Message}"); }
                         }
-                    } catch { }
+                    } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] force material state failed: {ex.Message}"); }
                     try { cmd.DrawMeshInstancedIndirect(data.mesh, 0, data.markMaterial, 0, data.graphicsBuffer, 0, matProp); } catch (Exception ex) { TerrainScannerPlugin.Logger.LogError($"[ScanFeature] ExecutePass: DrawMeshInstancedIndirect failed: {ex}"); }
                     // restore material state
                     try {
                         if (data.markMaterial != null) {
-                            try { if (changedQueue) data.markMaterial.renderQueue = origQueue; } catch { }
-                            try { if (changedZ && origZWrite >= 0) data.markMaterial.SetInt("_ZWrite", origZWrite); } catch { }
-                            try { if (changedZ && origZTest >= 0) data.markMaterial.SetInt("_ZTest", origZTest); } catch { }
+                            try { if (changedQueue) data.markMaterial.renderQueue = origQueue; } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] restore renderQueue failed: {ex.Message}"); }
+                            try { if (changedZ && origZWrite >= 0) data.markMaterial.SetInt("_ZWrite", origZWrite); } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] restore _ZWrite failed: {ex.Message}"); }
+                            try { if (changedZ && origZTest >= 0) data.markMaterial.SetInt("_ZTest", origZTest); } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] restore _ZTest failed: {ex.Message}"); }
                         }
-                    } catch { }
+                    } catch (Exception ex) { TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] restore material state failed: {ex.Message}"); }
                     // --- end TEMP DEBUG ---
                 }
             }
@@ -483,15 +440,15 @@ namespace TerrainScanner {
         public override void Create() {
             TerrainScannerPlugin.Logger?.LogInfo("[ScanFeature] Create() called");
             
-            if (settings.scanMaterial == null) { 
+            if (config.scanMaterial == null) { 
                 TerrainScannerPlugin.Logger?.LogError("[ScanFeature] scanMaterial is not assigned!"); 
                 return; 
             }
-            if (settings.markMaterial == null) { 
+            if (config.markMaterial == null) { 
                 TerrainScannerPlugin.Logger?.LogError("[ScanFeature] markMaterial is not assigned!"); 
                 return; 
             }
-            if (settings.markParticle1 == null || settings.markParticle2 == null || settings.markParticle3 == null) { 
+            if (config.markParticle1 == null || config.markParticle2 == null || config.markParticle3 == null) { 
                 TerrainScannerPlugin.Logger?.LogError("[ScanFeature] One or more mark particles are not assigned!"); 
                 return; 
             }
@@ -501,16 +458,16 @@ namespace TerrainScanner {
             }
             
             _marks = new Marks[horizontalCount * verticalCount];
-            _myPass = new CustomRenderPass(settings);
+            _myPass = new CustomRenderPass(config);
             _instance = this;
             
             TerrainScannerPlugin.Logger?.LogInfo("[ScanFeature] Create() completed successfully, _instance set");
         }
 
         public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData) {
-            if (settings.scanMaterial == null) return; if (!Application.isPlaying) return;
+            if (config.scanMaterial == null) return; if (!Application.isPlaying) return;
             if (renderingData.cameraData.cameraType == CameraType.Game) {
-                _myPass.renderPassEvent = settings.renderEvent;
+                _myPass.renderPassEvent = config.renderEvent;
                 _myPass.ConfigureInput(ScriptableRenderPassInput.Color);
                 _myPass.ConfigureInput(ScriptableRenderPassInput.Normal);
                 _myPass.ConfigureInput(ScriptableRenderPassInput.Depth);
@@ -518,8 +475,7 @@ namespace TerrainScanner {
         }
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
-            if (settings.scanMaterial == null) return; if (!Application.isPlaying) return;
+            if (config.scanMaterial == null) return; if (!Application.isPlaying) return;
             renderer.EnqueuePass(_myPass);
         }
     }
-}

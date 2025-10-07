@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,37 +18,12 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
 {
     public static TerrainScannerPlugin Instance;
     internal static new ManualLogSource Logger;
-    public ConfigEntry<KeyCode> configActivationKey;
-    // Style/config entries for ScanFeature
-    public ConfigEntry<string> configScanColorHead;
-    public ConfigEntry<string> configScanColor;
-    public ConfigEntry<float> configOutlineWidth;
-    public ConfigEntry<float> configScanLineWidth;
-    public ConfigEntry<float> configScanLineInterval;
-    public ConfigEntry<float> configHeadScanLineWidth;
-    // more style/config entries
-    public ConfigEntry<float> configScanLineBrightness;
-    public ConfigEntry<float> configScanRange;
-    public ConfigEntry<float> configOutlineBrightness;
-    public ConfigEntry<float> configHeadScanLineDistance;
-    public ConfigEntry<string> configScanCenterWS;
-    public ConfigEntry<float> configOutlineStarDistance;
-    // particle spawn probability config entries
-    public ConfigEntry<float> configSteepSpawnProb;
-    public ConfigEntry<float> configMidSpawnProb;
-    public ConfigEntry<float> configFlatSpawnProb;
 
     // track the active ScanFeature instance we created/configured
     ScanFeature activeScanFeature = null;
 
     // 声明加载的资源变量
-    private Material scanMaterial;
-    private Material markMaterial;
-    
-    private GameObject markParticle1;
-    private GameObject markParticle2;
-    private GameObject markParticle3;
-    
+
     private bool assetsLoaded = false;
     private bool scanFeatureInitialized = false;
 
@@ -57,6 +31,12 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
     {
         Instance = this;
         Logger = base.Logger;
+
+        // Initialize centralized ScanConfig manager which will bind BepInEx config
+        try {
+              ScanConfigManager.Initialize(this);
+            Logger.LogInfo("[INFO] ScanConfigManager initialized.");
+        } catch (Exception ex) { Logger.LogWarning($"[WARN] ScanConfigManager.Initialize failed: {ex.Message}"); }
 
         // 初始化 UniTask PlayerLoop 系统
         try
@@ -70,8 +50,6 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
             Logger.LogWarning($"[WARN] UniTask PlayerLoop initialization failed: {ex.Message}");
         }
 
-        // load config
-        setupConfig();
 
         LoadPeakBundle();
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -91,50 +69,58 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
                     Logger.LogInfo($"[DEBUG] Found asset: {assetName}");
                 });
                 #endif
-                // 保存加载的资源到类变量
-                scanMaterial = peakBundle.LoadAsset<Material>("Assets/Material/Scan.mat");
+                // 保存加载的资源并写入中心化配置（ScanConfigManager.Current）
+                var loadedScanMaterial = peakBundle.LoadAsset<Material>("Assets/Material/Scan.mat");
                 // 不再从 bundle 加载 ParticleTerrainMark.mat — 我们直接使用 bundle 中的 TerrianMarks.mat（instanced shader material）
-
-                // Bundle 必含 TerrianMarks.mat，直接加载并使用它作为 markMaterial
-                markMaterial = peakBundle.LoadAsset<Material>("Assets/Shader/TerrianMarks.mat");
-                markParticle1 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle1.prefab");
-                markParticle2 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle2.prefab");
-                markParticle3 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle3.prefab");
+                var loadedMarkMaterial = peakBundle.LoadAsset<Material>("Assets/Shader/TerrianMarks.mat");
+                var loadedMarkParticle1 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle1.prefab");
+                var loadedMarkParticle2 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle2.prefab");
+                var loadedMarkParticle3 = peakBundle.LoadAsset<GameObject>("Assets/Particles/LightParticle3.prefab");
 
 
                 // 检查是否为空
-                if (scanMaterial == null)
+                if (loadedScanMaterial == null)
                 {
                     Logger.LogError("[ERROR] Scan material failed to load from AssetBundle.");
                     return;
                 }
                 // Bundle 必含 TerrianMarks.mat，直接赋值并进行空检查
-                if (markMaterial == null)
+                if (loadedMarkMaterial == null)
                 {
                     Logger.LogError("[ERROR] TerrianMarks.mat failed to load from AssetBundle.");
                     return;
                 }
 
-                if (markParticle1 == null || markParticle2 == null || markParticle3 == null)
+                if (loadedMarkParticle1 == null || loadedMarkParticle2 == null || loadedMarkParticle3 == null)
                 {
                     Logger.LogError("[ERROR] One or more mark particles failed to load from AssetBundle.");
                     return;
                 }
 
                 Logger.LogInfo("[INFO] All assets loaded successfully from AssetBundle.");
+                // write loaded assets into central ScanConfig
+                try {
+                    if (ScanConfigManager.Current != null) {
+                        ScanConfigManager.Current.scanMaterial = loadedScanMaterial;
+                        ScanConfigManager.Current.markMaterial = loadedMarkMaterial;
+                        ScanConfigManager.Current.markParticle1 = loadedMarkParticle1;
+                        ScanConfigManager.Current.markParticle2 = loadedMarkParticle2;
+                        ScanConfigManager.Current.markParticle3 = loadedMarkParticle3;
+                    }
+                } catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to assign loaded assets to ScanConfigManager.Current: {ex.Message}"); }
+
                 assetsLoaded = true;
                 // 运行时诊断：打印材质/Shader 信息和是否包含关键属性
                 try {
-                    if (scanMaterial != null) {
-                        Logger.LogInfo($"[DIAG] scanMaterial shader={scanMaterial.shader?.name ?? "null"}");
-                        Logger.LogInfo($"[DIAG] scanMaterial has scanCenterWS? {scanMaterial.HasProperty("scanCenterWS")}");
-                        Logger.LogInfo($"[DIAG] scanMaterial has scanRange? {scanMaterial.HasProperty("scanRange")}");
-                        Logger.LogInfo($"[DIAG] scanMaterial has scanLineBrightness? {scanMaterial.HasProperty("scanLineBrightness")}");
-                        Logger.LogInfo($"[DIAG] scanMaterial renderQueue={scanMaterial.renderQueue} instancing={scanMaterial.enableInstancing}");
+                    if (loadedScanMaterial != null) {
+                        Logger.LogInfo($"[DIAG] scanMaterial shader={loadedScanMaterial.shader?.name ?? "null"}");
+                        Logger.LogInfo($"[DIAG] scanMaterial has scanRange? {loadedScanMaterial.HasProperty("scanRange")}");
+                        Logger.LogInfo($"[DIAG] scanMaterial has scanLineBrightness? {loadedScanMaterial.HasProperty("scanLineBrightness")}");
+                        Logger.LogInfo($"[DIAG] scanMaterial renderQueue={loadedScanMaterial.renderQueue} instancing={loadedScanMaterial.enableInstancing}");
                     }
-                    if (markMaterial != null) {
-                        Logger.LogInfo($"[DIAG] markMaterial shader={markMaterial.shader?.name ?? "null"}");
-                        Logger.LogInfo($"[DIAG] markMaterial instancing={markMaterial.enableInstancing} renderQueue={markMaterial.renderQueue}");
+                    if (loadedMarkMaterial != null) {
+                        Logger.LogInfo($"[DIAG] markMaterial shader={loadedMarkMaterial.shader?.name ?? "null"}");
+                        Logger.LogInfo($"[DIAG] markMaterial instancing={loadedMarkMaterial.enableInstancing} renderQueue={loadedMarkMaterial.renderQueue}");
                     }
                 } catch (Exception ex) { Logger.LogWarning($"[WARN] Material diagnostics failed: {ex.Message}"); }
                 
@@ -222,11 +208,11 @@ private void InitializeScanFeature()
     // Diagnostic: list renderer features (helpful to detect same-named but different-assembly types)
     try {
         var features = rendererData.rendererFeatures;
-        Logger.LogInfo($"[DEBUG] rendererFeatures count={features?.Count ?? 0}");
+        Logger.LogDebug($"[DEBUG] rendererFeatures count={features?.Count ?? 0}");
         if (features != null) {
             for (int i = 0; i < features.Count; i++) {
                 var f = features[i];
-                Logger.LogInfo($"[DEBUG] rendererFeature[{i}] name={(f!=null?f.name:"null")} type={(f!=null?f.GetType().FullName:"null")}");
+                Logger.LogDebug($"[DEBUG] rendererFeature[{i}] name={(f!=null?f.name:"null")} type={(f!=null?f.GetType().FullName:"null")}");
             }
         }
     } catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to enumerate rendererFeatures: {ex.Message}"); }
@@ -237,10 +223,14 @@ private void InitializeScanFeature()
         if (feature is ScanFeature existingScanFeature)
         {
             Logger.LogInfo("[DEBUG] ScanFeature already exists. Configuring...");
-            ConfigureScanFeature(existingScanFeature);
-            existingScanFeature.Create();
+
             activeScanFeature = existingScanFeature;
-            ApplyStyleConfigNow();
+
+            try {
+                // register existing feature with centralized config manager
+                ScanConfigManager.RegisterFeature(existingScanFeature);
+            } catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
+
             scanFeatureInitialized = true;
             return;
         }
@@ -250,8 +240,6 @@ private void InitializeScanFeature()
     var scanFeature = ScriptableObject.CreateInstance<ScanFeature>();
     scanFeature.name = "TerrainScanner_ScanFeature";
     
-    // 配置 ScanFeature（在 Create 之前）
-    ConfigureScanFeature(scanFeature);
     
     // 添加到渲染器
     rendererData.rendererFeatures.Add(scanFeature);
@@ -265,146 +253,17 @@ private void InitializeScanFeature()
     // 手动调用 Create 方法
     scanFeature.Create();
     activeScanFeature = scanFeature;
-    ApplyStyleConfigNow();
+
+    try {
+        // register newly created feature with centralized config manager
+        ScanConfigManager.RegisterFeature(scanFeature);
+    } catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
+
     scanFeatureInitialized = true;
     Logger.LogInfo("[SUCCESS] ScanFeature initialized!");
 }
 
 
-#region 配置
-    private void setupConfig()
-    {
-        configActivationKey = Config.Bind("Controls", "ActivationKey", KeyCode.Q, "The key to toggle the terrain scanner.");
-        configActivationKey.SettingChanged += OnActivationKeyChanged;
-        // 样式配置（颜色用 "r,g,b,a" 字符串表示，scanCenterWS 用 "x,y,z"）
-    configScanColorHead = Config.Bind("Style", "ScanColorHead", "0.054901965,0.5686275,0.85098046,1", "Scan head color as r,g,b,a");
-    configScanColor = Config.Bind("Style", "ScanColor", "0.38823533,0.7372549,0.8705883,1", "Scan color as r,g,b,a");
-    configOutlineWidth = Config.Bind("Style", "OutlineWidth", 2.48f, "Outline width");
-    configScanLineWidth = Config.Bind("Style", "ScanLineWidth", 1f, "Scan line width");
-        configScanLineInterval = Config.Bind("Style", "ScanLineInterval", 1f, "Scan line interval");
-        configHeadScanLineWidth = Config.Bind("Style", "HeadScanLineWidth", 1f, "Head scan line width");
-
-    configScanLineBrightness = Config.Bind("Style", "ScanLineBrightness", 2.5f, "Scan line brightness");
-    configScanRange = Config.Bind("Style", "ScanRange", 5f, "Scan range");
-    configOutlineBrightness = Config.Bind("Style", "OutlineBrightness", 1.32f, "Outline brightness");
-    configHeadScanLineDistance = Config.Bind("Style", "HeadScanLineDistance", 13.2f, "Head scan line distance");
-    configScanCenterWS = Config.Bind("Style", "ScanCenterWS", "123.05,36.3,147.86", "Scan center world-space as x,y,z");
-    configOutlineStarDistance = Config.Bind("Style", "OutlineStarDistance", 30f, "Outline star distance");
-    // particle spawn probability defaults
-    configSteepSpawnProb = Config.Bind("Style", "SteepSpawnProb", 0.1f, "Probability to spawn particle on steep slopes (category 3)");
-    configMidSpawnProb = Config.Bind("Style", "MidSpawnProb", 0.3f, "Probability to spawn particle on mid slopes (category 2)");
-    configFlatSpawnProb = Config.Bind("Style", "FlatSpawnProb", 0.0002f, "Probability to spawn particle on flat slopes (category 1)");
-
-    // 如果 ScanFeature 已经存在，立即应用新的样式配置
-    if (activeScanFeature != null) {
-        ApplyStyleConfigNow();
-    }
-
-    // subscribe to changes
-    configScanColorHead.SettingChanged += ApplyStyleConfig;
-    configScanColor.SettingChanged += ApplyStyleConfig;
-    configOutlineWidth.SettingChanged += ApplyStyleConfig;
-    configScanLineWidth.SettingChanged += ApplyStyleConfig;
-    configScanLineInterval.SettingChanged += ApplyStyleConfig;
-    configHeadScanLineWidth.SettingChanged += ApplyStyleConfig;
-    configScanLineBrightness.SettingChanged += ApplyStyleConfig;
-    configScanRange.SettingChanged += ApplyStyleConfig;
-    configOutlineBrightness.SettingChanged += ApplyStyleConfig;
-    configHeadScanLineDistance.SettingChanged += ApplyStyleConfig;
-    configScanCenterWS.SettingChanged += ApplyStyleConfig;
-    configOutlineStarDistance.SettingChanged += ApplyStyleConfig;
-    configSteepSpawnProb.SettingChanged += ApplyStyleConfig;
-    configMidSpawnProb.SettingChanged += ApplyStyleConfig;
-    configFlatSpawnProb.SettingChanged += ApplyStyleConfig;
-
-    }
-
-    void ApplyStyleConfig(object sender, EventArgs e)
-    {
-        if (activeScanFeature == null) return;
-        try {
-            // parse colors and vector
-            Color ParseColor(string s) {
-                var parts = s.Split(',');
-                if (parts.Length < 3) return Color.blue;
-                float r = float.Parse(parts[0]); float g = float.Parse(parts[1]); float b = float.Parse(parts[2]); float a = parts.Length>=4 ? float.Parse(parts[3]) : 1f;
-                return new Color(r,g,b,a);
-            }
-            Vector3 ParseVec3(string s) {
-                var parts = s.Split(',');
-                if (parts.Length < 3) return new Vector3(0,0,0);
-                float x = float.Parse(parts[0]); float y = float.Parse(parts[1]); float z = float.Parse(parts[2]);
-                return new Vector3(x,y,z);
-            }
-
-            activeScanFeature.settings.scanColorHead = ParseColor(configScanColorHead.Value);
-            activeScanFeature.settings.scanColor = ParseColor(configScanColor.Value);
-            activeScanFeature.settings.outlineWidth = configOutlineWidth.Value;
-            activeScanFeature.settings.scanLineWidth = configScanLineWidth.Value;
-            activeScanFeature.settings.scanLineInterval = configScanLineInterval.Value;
-            activeScanFeature.settings.headScanLineWidth = configHeadScanLineWidth.Value;
-            activeScanFeature.settings.scanLineBrightness = configScanLineBrightness.Value;
-            activeScanFeature.settings.scanRange = configScanRange.Value;
-            activeScanFeature.settings.outlineBrightness = configOutlineBrightness.Value;
-            activeScanFeature.settings.headScanLineDistance = configHeadScanLineDistance.Value;
-            activeScanFeature.settings.scanCenterWS = ParseVec3(configScanCenterWS.Value);
-            activeScanFeature.settings.outlineStarDistance = configOutlineStarDistance.Value;
-            // apply particle probabilities
-            activeScanFeature.settings.steepSpawnProb = configSteepSpawnProb.Value;
-            activeScanFeature.settings.midSpawnProb = configMidSpawnProb.Value;
-            activeScanFeature.settings.flatSpawnProb = configFlatSpawnProb.Value;
-        } catch { }
-    }
-
-    void ApplyStyleConfigNow() {
-        ApplyStyleConfig(this, EventArgs.Empty);
-    }
-
-    private void OnActivationKeyChanged(object sender, EventArgs e)
-    {
-        Logger.LogInfo($"[INFO] Activation key changed to: {configActivationKey.Value}");
-    }
-
-    void OnDestroy()
-    {
-    if (configActivationKey != null) configActivationKey.SettingChanged -= OnActivationKeyChanged;
-    if (configScanColorHead != null) configScanColorHead.SettingChanged -= ApplyStyleConfig;
-    if (configScanColor != null) configScanColor.SettingChanged -= ApplyStyleConfig;
-    if (configOutlineWidth != null) configOutlineWidth.SettingChanged -= ApplyStyleConfig;
-    if (configScanLineWidth != null) configScanLineWidth.SettingChanged -= ApplyStyleConfig;
-    if (configScanLineInterval != null) configScanLineInterval.SettingChanged -= ApplyStyleConfig;
-    if (configHeadScanLineWidth != null) configHeadScanLineWidth.SettingChanged -= ApplyStyleConfig;
-    if (configScanLineBrightness != null) configScanLineBrightness.SettingChanged -= ApplyStyleConfig;
-    if (configScanRange != null) configScanRange.SettingChanged -= ApplyStyleConfig;
-    if (configOutlineBrightness != null) configOutlineBrightness.SettingChanged -= ApplyStyleConfig;
-    if (configHeadScanLineDistance != null) configHeadScanLineDistance.SettingChanged -= ApplyStyleConfig;
-    if (configScanCenterWS != null) configScanCenterWS.SettingChanged -= ApplyStyleConfig;
-    if (configOutlineStarDistance != null) configOutlineStarDistance.SettingChanged -= ApplyStyleConfig;
-    if (configSteepSpawnProb != null) configSteepSpawnProb.SettingChanged -= ApplyStyleConfig;
-    if (configMidSpawnProb != null) configMidSpawnProb.SettingChanged -= ApplyStyleConfig;
-    if (configFlatSpawnProb != null) configFlatSpawnProb.SettingChanged -= ApplyStyleConfig;
-    }
-
-
-#endregion
-
-    public void ConfigureScanFeature(ScanFeature scanFeature)
-    {
-        // 配置 ScanFeature 的设置
-        scanFeature.settings.scanMaterial = scanMaterial;
-        // 直接使用从 AssetBundle 加载的 markMaterial（bundle 中应包含 TerrianMarks.mat）
-        if (markMaterial != null) {
-            try { markMaterial.enableInstancing = true; } catch { }
-        }
-        scanFeature.settings.markMaterial = markMaterial;
-        scanFeature.settings.markParticle1 = markParticle1;
-        scanFeature.settings.markParticle2 = markParticle2;
-        scanFeature.settings.markParticle3 = markParticle3;
-        scanFeature.settings.scanColor = Color.green;
-        scanFeature.settings.scanRange = 15f;
-
-        Debug.Log("ScanFeature 配置完成！");
-    }
-
+    // ConfigureScanFeature removed: resource/config injection is handled centrally by ScanConfigManager.RegisterFeature
 
 }
