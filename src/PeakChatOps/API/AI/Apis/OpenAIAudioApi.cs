@@ -1,7 +1,3 @@
-using System.Net.Http;
-
-using Newtonsoft.Json;
-
 namespace PeakChatOps.API.AI.Apis
 {
     /// <summary>
@@ -16,9 +12,9 @@ namespace PeakChatOps.API.AI.Apis
             _client = client;
         }
 
-    /// <summary>
-    /// OpenAI Audio API endpoint enum. Use <see cref="OpenAIEndpointExtensions.ToPath"/> to get the path string.
-    /// </summary>
-    public static OpenAIEndpoint Endpoint => OpenAIEndpoint.Audio;
+        /// <summary>
+        /// OpenAI Audio API endpoint enum. Use <see cref="OpenAIEndpointExtensions.ToPath"/> to get the path string.
+        /// </summary>
+        public static OpenAIEndpoint Endpoint => OpenAIEndpoint.Audio;
     }
 }

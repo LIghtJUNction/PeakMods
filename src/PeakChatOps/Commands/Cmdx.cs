@@ -11,11 +11,11 @@ using PeakChatOps.Core;
 
 namespace PeakChatOps.Commands;
 
- [PCOCommand("cmdx", "命令执行器", "用法: /cmdx <cmd> <args>\n执行指定的命令。")]
- public class Cmdx
- {
-     // 静态保存所有命令元数据，供Help等调用
-     public static readonly List<PCOCommandAttribute> CommandMetas = new List<PCOCommandAttribute>();
+[PCOCommand("cmdx", "命令执行器", "用法: /cmdx <cmd> <args>\n执行指定的命令。")]
+public class Cmdx
+{
+    // 静态保存所有命令元数据，供Help等调用
+    public static readonly List<PCOCommandAttribute> CommandMetas = new List<PCOCommandAttribute>();
     // 全局命令前缀（用于外部引用）
     public static string Prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
     public Cmdx()
@@ -47,11 +47,11 @@ namespace PeakChatOps.Commands;
                 return;
             }
 
-                var subCommand = args[0];
-                var subArgs = args.Skip(1).ToArray();
-                CmdMessageEvent subCmdEvent = new CmdMessageEvent(subCommand, subArgs, "cmdx");
-                await EventBusRegistry.CmdMessageBus.Publish("cmd://", subCmdEvent);
-                return;
+            var subCommand = args[0];
+            var subArgs = args.Skip(1).ToArray();
+            CmdMessageEvent subCmdEvent = new CmdMessageEvent(subCommand, subArgs, "cmdx");
+            await EventBusRegistry.CmdMessageBus.Publish("cmd://", subCmdEvent);
+            return;
 
         }
 
@@ -109,11 +109,11 @@ namespace PeakChatOps.Commands;
         #endregion
 
 
-        #if DEBUG
+#if DEBUG
         TryInstantiate(typeof(DevCommand));
-        #endif
-        
-        
+#endif
+
+
         // 通过反射加载插件目录下的 dll 并实例化带 PCOCommand 特性的类型以触发其构造函数，并收集元数据
         string pluginsDir = Paths.PluginPath;
         try

@@ -1,8 +1,8 @@
 #if DEBUG
-using System.Linq;
 using System.Collections.Generic;
-using PeakChatOps.API;
+using System.Linq;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.Core;
 using Photon.Pun;
 
@@ -20,16 +20,16 @@ public class DevCommand
         EventBusRegistry.CmdMessageBus.Subscribe("cmd://dev", Handle);
         DevLog.UI("[Cmd] DevCommand subscribed to cmd://dev");
     }
-    
+
     public static async UniTask Handle(CmdMessageEvent evt)
     {
         try
         {
             DevLog.File("[DevCommand] Handle started");
-            
+
             var args = evt.Args;
             DevLog.File($"[DevCommand] args.Length={args.Length}");
-            
+
             if (args.Length == 0)
             {
                 await PublishResult(evt, args, false, "用法: /dev mock player <消息>");
@@ -38,7 +38,7 @@ public class DevCommand
 
             var action = args[0].ToLowerInvariant();
             DevLog.File($"[DevCommand] action={action}");
-            
+
             if (action != "mock")
             {
                 await PublishResult(evt, args, false, $"未知子命令: {args[0]}");
@@ -53,7 +53,7 @@ public class DevCommand
 
             var target = args[1].ToLowerInvariant();
             DevLog.File($"[DevCommand] target={target}");
-            
+
             if (target != "player")
             {
                 await PublishResult(evt, args, false, $"暂不支持的 mock 类型: {args[1]}");
@@ -77,14 +77,14 @@ public class DevCommand
             );
 
             DevLog.File($"[DevCommand] Publishing mock message: sender={nickname}, msg={message}");
-            
+
             if (EventBusRegistry.ChatMessageBus == null)
             {
                 DevLog.File($"[DevCommand] ERROR: ChatMessageBus is null!");
                 await PublishResult(evt, args, false, "ChatMessageBus 未初始化");
                 return;
             }
-            
+
             await EventBusRegistry.ChatMessageBus.Publish("sander://other", mockChatEvent);
             DevLog.File($"[DevCommand] Mock message published successfully");
 

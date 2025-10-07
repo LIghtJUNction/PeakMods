@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using BepInEx;
 #nullable enable
 
 namespace PeakChatOps.core;
@@ -72,10 +71,10 @@ public static class PLocalizedText
 
         // 第一行是语言列表
         var header = ParseCsvLine(lines[0]);
-        
+
         // 确定当前语言索引
         _currentLangIndex = GetCurrentLanguageIndex(header);
-        
+
         if (_currentLangIndex < 0 || _currentLangIndex >= header.Count)
         {
             PeakChatOpsPlugin.Logger.LogWarning($"[PLocalizedText] Invalid language index: {_currentLangIndex}, defaulting to 0 (English)");

@@ -1,12 +1,12 @@
-using BepInEx.Configuration;
-using UnityEngine;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+using BepInEx.Configuration;
 using PeakChatOps.core;
+using UnityEngine;
 namespace PeakChatOps;
 
 
@@ -17,7 +17,7 @@ public class PConfig
         "PeakChatOps"
     );
     private static readonly string ApiKeyFilePath = Path.Combine(ApiKeyFolder, "api_keys.dat");
-    
+
     // 内存中的 hash -> key 映射
     private static readonly Dictionary<string, string> _keyCache = new Dictionary<string, string>();
 
@@ -61,8 +61,8 @@ public class PConfig
             PLocalizedText.GetText("REVIVE_MESSAGE"),
             PLocalizedText.GetText("REVIVE_MESSAGE_DESCRIPTION")
         );
-        
-        
+
+
         PassOutMessage = config.Bind(
             "preset", "PassOutMessage",
             PLocalizedText.GetText("PASS_OUT_MESSAGE"),
@@ -81,7 +81,7 @@ public class PConfig
             "AI", "ApiKey", defaultApiKeyHash,
             PLocalizedText.GetText("AI_APIKEY_DESCRIPTION")
         );
-        
+
         // 监听配置变化：用户输入明文 key 时，自动 hash 并保存
         AiApiKey.SettingChanged += (_, _) => SaveApiKeyToFile(AiApiKey.Value);
 
@@ -101,7 +101,7 @@ public class PConfig
 
         // AI 自动翻译 配置
         AiAutoTranslate = config.Bind(
-            "AI", "AutoTranslate",  false,
+            "AI", "AutoTranslate", false,
             PLocalizedText.GetText("AI_AUTOTRANSLATE_DESCRIPTION")
         );
 
@@ -127,7 +127,7 @@ public class PConfig
     private static string ComputeHash(string input)
     {
         if (string.IsNullOrEmpty(input)) return string.Empty;
-        
+
         using (var sha256 = SHA256.Create())
         {
             byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
@@ -141,7 +141,7 @@ public class PConfig
     private static void LoadApiKeysFromFile()
     {
         _keyCache.Clear();
-        
+
         try
         {
             if (File.Exists(ApiKeyFilePath))
@@ -157,7 +157,7 @@ public class PConfig
                         _keyCache[hash] = key;
                     }
                 }
-                
+
                 Debug.Log($"[PeakChatOps] Loaded {_keyCache.Count} API key(s) from: {ApiKeyFilePath}");
             }
         }
@@ -174,7 +174,7 @@ public class PConfig
     {
         // 首次加载文件
         LoadApiKeysFromFile();
-        
+
         // 如果有缓存的 key，返回第一个（用于初始化）
         if (_keyCache.Count > 0)
         {
@@ -183,7 +183,7 @@ public class PConfig
             Debug.Log($"[PeakChatOps] Using API Key with hash: {hash}");
             return hash; // 返回 hash 作为配置的默认值
         }
-        
+
         return "ollama"; // 默认值
     }
 
@@ -203,10 +203,10 @@ public class PConfig
 
             // 计算新 key 的 hash
             string hash = ComputeHash(input);
-            
+
             // 更新内存缓存
             _keyCache[hash] = input;
-            
+
             // 确保目录存在
             if (!Directory.Exists(ApiKeyFolder))
             {
@@ -216,11 +216,11 @@ public class PConfig
             // 保存所有映射到文件（格式：hash=key）
             var lines = _keyCache.Select(kvp => $"{kvp.Key}={kvp.Value}");
             File.WriteAllLines(ApiKeyFilePath, lines);
-            
+
             Debug.Log($"[PeakChatOps] API Key saved with hash: {hash} -> {ApiKeyFilePath}");
-            
+
             // 更新配置文件中的值为 hash（如果不是从配置变化事件触发的）
-            if (PeakChatOpsPlugin.config != null && PeakChatOpsPlugin.config.AiApiKey != null && 
+            if (PeakChatOpsPlugin.config != null && PeakChatOpsPlugin.config.AiApiKey != null &&
                 PeakChatOpsPlugin.config.AiApiKey.Value != hash)
             {
                 PeakChatOpsPlugin.config.AiApiKey.Value = hash;
@@ -247,13 +247,13 @@ public class PConfig
     public static string GetActualApiKey(string hashOrKey)
     {
         if (string.IsNullOrEmpty(hashOrKey)) return "ollama";
-        
+
         // 如果是 hash，从缓存中查找
         if (IsHashValue(hashOrKey) && _keyCache.ContainsKey(hashOrKey))
         {
             return _keyCache[hashOrKey];
         }
-        
+
         // 否则直接返回（可能是明文 key 或默认值）
         return hashOrKey;
     }
@@ -264,7 +264,7 @@ public enum UIAlignment
     TopLeft,
     TopRight,
     Center
-    
+
 }
 
 

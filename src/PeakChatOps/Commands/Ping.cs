@@ -1,8 +1,8 @@
 
 #nullable enable
 using System;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.Core;
 namespace PeakChatOps.Commands;
 

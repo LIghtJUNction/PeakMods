@@ -1,9 +1,8 @@
 using System;
 using System.Net.Http;
 using System.Text;
-using Newtonsoft.Json;
 using Cysharp.Threading.Tasks;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace PeakChatOps.API.AI
 {

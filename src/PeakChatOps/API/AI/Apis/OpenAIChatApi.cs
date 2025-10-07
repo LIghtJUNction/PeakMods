@@ -1,8 +1,6 @@
-using System.Net.Http;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace PeakChatOps.API.AI.Apis
 {
@@ -17,7 +15,7 @@ namespace PeakChatOps.API.AI.Apis
         {
             _client = client;
         }
-        
+
 
         /// <summary>
         /// Endpoint enum for chat completions.

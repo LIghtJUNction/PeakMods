@@ -1,7 +1,6 @@
 using System;
 
 using Cysharp.Threading.Tasks;
-using PeakChatOps.API.AI.Apis;
 
 namespace PeakChatOps.API.AI.Apis
 {

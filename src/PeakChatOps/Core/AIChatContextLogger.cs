@@ -1,11 +1,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using PeakChatOps.API;
 using Photon.Pun;
-using Photon.Realtime;
-using ExitGames.Client.Photon;
-using System.Linq;
 
 #nullable enable
 namespace PeakChatOps.Core;
@@ -118,23 +116,23 @@ public class AIChatContextLogger
     /// <summary>
     /// 运行时同步配置的最大历史条数
     /// </summary>
-        public void SyncMaxHistoryFromConfig()
+    public void SyncMaxHistoryFromConfig()
+    {
+        int configVal = 30;
+        try
         {
-            int configVal = 30;
-            try
-            {
-                configVal = PeakChatOpsPlugin.config.AiContextMaxCount?.Value ?? 30;
-            }
-            catch (Exception ex)
-            {
-                PeakChatOpsPlugin.Logger.LogDebug($"[AIContext] SyncMaxHistoryFromConfig failed to read config: {ex.Message}");
-            }
-            if (configVal > 0)
-            {
-                _maxHistory = configVal;
-                TrimExcess(); // 同步后立即裁剪
-            }
+            configVal = PeakChatOpsPlugin.config.AiContextMaxCount?.Value ?? 30;
         }
+        catch (Exception ex)
+        {
+            PeakChatOpsPlugin.Logger.LogDebug($"[AIContext] SyncMaxHistoryFromConfig failed to read config: {ex.Message}");
+        }
+        if (configVal > 0)
+        {
+            _maxHistory = configVal;
+            TrimExcess(); // 同步后立即裁剪
+        }
+    }
 
     /// <summary>
     /// 追加一条AI聊天消息到上下文
@@ -201,7 +199,7 @@ public class AIChatContextLogger
         {
             messages.Add(entry.Payload);
         }
-        
+
         DevLog.UI($"[AIContext] BuildContextMessages: total messages count = {messages.Count}\n 最近4条: {string.Join(", ", messages.TakeLast(4).Select(m => m["content"]))}");
         return messages;
     }

@@ -1,9 +1,9 @@
 using System;
-using PeakChatOps.API;
-using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Reflection;
+using Cysharp.Threading.Tasks;
 using ExitGames.Client.Photon;
+using PeakChatOps.API;
 using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
@@ -48,13 +48,13 @@ public static class ChatMessageChain
         // 使用自定义颜色或默认颜色
         string customColor = evt.Extra?.GetExtraValue<string>("color", null);
         string colorHex = !string.IsNullOrEmpty(customColor) ? customColor : MessageStyles.ColorPlayerRemote;
-        
+
         // 死亡状态覆盖颜色
         if (evt.IsDead)
         {
             colorHex = MessageStyles.ColorDead;
         }
-        
+
         string deadMark = evt.IsDead ? $" <b><color={MessageStyles.ColorError}>(DEAD)</color></b>" : "";
 
 
@@ -65,7 +65,7 @@ public static class ChatMessageChain
         }
         catch (Exception ex)
         {
-            try { PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel("Pong"), MessageStyles.ErrorContent(ex.Message)); } 
+            try { PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel("Pong"), MessageStyles.ErrorContent(ex.Message)); }
             catch (Exception innerEx) { DevLog.UI($"[ChatMessageChain] Failed to show pong error: {innerEx}"); }
         }
 
@@ -74,7 +74,7 @@ public static class ChatMessageChain
         {
             return UniTask.CompletedTask;
         }
-        
+
         var playerLabel = $"<color={colorHex}><size={MessageStyles.SizeLabel}>[{evt.Sender}]</size></color>{deadMark}";
         var coloredMessage = MessageStyles.PlayerContent(evt.Message, isLocal: false);
         PeakChatOpsUI.Instance.AddMessage(playerLabel, coloredMessage);
@@ -95,14 +95,14 @@ public static class ChatMessageChain
 
         try
         {
-        object[] payload = new object[]
-            {
+            object[] payload = new object[]
+                {
                 evt.Sender,
                 evt.Message,
                 evt.UserId,
                 evt.IsDead,
                 ConvertExtraToHashtable(evt.Extra)
-            };
+                };
             Photon.Pun.PhotonNetwork.RaiseEvent(
                 EventCodes.ChatEventCode,
                 payload,
@@ -114,7 +114,7 @@ public static class ChatMessageChain
         {
             PeakChatOpsUI.Instance.AddMessage(MessageStyles.ErrorLabel(), MessageStyles.ErrorContent(ex.Message));
         }
-        
+
         var youLabel = MessageStyles.PlayerLabel("You", isLocal: true, isDead: evt.IsDead);
         var coloredMessage = MessageStyles.PlayerContent(evt.Message, isLocal: true);
         PeakChatOpsUI.Instance.AddMessage(youLabel, coloredMessage);

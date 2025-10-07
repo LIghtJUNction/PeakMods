@@ -91,11 +91,11 @@ public class PeakChatOpsUI : MonoBehaviour
             messageList.virtualizationMethod = CollectionVirtualizationMethod.DynamicHeight;
             messageList.selectionType = SelectionType.None;
             messageList.style.flexGrow = 1;
-            
+
             // 初始化消息列表
             messages.Clear();
             messages.Add(PLocalizedText.GetText("PEAKCHATOPSWELCOME"));
-            
+
             messageList.itemsSource = messages;
             messageList.makeItem = MakeItem();
             messageList.bindItem = BindItem();
@@ -133,7 +133,7 @@ public class PeakChatOpsUI : MonoBehaviour
         // 情况1：未进入输入模式时，监听快捷键
         if (!isBlockingInput)
         {
-            if (PeakChatOpsPlugin.config?.Key != null && 
+            if (PeakChatOpsPlugin.config?.Key != null &&
                 Input.GetKeyDown(PeakChatOpsPlugin.config.Key.Value))
             {
                 EnterInputMode();
@@ -166,7 +166,7 @@ public class PeakChatOpsUI : MonoBehaviour
 
         isBlockingInput = true;
         ShowNow();
-        
+
         if (messageInputField != null)
         {
             messageInputField.Focus();
@@ -179,7 +179,7 @@ public class PeakChatOpsUI : MonoBehaviour
     void ExitInputMode()
     {
         if (!isBlockingInput) return;
-        
+
         if (messageInputField != null)
         {
             messageInputField.Blur();
@@ -203,13 +203,13 @@ public class PeakChatOpsUI : MonoBehaviour
 
         var root = uIDocument.rootVisualElement;
         var messageInput = root.Q<TextField>("message-input");
-        
+
         if (messageInput != null && !string.IsNullOrWhiteSpace(messageInput.value))
         {
             string msg = messageInput.value;
             messageInput.value = "";
             ExitInputMode();
-            
+
             // 通过 ChatSystem 发送消息
             if (ChatSystem.Instance != null)
             {
@@ -229,7 +229,7 @@ public class PeakChatOpsUI : MonoBehaviour
     {
         var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
         if (chatPanel == null) return;
-        
+
         chatPanel.RemoveFromClassList("pos-topright");
         chatPanel.RemoveFromClassList("pos-center");
         chatPanel.AddToClassList("pos-topleft");
@@ -239,17 +239,17 @@ public class PeakChatOpsUI : MonoBehaviour
     {
         var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
         if (chatPanel == null) return;
-        
+
         chatPanel.RemoveFromClassList("pos-topleft");
         chatPanel.RemoveFromClassList("pos-center");
         chatPanel.AddToClassList("pos-topright");
     }
-    
+
     public void OnCenter()
     {
         var chatPanel = uIDocument?.rootVisualElement?.Q("chat-panel");
         if (chatPanel == null) return;
-        
+
         chatPanel.RemoveFromClassList("pos-topright");
         chatPanel.RemoveFromClassList("pos-topleft");
         chatPanel.AddToClassList("pos-center");
@@ -268,16 +268,16 @@ public class PeakChatOpsUI : MonoBehaviour
         if (messageListView == null) return;
 
         // ⚡ 性能优化：减少字符串拼接和日志
-        var message = string.IsNullOrEmpty(sender) 
-            ? content 
+        var message = string.IsNullOrEmpty(sender)
+            ? content
             : $"[{sender}] {content}";
-        
+
         messages.Add(message);
-        
+
         // ⚡ 性能优化：使用 Rebuild() 而不是 RefreshItems()
         // Rebuild() 只更新数据源变化，RefreshItems() 会刷新所有可见项
         messageListView.Rebuild();
-        
+
         // ⚡ 性能优化：减少延迟时间到 50ms，提升响应速度
         if (messages.Count > 0)
         {
@@ -286,7 +286,7 @@ public class PeakChatOpsUI : MonoBehaviour
                 messageListView.ScrollToItem(messages.Count - 1);
             }).StartingIn(50);
         }
-        
+
         // ⚡ 性能优化：移除高亮效果（减少 DOM 操作）
         // 高亮动画会触发额外的样式计算和重绘
     }
@@ -305,7 +305,7 @@ public class PeakChatOpsUI : MonoBehaviour
             ExitInputMode();
         }
     }
-    
+
     public void ShowNow()
     {
         if (uIDocument != null)
@@ -314,7 +314,7 @@ public class PeakChatOpsUI : MonoBehaviour
             EnterInputMode();
         }
     }
-    
+
     void MinimizeUI()
     {
         var chatPanel = uIDocument?.rootVisualElement?.Q<VisualElement>("chat-panel");
@@ -328,7 +328,7 @@ public class PeakChatOpsUI : MonoBehaviour
         {
             chatPanel.AddToClassList("minimized");
         }
-        
+
         ExitInputMode();
     }
 
@@ -345,7 +345,7 @@ public class PeakChatOpsUI : MonoBehaviour
         {
             chatPanel.AddToClassList("maximized");
         }
-        
+
         EnterInputMode();
     }
 
@@ -353,7 +353,7 @@ public class PeakChatOpsUI : MonoBehaviour
     {
         // 国际化组件测试
         PeakChatOpsPlugin.Logger.LogInfo($"Localization test: '{PLocalizedText.GetText("PEAKCHATOPSWELCOME")}'");
-        
+
     }
 
     #endregion
@@ -401,17 +401,17 @@ public class MessageLabel : Label
     {
         // 添加样式类
         AddToClassList("message-item");
-        
+
         // ✅ 启用文本选择
         selection.isSelectable = true;
-        
+
         // ✅ 文本换行设置（最重要！）
         style.whiteSpace = WhiteSpace.Normal;        // 允许文本自动换行
-        
+
         // ✅ Flex 布局设置
         style.flexShrink = 0;                        // 不压缩
         style.flexGrow = 1;                          // 允许横向扩展填满容器
-        
+
         // ✅ 设置内边距，避免内容贴边
         style.paddingLeft = 8;
         style.paddingRight = 8;
@@ -419,7 +419,7 @@ public class MessageLabel : Label
         style.paddingBottom = 4;
         style.marginTop = 1;
         style.marginBottom = 1;                      // 消息之间的间距
-        
+
         // ✅ 确保文本可见
         style.unityTextAlign = TextAnchor.UpperLeft;
         style.color = new Color(0.9f, 0.9f, 0.9f, 1f); // 浅灰色文本

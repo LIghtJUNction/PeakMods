@@ -1,12 +1,11 @@
 
 using System;
-using PeakChatOps.API;
-using PeakChatOps.API.AI;
-using Cysharp.Threading.Tasks;
-using PeakChatOps.Core;
-using PeakChatOps.core;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
+using PeakChatOps.core;
+using PeakChatOps.Core;
 
 #nullable enable
 namespace PeakChatOps.Commands;

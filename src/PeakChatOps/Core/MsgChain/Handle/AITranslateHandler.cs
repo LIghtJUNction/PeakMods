@@ -1,6 +1,6 @@
 using System;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 
 namespace PeakChatOps.Core.MsgChain.Handle;
 public static class AITranslateHandler

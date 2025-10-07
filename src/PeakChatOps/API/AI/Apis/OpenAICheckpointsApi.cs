@@ -1,8 +1,3 @@
-using System.Net.Http;
-
-using Newtonsoft.Json;
-using PeakChatOps.API.AI.Apis;
-
 namespace PeakChatOps.API.AI.Apis
 {
     /// <summary>

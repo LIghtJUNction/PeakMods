@@ -1,20 +1,17 @@
-﻿using BepInEx;
-using System;
+﻿using System;
+using System.IO;
+using System.Linq;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-
-using PeakChatOps.Patches;
-using UnityEngine;
-
+using PeakChatOps.core;
 using PeakChatOps.Core;
 using PeakChatOps.Core.MsgChain;
-using PEAKLib.Core;
-
+using PeakChatOps.Patches;
 using PeakChatOps.UI;
-using System.Linq;
+using PEAKLib.Core;
 using TMPro;
-using PeakChatOps.core;
-using System.IO;
+using UnityEngine;
 #nullable enable
 
 namespace PeakChatOps;
@@ -61,14 +58,14 @@ partial class PeakChatOpsPlugin : BaseUnityPlugin
         // 加载 UXML/Prefab 资源（优先尝试 UIDocument prefab）
         this.LoadBundleWithName(
             "PeakChatOpsUI.peakbundle",
-            peakBundle => 
-            { 
-                #if DEBUG
-                peakBundle.GetAllAssetNames().ToList().ForEach(name => 
+            peakBundle =>
+            {
+#if DEBUG
+                peakBundle.GetAllAssetNames().ToList().ForEach(name =>
                 {
                     Logger.LogInfo($"[DEBUG] Found asset: {name}");
                 });
-                #endif
+#endif
 
                 PeakChatOpsUIPrefab = peakBundle.LoadAsset<GameObject>("Assets/MOD/PeakChatOpsUI.prefab");
 

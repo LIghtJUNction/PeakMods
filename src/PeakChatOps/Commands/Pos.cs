@@ -1,6 +1,6 @@
 using System;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.Core;
 using PeakChatOps.UI;
 #nullable enable
@@ -22,7 +22,7 @@ public class PosCommand
         try
         {
             var args = evt.Args ?? Array.Empty<string>();
-            
+
             // 提取位置参数
             var pos = args.Length > 0 ? args[0].ToUpper() : "";
             // 执行位置设置

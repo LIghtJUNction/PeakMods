@@ -18,7 +18,7 @@ namespace PeakChatOps.API
     /// 或者订阅回调：
     /// bus.Subscribe(e => { /* handle */ return UniTask.CompletedTask; });
     /// </summary>
-    
+
     public class UniEventBus<T>
     {
         // 每个通道一个队列和一个 handler

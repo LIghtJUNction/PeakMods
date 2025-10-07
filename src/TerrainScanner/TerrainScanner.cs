@@ -2,13 +2,13 @@ using System;
 using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using PEAKLib.Core;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.Rendering;
-
 using Cysharp.Threading.Tasks;
+using PEAKLib.Core;
+using TerrainScanner.DS;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 namespace TerrainScanner;
 
@@ -33,10 +33,12 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
         Logger = base.Logger;
 
         // Initialize centralized ScanConfig manager which will bind BepInEx config
-        try {
-              ScanConfigManager.Initialize(this);
+        try
+        {
+            ScanConfigManager.Initialize(this);
             Logger.LogInfo("[INFO] ScanConfigManager initialized.");
-        } catch (Exception ex) { Logger.LogWarning($"[WARN] ScanConfigManager.Initialize failed: {ex.Message}"); }
+        }
+        catch (Exception ex) { Logger.LogWarning($"[WARN] ScanConfigManager.Initialize failed: {ex.Message}"); }
 
         // 初始化 UniTask PlayerLoop 系统
         try
@@ -63,12 +65,12 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
             "TerrainScanner.peakbundle",
             peakBundle =>
             {
-                #if DEBUG
+#if DEBUG
                 peakBundle.GetAllAssetNames().ToList().ForEach(assetName =>
                 {
                     Logger.LogInfo($"[DEBUG] Found asset: {assetName}");
                 });
-                #endif
+#endif
                 // 保存加载的资源并写入中心化配置（ScanConfigManager.Current）
                 var loadedScanMaterial = peakBundle.LoadAsset<Material>("Assets/Material/Scan.mat");
                 // 不再从 bundle 加载 ParticleTerrainMark.mat — 我们直接使用 bundle 中的 TerrianMarks.mat（instanced shader material）
@@ -99,31 +101,38 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
 
                 Logger.LogInfo("[INFO] All assets loaded successfully from AssetBundle.");
                 // write loaded assets into central ScanConfig
-                try {
-                    if (ScanConfigManager.Current != null) {
+                try
+                {
+                    if (ScanConfigManager.Current != null)
+                    {
                         ScanConfigManager.Current.scanMaterial = loadedScanMaterial;
                         ScanConfigManager.Current.markMaterial = loadedMarkMaterial;
                         ScanConfigManager.Current.markParticle1 = loadedMarkParticle1;
                         ScanConfigManager.Current.markParticle2 = loadedMarkParticle2;
                         ScanConfigManager.Current.markParticle3 = loadedMarkParticle3;
                     }
-                } catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to assign loaded assets to ScanConfigManager.Current: {ex.Message}"); }
+                }
+                catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to assign loaded assets to ScanConfigManager.Current: {ex.Message}"); }
 
                 assetsLoaded = true;
                 // 运行时诊断：打印材质/Shader 信息和是否包含关键属性
-                try {
-                    if (loadedScanMaterial != null) {
+                try
+                {
+                    if (loadedScanMaterial != null)
+                    {
                         Logger.LogInfo($"[DIAG] scanMaterial shader={loadedScanMaterial.shader?.name ?? "null"}");
                         Logger.LogInfo($"[DIAG] scanMaterial has scanRange? {loadedScanMaterial.HasProperty("scanRange")}");
                         Logger.LogInfo($"[DIAG] scanMaterial has scanLineBrightness? {loadedScanMaterial.HasProperty("scanLineBrightness")}");
                         Logger.LogInfo($"[DIAG] scanMaterial renderQueue={loadedScanMaterial.renderQueue} instancing={loadedScanMaterial.enableInstancing}");
                     }
-                    if (loadedMarkMaterial != null) {
+                    if (loadedMarkMaterial != null)
+                    {
                         Logger.LogInfo($"[DIAG] markMaterial shader={loadedMarkMaterial.shader?.name ?? "null"}");
                         Logger.LogInfo($"[DIAG] markMaterial instancing={loadedMarkMaterial.enableInstancing} renderQueue={loadedMarkMaterial.renderQueue}");
                     }
-                } catch (Exception ex) { Logger.LogWarning($"[WARN] Material diagnostics failed: {ex.Message}"); }
-                
+                }
+                catch (Exception ex) { Logger.LogWarning($"[WARN] Material diagnostics failed: {ex.Message}"); }
+
                 // 如果已经在场景中，立即初始化 ScanFeature
                 if (Camera.main != null)
                 {
@@ -134,134 +143,142 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
 
     }
 
-public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-{
-    Camera mainCamera = Camera.main;
-    if (mainCamera != null)
+    public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // 确保不重复添加 ActiveScan 组件
-        if (mainCamera.gameObject.GetComponent<ActiveScan>() == null)
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null)
         {
-            mainCamera.gameObject.AddComponent<ActiveScan>();
-            Logger.LogInfo("[INFO] ActiveScan component added to main camera");
-        }
-        
-        // 只有在资源已加载且 ScanFeature 未初始化时才进行初始化
-        if (assetsLoaded && !scanFeatureInitialized)
-        {
-            InitializeScanFeature();
-        }
-    }
-    else
-    {
-        Logger.LogWarning("[WARN] Main camera not found in scene");
-    }
-}
+            // 确保不重复添加 ActiveScan 组件
+            if (mainCamera.gameObject.GetComponent<ActiveScan>() == null)
+            {
+                mainCamera.gameObject.AddComponent<ActiveScan>();
+                Logger.LogInfo("[INFO] ActiveScan component added to main camera");
+            }
 
-private void InitializeScanFeature()
-{
-    // 确保资源已加载
-    if (!assetsLoaded)
-    {
-        Logger.LogWarning("[WARN] Assets not loaded yet. Waiting for AssetBundle to finish loading...");
-        return;
-    }
-    
-    // 防止重复初始化
-    if (scanFeatureInitialized)
-    {
-        Logger.LogInfo("[DEBUG] ScanFeature already initialized. Skipping...");
-        return;
-    }
-    
-    var pipelineAsset = (UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline;
-    if (pipelineAsset == null)
-    {
-        Logger.LogError("[ERROR] UniversalRenderPipelineAsset is null!");
-        return;
-    }
-
-    // 获取 UniversalRendererData
-    var rendererDataList = typeof(UniversalRenderPipelineAsset)
-        .GetField("m_RendererDataList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-    
-    if (rendererDataList == null)
-    {
-        Logger.LogError("[ERROR] Unable to access m_RendererDataList via reflection.");
-        return;
-    }
-
-    var rendererDataArray = rendererDataList.GetValue(pipelineAsset) as ScriptableRendererData[];
-    if (rendererDataArray == null || rendererDataArray.Length == 0)
-    {
-        Logger.LogError("[ERROR] RendererData array is null or empty.");
-        return;
-    }
-
-    var rendererData = rendererDataArray[0] as UniversalRendererData;
-    if (rendererData == null)
-    {
-        Logger.LogError("[ERROR] First renderer is not UniversalRendererData.");
-        return;
-    }
-
-    // Diagnostic: list renderer features (helpful to detect same-named but different-assembly types)
-    try {
-        var features = rendererData.rendererFeatures;
-        Logger.LogDebug($"[DEBUG] rendererFeatures count={features?.Count ?? 0}");
-        if (features != null) {
-            for (int i = 0; i < features.Count; i++) {
-                var f = features[i];
-                Logger.LogDebug($"[DEBUG] rendererFeature[{i}] name={(f!=null?f.name:"null")} type={(f!=null?f.GetType().FullName:"null")}");
+            // 只有在资源已加载且 ScanFeature 未初始化时才进行初始化
+            if (assetsLoaded && !scanFeatureInitialized)
+            {
+                InitializeScanFeature();
             }
         }
-    } catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to enumerate rendererFeatures: {ex.Message}"); }
-
-    // 检查是否已经存在 ScanFeature
-    foreach (var feature in rendererData.rendererFeatures)
-    {
-        if (feature is ScanFeature existingScanFeature)
+        else
         {
-            Logger.LogInfo("[DEBUG] ScanFeature already exists. Configuring...");
-
-            activeScanFeature = existingScanFeature;
-
-            try {
-                // register existing feature with centralized config manager
-                ScanConfigManager.RegisterFeature(existingScanFeature);
-            } catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
-
-            scanFeatureInitialized = true;
-            return;
+            Logger.LogWarning("[WARN] Main camera not found in scene");
         }
     }
 
-    // 创建新的 ScanFeature
-    var scanFeature = ScriptableObject.CreateInstance<ScanFeature>();
-    scanFeature.name = "TerrainScanner_ScanFeature";
-    
-    
-    // 添加到渲染器
-    rendererData.rendererFeatures.Add(scanFeature);
-    Logger.LogInfo("[SUCCESS] ScanFeature created and added to renderer!");
-    
-    // 标记为脏数据以触发更新
-    #if UNITY_EDITOR
+    private void InitializeScanFeature()
+    {
+        // 确保资源已加载
+        if (!assetsLoaded)
+        {
+            Logger.LogWarning("[WARN] Assets not loaded yet. Waiting for AssetBundle to finish loading...");
+            return;
+        }
+
+        // 防止重复初始化
+        if (scanFeatureInitialized)
+        {
+            Logger.LogInfo("[DEBUG] ScanFeature already initialized. Skipping...");
+            return;
+        }
+
+        var pipelineAsset = (UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline;
+        if (pipelineAsset == null)
+        {
+            Logger.LogError("[ERROR] UniversalRenderPipelineAsset is null!");
+            return;
+        }
+
+        // 获取 UniversalRendererData
+        var rendererDataList = typeof(UniversalRenderPipelineAsset)
+            .GetField("m_RendererDataList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (rendererDataList == null)
+        {
+            Logger.LogError("[ERROR] Unable to access m_RendererDataList via reflection.");
+            return;
+        }
+
+        var rendererDataArray = rendererDataList.GetValue(pipelineAsset) as ScriptableRendererData[];
+        if (rendererDataArray == null || rendererDataArray.Length == 0)
+        {
+            Logger.LogError("[ERROR] RendererData array is null or empty.");
+            return;
+        }
+
+        var rendererData = rendererDataArray[0] as UniversalRendererData;
+        if (rendererData == null)
+        {
+            Logger.LogError("[ERROR] First renderer is not UniversalRendererData.");
+            return;
+        }
+
+        // Diagnostic: list renderer features (helpful to detect same-named but different-assembly types)
+        try
+        {
+            var features = rendererData.rendererFeatures;
+            Logger.LogDebug($"[DEBUG] rendererFeatures count={features?.Count ?? 0}");
+            if (features != null)
+            {
+                for (int i = 0; i < features.Count; i++)
+                {
+                    var f = features[i];
+                    Logger.LogDebug($"[DEBUG] rendererFeature[{i}] name={(f != null ? f.name : "null")} type={(f != null ? f.GetType().FullName : "null")}");
+                }
+            }
+        }
+        catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to enumerate rendererFeatures: {ex.Message}"); }
+
+        // 检查是否已经存在 ScanFeature
+        foreach (var feature in rendererData.rendererFeatures)
+        {
+            if (feature is ScanFeature existingScanFeature)
+            {
+                Logger.LogInfo("[DEBUG] ScanFeature already exists. Configuring...");
+
+                activeScanFeature = existingScanFeature;
+
+                try
+                {
+                    // register existing feature with centralized config manager
+                    ScanConfigManager.RegisterFeature(existingScanFeature);
+                }
+                catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
+
+                scanFeatureInitialized = true;
+                return;
+            }
+        }
+
+        // 创建新的 ScanFeature
+        var scanFeature = ScriptableObject.CreateInstance<ScanFeature>();
+        scanFeature.name = "TerrainScanner_ScanFeature";
+
+
+        // 添加到渲染器
+        rendererData.rendererFeatures.Add(scanFeature);
+        Logger.LogInfo("[SUCCESS] ScanFeature created and added to renderer!");
+
+        // 标记为脏数据以触发更新
+#if UNITY_EDITOR
     UnityEditor.EditorUtility.SetDirty(rendererData);
-    #endif
-    
-    // 手动调用 Create 方法
-    scanFeature.Create();
-    activeScanFeature = scanFeature;
+#endif
 
-    try {
-        // register newly created feature with centralized config manager
-        ScanConfigManager.RegisterFeature(scanFeature);
-    } catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
+        // 手动调用 Create 方法
+        scanFeature.Create();
+        activeScanFeature = scanFeature;
 
-    scanFeatureInitialized = true;
-    Logger.LogInfo("[SUCCESS] ScanFeature initialized!");
-}
+        try
+        {
+            // register newly created feature with centralized config manager
+            ScanConfigManager.RegisterFeature(scanFeature);
+        }
+        catch (Exception ex) { Logger.LogWarning($"[WARN] RegisterFeature failed: {ex.Message}"); }
+
+        scanFeatureInitialized = true;
+        Logger.LogInfo("[SUCCESS] ScanFeature initialized!");
+    }
 
 
     // ConfigureScanFeature removed: resource/config injection is handled centrally by ScanConfigManager.RegisterFeature

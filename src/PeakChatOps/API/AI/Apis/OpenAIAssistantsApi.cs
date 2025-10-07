@@ -1,7 +1,3 @@
-using System.Net.Http;
-
-using Newtonsoft.Json;
-
 namespace PeakChatOps.API.AI.Apis
 {
     /// <summary>
@@ -16,9 +12,9 @@ namespace PeakChatOps.API.AI.Apis
             _client = client;
         }
 
-    /// <summary>
-    /// Endpoint enum for assistants.
-    /// </summary>
-    public static OpenAIEndpoint Endpoint => OpenAIEndpoint.Assistants;
+        /// <summary>
+        /// Endpoint enum for assistants.
+        /// </summary>
+        public static OpenAIEndpoint Endpoint => OpenAIEndpoint.Assistants;
     }
 }

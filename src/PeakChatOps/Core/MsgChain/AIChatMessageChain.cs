@@ -1,13 +1,12 @@
 // ReSharper disable InconsistentNaming
 using System;
-using PeakChatOps.API;
-using Cysharp.Threading.Tasks;
-
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.API.AI;
-using PeakChatOps.UI;
 using PeakChatOps.Commands;
 using PeakChatOps.core;
+using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
 
@@ -41,7 +40,7 @@ public static class AIChatMessageChain
             {
                 case "clear":
                     AIChatContextLogger.Instance?.Clear();
-                    PeakChatOpsUI.Instance?.AddMessage(MessageStyles.AILabel(), 
+                    PeakChatOpsUI.Instance?.AddMessage(MessageStyles.AILabel(),
                         MessageStyles.SystemContent("上下文已清空 (Context cleared)"));
                     return;
                 case "send":
@@ -105,7 +104,7 @@ public static class AIChatMessageChain
                 var chatApi = new API.AI.Apis.OpenAIChatApi(client);
 
                 var response = await chatApi.CreateChatCompletionAsync(model, messages, maxTokens);
-                
+
                 if (response == null)
                 {
                     DevLog.File("[AI] ❌ API 返回 null 响应");
@@ -193,7 +192,7 @@ public static class AIChatMessageChain
                     extra: evt.Extra
                 );
                 EventBusRegistry.ChatMessageBus.Publish("sander://self", chatEvt).Forget();
-                
+
                 // 同时在 UI 显示确认信息
                 var preview = aiReply.Substring(0, Math.Min(50, aiReply.Length));
                 var confirmMsg = MessageStyles.SuccessContent($"已发送到游戏聊天: {preview}...");
@@ -212,7 +211,7 @@ public static class AIChatMessageChain
         {
             // 完全没有回复内容
             DevLog.File("[AI] ⚠️ aiReply 为空或 null");
-            PeakChatOpsUI.Instance?.AddMessage(MessageStyles.WarningLabel("AI"), 
+            PeakChatOpsUI.Instance?.AddMessage(MessageStyles.WarningLabel("AI"),
                 MessageStyles.WarningContent("没有收到任何响应"));
         }
     }
@@ -345,7 +344,7 @@ public static class AIChatMessageChain
         else
         {
             DevLog.File("[Translate] ⚠️ translationReply 为空或 null");
-            PeakChatOpsUI.Instance.AddMessage(MessageStyles.WarningLabel("翻译"), 
+            PeakChatOpsUI.Instance.AddMessage(MessageStyles.WarningLabel("翻译"),
                 MessageStyles.WarningContent("没有收到任何响应"));
         }
     }

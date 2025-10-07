@@ -1,6 +1,6 @@
 using System;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.UI;
 #nullable enable
 namespace PeakChatOps.Commands;

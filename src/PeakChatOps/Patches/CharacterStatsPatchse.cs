@@ -34,7 +34,7 @@ public class CharacterStatsPatches
     static CharacterStatsPatches()
     {
         PeakChatOpsPlugin.Logger.LogWarning("[Harmony] CharacterStatsPatches static ctor loaded!");
-        
+
     }
 
     [HarmonyPatch("Record", new[] { typeof(bool), typeof(float) })]

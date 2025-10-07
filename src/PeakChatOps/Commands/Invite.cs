@@ -1,6 +1,6 @@
 using System;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using PeakChatOps.Core;
 using Steamworks;
 #nullable enable
@@ -34,10 +34,10 @@ public class InviteCommand
     }
     public static void InviteFriends()
     {
-      CSteamID lobbyID;
-      if (!GameHandler.GetService<SteamLobbyHandler>().InSteamLobby(out lobbyID))
-        return;
-      SteamFriends.ActivateGameOverlayInviteDialog(lobbyID);
+        CSteamID lobbyID;
+        if (!GameHandler.GetService<SteamLobbyHandler>().InSteamLobby(out lobbyID))
+            return;
+        SteamFriends.ActivateGameOverlayInviteDialog(lobbyID);
     }
 
 

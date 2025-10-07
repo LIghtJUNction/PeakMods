@@ -1,8 +1,8 @@
 using System;
-using PeakChatOps.Commands;
-using PeakChatOps.API;
-using Cysharp.Threading.Tasks;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
+using PeakChatOps.Commands;
 using PeakChatOps.UI;
 
 namespace PeakChatOps.Core.MsgChain;
@@ -120,20 +120,20 @@ public static class CentralCmdRouter
     // 处理命令结果
     private static UniTask HandleCmdExecResultAsync(CmdExecResultEvent evt)
     {
-        DevLog.UI($"[DebugUI] HandleCmdExecResultAsync called. Command={(evt==null?"<null>":evt.Command)} Success={(evt==null?"<null>":evt.Success.ToString())}");
-        
+        DevLog.UI($"[DebugUI] HandleCmdExecResultAsync called. Command={(evt == null ? "<null>" : evt.Command)} Success={(evt == null ? "<null>" : evt.Success.ToString())}");
+
         if (evt == null) return UniTask.CompletedTask;
-        
-        var label = evt.Success 
-            ? MessageStyles.SuccessLabel("Cmd") 
+
+        var label = evt.Success
+            ? MessageStyles.SuccessLabel("Cmd")
             : MessageStyles.ErrorLabel("Cmd");
-        
+
         var message = evt.Stdout ?? evt.Stderr ?? string.Empty;
-        var coloredMessage = evt.Success 
-            ? MessageStyles.SuccessContent(message) 
+        var coloredMessage = evt.Success
+            ? MessageStyles.SuccessContent(message)
             : MessageStyles.ErrorContent(message);
         PeakChatOpsUI.Instance.AddMessage(label, coloredMessage);
-        
+
         return UniTask.CompletedTask;
     }
 

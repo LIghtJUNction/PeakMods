@@ -1,12 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using UnityEngine;
-using ExitGames.Client.Photon;
-using Photon.Pun;
-using PeakChatOps.API;
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using ExitGames.Client.Photon;
+using PeakChatOps.API;
+using Photon.Pun;
+using UnityEngine;
 
 namespace PeakChatOps.Core;
 
@@ -64,7 +64,7 @@ public class ChatSystem : MonoBehaviour
     {
         // 使用 File 而不是 UI，避免循环调用 AddMessage
         // DevLog.File($"[ChatSystem.OnEvent] photonEvent: code={photonEvent.Code}, sender={photonEvent.Sender}, customData={photonEvent.CustomData}");
-        
+
         if (eventHandlers.TryGetValue(photonEvent.Code, out var handler))
         {
             handler(photonEvent);
@@ -117,7 +117,7 @@ public class ChatSystem : MonoBehaviour
         );
         // Photon 回调是同步的；以 fire-and-forget 的方式启动异步处理
         DevLog.File($"[ChatSystem] Received chat message from payload: nick={msg.Nickname} msg={msg.Message}");
-        
+
         // 将接收到的消息发布到 ChatMessageBus 的 "sander://other" 频道
         var chatEvent = new ChatMessageEvent(
             msg.Nickname,
@@ -126,11 +126,11 @@ public class ChatSystem : MonoBehaviour
             msg.IsDead,
             msg.Extra
         );
-        
+
         // 使用 fire-and-forget 方式发布事件
         PublishRemoteMessageAsync(chatEvent).Forget();
     }
-    
+
     /// <summary>
     /// 异步发布远程玩家消息到事件总线
     /// </summary>
@@ -153,7 +153,7 @@ public class ChatSystem : MonoBehaviour
     {
         if (string.IsNullOrWhiteSpace(message)) return;
         DevLog.UI($"[ChatSystem.SendChatMessageAsync] called, message={message}");
-        DevLog.File($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra==null?0:extra.Count)}");
+        DevLog.File($"[ChatSystem] SendChatMessageAsync called message='{message}' extraKeys={(extra == null ? 0 : extra.Count)}");
         string prefix = PeakChatOpsPlugin.config.CmdPrefix.Value;
         bool isDead = false;
         if (!string.IsNullOrEmpty(prefix) && message.StartsWith(prefix))
@@ -194,7 +194,7 @@ public class ChatSystem : MonoBehaviour
     private static Dictionary<string, object> ConvertHashtableToDictionary(ExitGames.Client.Photon.Hashtable hashtable)
     {
         if (hashtable == null) return null;
-        
+
         var dictionary = new Dictionary<string, object>();
         foreach (DictionaryEntry entry in hashtable)
         {

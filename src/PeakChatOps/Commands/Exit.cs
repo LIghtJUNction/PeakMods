@@ -1,9 +1,9 @@
 
 using System;
-using UnityEngine.SceneManagement;
-using PeakChatOps.API;
 using Cysharp.Threading.Tasks;
+using PeakChatOps.API;
 using Photon.Pun;
+using UnityEngine.SceneManagement;
 
 #nullable enable
 namespace PeakChatOps.Commands;
@@ -21,7 +21,7 @@ public class ExitCommand
         {
             if (evt.Args.Length == 0)
                 GameHandler.GetService<SteamLobbyHandler>().LeaveLobby();
-                PhotonNetwork.Disconnect();
+            PhotonNetwork.Disconnect();
             if (evt.Args.Length > 1)
             {
                 var sceneName = evt.Args[0];
