@@ -16,8 +16,8 @@ public class ScanFeature : ScriptableRendererFeature {
 		public Material scanMaterial;
 
 		[Header( "Static Settings" )]
-		public Color scanColorHead = Color.blue;
-		public Color scanColor = Color.blue;
+		public Color scanColorHead = new Color(0.054901965f, 0.5686275f, 0.85098046f, 1f); // 青蓝
+		public Color scanColor = new Color(0.38823533f, 0.7372549f, 0.8705883f, 1f); // 青蓝偏亮
 		public float outlineWidth = 0.1f;
 		public float scanLineWidth = 1f;
 		public float scanLineInterval = 1f;

@@ -277,8 +277,8 @@ private void InitializeScanFeature()
         configActivationKey = Config.Bind("Controls", "ActivationKey", KeyCode.Q, "The key to toggle the terrain scanner.");
         configActivationKey.SettingChanged += OnActivationKeyChanged;
         // 样式配置（颜色用 "r,g,b,a" 字符串表示，scanCenterWS 用 "x,y,z"）
-        configScanColorHead = Config.Bind("Style", "ScanColorHead", "0,0,1,1", "Scan head color as r,g,b,a");
-        configScanColor = Config.Bind("Style", "ScanColor", "0,0,1,1", "Scan color as r,g,b,a");
+    configScanColorHead = Config.Bind("Style", "ScanColorHead", "0.054901965,0.5686275,0.85098046,1", "Scan head color as r,g,b,a");
+    configScanColor = Config.Bind("Style", "ScanColor", "0.38823533,0.7372549,0.8705883,1", "Scan color as r,g,b,a");
     configOutlineWidth = Config.Bind("Style", "OutlineWidth", 2.48f, "Outline width");
     configScanLineWidth = Config.Bind("Style", "ScanLineWidth", 1f, "Scan line width");
         configScanLineInterval = Config.Bind("Style", "ScanLineInterval", 1f, "Scan line interval");
