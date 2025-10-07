@@ -140,13 +140,22 @@ public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     Camera mainCamera = Camera.main;
     if (mainCamera != null)
     {
-        mainCamera.gameObject.AddComponent<ActiveScan>();
+        // 确保不重复添加 ActiveScan 组件
+        if (mainCamera.gameObject.GetComponent<ActiveScan>() == null)
+        {
+            mainCamera.gameObject.AddComponent<ActiveScan>();
+            Logger.LogInfo("[INFO] ActiveScan component added to main camera");
+        }
         
         // 只有在资源已加载且 ScanFeature 未初始化时才进行初始化
         if (assetsLoaded && !scanFeatureInitialized)
         {
             InitializeScanFeature();
         }
+    }
+    else
+    {
+        Logger.LogWarning("[WARN] Main camera not found in scene");
     }
 }
 

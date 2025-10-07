@@ -77,10 +77,24 @@ namespace TerrainScanner {
         }
 
         static async UniTaskVoid StartScan(Transform player) {
-            if (!Application.isPlaying) return;
-            if (!canScan) return;
+            if (!Application.isPlaying) {
+                TerrainScannerPlugin.Logger?.LogWarning("[WARN] Cannot scan: not playing");
+                return;
+            }
+            if (!canScan) {
+                TerrainScannerPlugin.Logger?.LogInfo("[INFO] Scan already in progress");
+                return;
+            }
             if (_instance == null) {
-                TerrainScannerPlugin.Logger.LogError("[ERROR] ScanFeature instance is null. Ensure it is properly initialized.");
+                TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature instance is null. Ensure it is properly initialized.");
+                return;
+            }
+            if (_instance.settings == null) {
+                TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature settings is null.");
+                return;
+            }
+            if (_instance.settings.scanMaterial == null) {
+                TerrainScannerPlugin.Logger?.LogError("[ERROR] ScanFeature scanMaterial is null. Assets may not be loaded yet.");
                 return;
             }
             canScan = false;
@@ -449,13 +463,30 @@ namespace TerrainScanner {
         }
 
         public override void Create() {
-            if (settings.scanMaterial == null) { TerrainScannerPlugin.Logger.LogError("[ScanFeature] scanMaterial is not assigned!"); return; }
-            if (settings.markMaterial == null) { TerrainScannerPlugin.Logger.LogError("[ScanFeature] markMaterial is not assigned!"); return; }
-            if (settings.markParticle1 == null || settings.markParticle2 == null || settings.markParticle3 == null) { TerrainScannerPlugin.Logger.LogError("[ScanFeature] One or more mark particles are not assigned!"); return; }
-            if (!Application.isPlaying) return;
+            TerrainScannerPlugin.Logger?.LogInfo("[ScanFeature] Create() called");
+            
+            if (settings.scanMaterial == null) { 
+                TerrainScannerPlugin.Logger?.LogError("[ScanFeature] scanMaterial is not assigned!"); 
+                return; 
+            }
+            if (settings.markMaterial == null) { 
+                TerrainScannerPlugin.Logger?.LogError("[ScanFeature] markMaterial is not assigned!"); 
+                return; 
+            }
+            if (settings.markParticle1 == null || settings.markParticle2 == null || settings.markParticle3 == null) { 
+                TerrainScannerPlugin.Logger?.LogError("[ScanFeature] One or more mark particles are not assigned!"); 
+                return; 
+            }
+            if (!Application.isPlaying) {
+                TerrainScannerPlugin.Logger?.LogWarning("[ScanFeature] Not in play mode, skipping Create()");
+                return;
+            }
+            
             _marks = new Marks[horizontalCount * verticalCount];
             _myPass = new CustomRenderPass(settings);
             _instance = this;
+            
+            TerrainScannerPlugin.Logger?.LogInfo("[ScanFeature] Create() completed successfully, _instance set");
         }
 
         public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData) {
