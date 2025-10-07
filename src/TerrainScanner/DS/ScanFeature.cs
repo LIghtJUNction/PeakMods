@@ -82,16 +82,16 @@ public class ScanFeature : ScriptableRendererFeature
         if (markMaterial != null)
         {
             markMaterial.SetFloat(ColorAlpha, 0);
-            var tween9 = markMaterial.DOFloat(1, ColorAlpha, 1f);
+            markMaterial.DOFloat(1, ColorAlpha, 1f);
             markTween = markMaterial.DOFloat(0, ColorAlpha, 1f).SetDelay(7);
             if (markTween != null) markTween.onComplete += () => { showMark = false; };
         }
 
         int scanId = ++s_scanCounter;
-        // Delegate sampling to ScanMarkRenderer which uses ScanRaySampling + ParticleSpawner.
+
         try
         {
-            var result = await ScanMarkRenderer.GenerateTerrainMarks(player, _instance.config, horizontalCount, verticalCount, gridStep, scanId);
+            var result = await ScanMarkRenderer.GenerateTerrainMarks(player, _instance.config, ScanFeature._instance.config.horizontalCount, ScanFeature._instance.config.verticalCount, ScanFeature._instance.config.gridStep, scanId);
             lock (_marksLock) { _marksForRender = result; }
         }
         catch (Exception ex)
@@ -104,12 +104,6 @@ public class ScanFeature : ScriptableRendererFeature
     // double-buffered completed marks for rendering; swap in when a scan finishes
     static Marks[] _marksForRender;
     static readonly object _marksLock = new object();
-
-
-    const int horizontalCount = 70;
-    const int verticalCount = 50;
-    const float gridStep = 0.5f;
-
 
     // constants and shader IDs
     readonly static int ScanColorHead = Shader.PropertyToID("scanColorHead");
@@ -144,7 +138,7 @@ public class ScanFeature : ScriptableRendererFeature
         public CustomRenderPass(ScanConfig settings)
         {
             // Delegate GPU resource creation to ScanMarkRenderer to keep single responsibility
-            ScanMarkRenderer.CreateResources(settings, horizontalCount, verticalCount, out mesh, out _computeBuffer, out _graphicsBuffer, out _commandData);
+            ScanMarkRenderer.CreateResources(settings, settings.horizontalCount, settings.verticalCount, out mesh, out _computeBuffer, out _graphicsBuffer, out _commandData);
             this.settings = settings;
             _passName = "ScanEffect";
             // ensure mark material supports GPU instancing
@@ -155,7 +149,7 @@ public class ScanFeature : ScriptableRendererFeature
         {
             try { if (_computeBuffer != null) { _computeBuffer.Dispose(); _computeBuffer = null; } } catch { }
             try { if (_graphicsBuffer != null) { _graphicsBuffer.Dispose(); _graphicsBuffer = null; } } catch { }
-            try { if (mesh != null) { UnityEngine.Object.Destroy(mesh); mesh = null; } } catch { }
+            try { if (mesh != null) { Destroy(mesh); mesh = null; } } catch { }
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -173,8 +167,8 @@ public class ScanFeature : ScriptableRendererFeature
                 passData.graphicsBuffer = _graphicsBuffer;
                 passData.commandData = _commandData;
                 passData.mesh = mesh;
-                passData.localHorizontalCount = horizontalCount;
-                passData.localVerticalCount = verticalCount;
+                passData.localHorizontalCount = settings.horizontalCount;
+                passData.localVerticalCount = settings.verticalCount;
                 passData.depthTarget = depthTarget;
                 builder.SetRenderAttachment(colorTarget, 0, AccessFlags.ReadWrite);
                 builder.UseTexture(depthTarget);
@@ -187,7 +181,7 @@ public class ScanFeature : ScriptableRendererFeature
             public Material scanMaterial;
             public Material markMaterial;
             public bool localShowMark;
-            public TerrainScanner.DS.Marks[] marks;
+            public Marks[] marks;
             public ComputeBuffer computeBuffer;
             public GraphicsBuffer graphicsBuffer;
             public GraphicsBuffer.IndirectDrawIndexedArgs[] commandData;
@@ -210,7 +204,6 @@ public class ScanFeature : ScriptableRendererFeature
 
                 if (data.localShowMark && data.markMaterial != null)
             {
-                // delegate actual buffer upload + draw to ScanMarkRenderer
                 try
                 {
                     var renderMarks = _marksForRender;

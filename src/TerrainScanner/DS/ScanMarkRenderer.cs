@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
 
 namespace TerrainScanner.DS;
@@ -7,8 +8,10 @@ namespace TerrainScanner.DS;
 
 // Public mark struct used by rendering pipeline and compute buffer uploads.
 // Keeps same memory layout as previous internal struct (Vector3 + int).
+[StructLayout(LayoutKind.Sequential)]
 public struct Marks
 {
+    // Use sequential layout to guarantee memory layout matches HLSL StructuredBuffer<Marks>
     public Vector3 markPosition;
     public ScanRaySampling.RayMarkCategory markCategory;
 }
@@ -59,11 +62,8 @@ public static class ScanMarkRenderer
             if (normal.y < Mathf.Cos(50f * Mathf.Deg2Rad))
             {
                 marks[idx].markCategory = ScanRaySampling.RayMarkCategory.Steep;
-                if (UnityEngine.Random.value < steepProb)
-                {
-                    marks[idx].markPosition = hit.point;
-                    ParticleSpawner.ShootParticle(hit.point, normal, 3, config);
-                }
+                marks[idx].markPosition = hit.point;
+                if (UnityEngine.Random.value < steepProb) ParticleSpawner.ShootParticle(hit.point, normal, 3, config);
             }
             // 缓坡
             else if (normal.y < Mathf.Cos(30f * Mathf.Deg2Rad))
@@ -189,7 +189,10 @@ public static class ScanMarkRenderer
 
         try
         {
+            TerrainScannerPlugin.Logger?.LogInfo($"[ScanMarkRenderer] Uploading {compact.Length} marks to compute buffer (count={computeBuffer.count})");
+            if (compact.Length > 0) TerrainScannerPlugin.Logger?.LogInfo($"[ScanMarkRenderer] first mark: pos={compact[0].markPosition}, cat={(int)compact[0].markCategory}");
             computeBuffer.SetData(compact);
+            TerrainScannerPlugin.Logger?.LogInfo("[ScanMarkRenderer] computeBuffer.SetData completed");
         }
         catch (Exception ex)
         {

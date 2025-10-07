@@ -54,6 +54,13 @@ public class ScanConfig
     public float sampling_jitterScale = 0.06f;         // jitter multiplier for sampling positions
     public float sampling_rowStepMultiplier = 0.9f;    // row forward taper multiplier
 
+    // How much above the camera/player to start ray origins. Increase to scan higher geometry.
+    public float sampling_originHeightOffset = 10f;
+
+    public int horizontalCount = 40;
+    public int verticalCount = 50;
+    public float gridStep = 0.5f;
+
     // BepInEx config entries (populated by Bind)
     public ConfigEntry<string> cfgScanColorHead;
     public ConfigEntry<string> cfgScanColor;
@@ -71,6 +78,10 @@ public class ScanConfig
     public ConfigEntry<float> cfgMidSpawnProb;
     public ConfigEntry<float> cfgFlatSpawnProb;
 
+    public ConfigEntry<int> cfgHorizontalCount;
+    public ConfigEntry<int> cfgVerticalCount;
+    public ConfigEntry<float> cfgGridStep;
+
     bool _bound = false;
 
     // Bind this ScanConfig to a BepInEx plugin's Config. onChanged is invoked after initial population and on any setting change.
@@ -80,26 +91,33 @@ public class ScanConfig
         if (_bound) return;
         _bound = true;
         var cfg = plugin.Config;
-        cfgScanColorHead = cfg.Bind("Style", "ScanColorHead", "0.054901965,0.5686275,0.85098046,1",
+        cfgScanColorHead = cfg.Bind("Style", "ScanColorHead", scanColorHead.r + "," + scanColorHead.g + "," + scanColorHead.b + "," + scanColorHead.a,
             "Scan head color as r,g,b,a");
-        cfgScanColor = cfg.Bind("Style", "ScanColor", "0.38823533,0.7372549,0.8705883,1", "Scan color as r,g,b,a");
-        cfgOutlineWidth = cfg.Bind("Style", "OutlineWidth", 2.48f, "Outline width");
-        cfgScanLineWidth = cfg.Bind("Style", "ScanLineWidth", 1f, "Scan line width");
-        cfgScanLineInterval = cfg.Bind("Style", "ScanLineInterval", 1f, "Scan line interval");
-        cfgHeadScanLineWidth = cfg.Bind("Style", "HeadScanLineWidth", 1f, "Head scan line width");
-        cfgScanLineBrightness = cfg.Bind("Style", "ScanLineBrightness", 2.5f, "Scan line brightness");
-        cfgScanRange = cfg.Bind("Style", "ScanRange", 5f, "Scan range");
-        cfgOutlineBrightness = cfg.Bind("Style", "OutlineBrightness", 1.32f, "Outline brightness");
-        cfgHeadScanLineDistance = cfg.Bind("Style", "HeadScanLineDistance", 13.2f, "Head scan line distance");
-        cfgScanCenterWS = cfg.Bind("Style", "ScanCenterWS", "123.05,36.3,147.86",
+        cfgScanColor = cfg.Bind("Style", "ScanColor", scanColor.r + "," + scanColor.g + "," + scanColor.b + "," + scanColor.a,
+            "Scan body color as r,g,b,a");
+        cfgOutlineWidth = cfg.Bind("Style", "OutlineWidth", outlineWidth, "Outline width");
+        cfgScanLineWidth = cfg.Bind("Style", "ScanLineWidth", scanLineWidth, "Scan line width");
+        cfgScanLineInterval = cfg.Bind("Style", "ScanLineInterval", scanLineInterval, "Scan line interval");
+        cfgHeadScanLineWidth = cfg.Bind("Style", "HeadScanLineWidth", headScanLineWidth, "Head scan line width");
+        cfgScanLineBrightness = cfg.Bind("Style", "ScanLineBrightness", scanLineBrightness, "Scan line brightness");
+        cfgScanRange = cfg.Bind("Style", "ScanRange", scanRange, "Scan range");
+        cfgOutlineBrightness = cfg.Bind("Style", "OutlineBrightness", outlineBrightness, "Outline brightness");
+        cfgHeadScanLineDistance = cfg.Bind("Style", "HeadScanLineDistance", headScanLineDistance, "Head scan line distance");
+        cfgScanCenterWS = cfg.Bind("Style", "ScanCenterWS", scanCenterWS.x + "," + scanCenterWS.y + "," + scanCenterWS.z,
             "Scan center world-space as x,y,z");
-        cfgOutlineStarDistance = cfg.Bind("Style", "OutlineStarDistance", 30f, "Outline star distance");
-        cfgSteepSpawnProb = cfg.Bind("Style", "SteepSpawnProb", 0.1f,
+        cfgOutlineStarDistance = cfg.Bind("Style", "OutlineStarDistance", outlineStarDistance, "Outline star distance");
+        
+        cfgSteepSpawnProb = cfg.Bind("prob", "SteepSpawnProb", steepSpawnProb,
             "Probability to spawn particle on steep slopes (category 3)");
-        cfgMidSpawnProb = cfg.Bind("Style", "MidSpawnProb", 0.3f,
+        cfgMidSpawnProb = cfg.Bind("prob", "MidSpawnProb", midSpawnProb,
             "Probability to spawn particle on mid slopes (category 2)");
-        cfgFlatSpawnProb = cfg.Bind("Style", "FlatSpawnProb", 0.0002f,
+        cfgFlatSpawnProb = cfg.Bind("prob", "FlatSpawnProb", flatSpawnProb,
             "Probability to spawn particle on flat slopes (category 1)");
+
+        cfgHorizontalCount = cfg.Bind("Performance", "HorizontalCount", horizontalCount, "Number of horizontal samples");
+        cfgVerticalCount = cfg.Bind("Performance", "VerticalCount", verticalCount, "Number of vertical samples");
+        cfgGridStep = cfg.Bind("Performance", "GridStep", gridStep, "Grid step size");
+
 
         // parse helpers
         Color ParseColor(string s)

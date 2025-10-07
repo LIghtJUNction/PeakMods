@@ -34,10 +34,10 @@ public static class ScanRaySampling
             // Ray origin height: prefer camera eye height (if available), otherwise player's height.
             float originBaseY = player.position.y;
             if (Camera.main != null) originBaseY = Camera.main.transform.position.y;
-            originBaseY += 0.9f; // sit slightly above eye/player to better catch walls and ledges
+            originBaseY += config?.sampling_originHeightOffset ?? 0.9f; // configurable offset above camera/player
 
             // Move the origin slightly forward so sampling concentrates in front of the player (climbing direction)
-            Vector3 originCenter = new Vector3(player.position.x, originBaseY, player.position.z) + forward * 1.0f;
+            Vector3 originCenter = new Vector3(player.position.x, originBaseY, player.position.z) + forward * (config?.sampling_forwardOffset ?? 1.0f);
 
             // Read tunables from config (fall back to constants if config is null)
             float centerShapeExp = config?.sampling_centerShapeExponent ?? 0.75f;
