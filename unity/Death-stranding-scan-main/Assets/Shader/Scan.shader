@@ -1,5 +1,26 @@
 Shader "Unlit/Scan"
 {
+    Properties {
+        // Expose properties with the exact names expected by the C# code (no leading underscore)
+        scanColorHead ("scanColorHead", Color) = (0, 0, 1, 1)
+        scanColor ("scanColor", Color) = (0, 0, 1, 1)
+        outlineWidth ("outlineWidth", Float) = 0.1
+        outlineBrightness ("outlineBrightness", Float) = 1
+        outlineStarDistance ("outlineStarDistance", Float) = 30
+
+        scanLineInterval ("scanLineInterval", Float) = 1
+        scanLineWidth ("scanLineWidth", Float) = 1
+        scanLineBrightness ("scanLineBrightness", Float) = 1
+        scanRange ("scanRange", Float) = 1
+
+        scanCenterWS ("scanCenterWS", Vector) = (123.05, 36.3, 147.86, 0)
+        headScanLineDistance ("headScanLineDistance", Float) = 8
+        headScanLineWidth ("headScanLineWidth", Float) = 1
+        headScanLineBrightness ("headScanLineBrightness", Float) = 1
+
+        // The blit include expects _BlitTexture; keep a default so the shader compiles in editor
+        _BlitTexture ("Blit Texture", 2D) = "white" {}
+    }
     Subshader
     {
         Tags

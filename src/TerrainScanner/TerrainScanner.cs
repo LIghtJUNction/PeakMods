@@ -115,7 +115,6 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
                     return;
                 }
 
-                Logger.LogInfo("[INFO] Loaded TerrianMarks.mat from bundle and assigned as markMaterial.");
                 if (markParticle1 == null || markParticle2 == null || markParticle3 == null)
                 {
                     Logger.LogError("[ERROR] One or more mark particles failed to load from AssetBundle.");
@@ -124,6 +123,20 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
 
                 Logger.LogInfo("[INFO] All assets loaded successfully from AssetBundle.");
                 assetsLoaded = true;
+                // 运行时诊断：打印材质/Shader 信息和是否包含关键属性
+                try {
+                    if (scanMaterial != null) {
+                        Logger.LogInfo($"[DIAG] scanMaterial shader={scanMaterial.shader?.name ?? "null"}");
+                        Logger.LogInfo($"[DIAG] scanMaterial has scanCenterWS? {scanMaterial.HasProperty("scanCenterWS")}");
+                        Logger.LogInfo($"[DIAG] scanMaterial has scanRange? {scanMaterial.HasProperty("scanRange")}");
+                        Logger.LogInfo($"[DIAG] scanMaterial has scanLineBrightness? {scanMaterial.HasProperty("scanLineBrightness")}");
+                        Logger.LogInfo($"[DIAG] scanMaterial renderQueue={scanMaterial.renderQueue} instancing={scanMaterial.enableInstancing}");
+                    }
+                    if (markMaterial != null) {
+                        Logger.LogInfo($"[DIAG] markMaterial shader={markMaterial.shader?.name ?? "null"}");
+                        Logger.LogInfo($"[DIAG] markMaterial instancing={markMaterial.enableInstancing} renderQueue={markMaterial.renderQueue}");
+                    }
+                } catch (Exception ex) { Logger.LogWarning($"[WARN] Material diagnostics failed: {ex.Message}"); }
                 
                 // 如果已经在场景中，立即初始化 ScanFeature
                 if (Camera.main != null)
@@ -266,21 +279,26 @@ private void InitializeScanFeature()
         // 样式配置（颜色用 "r,g,b,a" 字符串表示，scanCenterWS 用 "x,y,z"）
         configScanColorHead = Config.Bind("Style", "ScanColorHead", "0,0,1,1", "Scan head color as r,g,b,a");
         configScanColor = Config.Bind("Style", "ScanColor", "0,0,1,1", "Scan color as r,g,b,a");
-        configOutlineWidth = Config.Bind("Style", "OutlineWidth", 0.1f, "Outline width");
-        configScanLineWidth = Config.Bind("Style", "ScanLineWidth", 1f, "Scan line width");
+    configOutlineWidth = Config.Bind("Style", "OutlineWidth", 2.48f, "Outline width");
+    configScanLineWidth = Config.Bind("Style", "ScanLineWidth", 1f, "Scan line width");
         configScanLineInterval = Config.Bind("Style", "ScanLineInterval", 1f, "Scan line interval");
         configHeadScanLineWidth = Config.Bind("Style", "HeadScanLineWidth", 1f, "Head scan line width");
 
-        configScanLineBrightness = Config.Bind("Style", "ScanLineBrightness", 1f, "Scan line brightness");
-        configScanRange = Config.Bind("Style", "ScanRange", 1f, "Scan range");
-        configOutlineBrightness = Config.Bind("Style", "OutlineBrightness", 1f, "Outline brightness");
-        configHeadScanLineDistance = Config.Bind("Style", "HeadScanLineDistance", 8f, "Head scan line distance");
-        configScanCenterWS = Config.Bind("Style", "ScanCenterWS", "123.05,36.3,147.86", "Scan center world-space as x,y,z");
-        configOutlineStarDistance = Config.Bind("Style", "OutlineStarDistance", 30f, "Outline star distance");
+    configScanLineBrightness = Config.Bind("Style", "ScanLineBrightness", 2.5f, "Scan line brightness");
+    configScanRange = Config.Bind("Style", "ScanRange", 5f, "Scan range");
+    configOutlineBrightness = Config.Bind("Style", "OutlineBrightness", 1.32f, "Outline brightness");
+    configHeadScanLineDistance = Config.Bind("Style", "HeadScanLineDistance", 13.2f, "Head scan line distance");
+    configScanCenterWS = Config.Bind("Style", "ScanCenterWS", "123.05,36.3,147.86", "Scan center world-space as x,y,z");
+    configOutlineStarDistance = Config.Bind("Style", "OutlineStarDistance", 30f, "Outline star distance");
     // particle spawn probability defaults
     configSteepSpawnProb = Config.Bind("Style", "SteepSpawnProb", 0.1f, "Probability to spawn particle on steep slopes (category 3)");
     configMidSpawnProb = Config.Bind("Style", "MidSpawnProb", 0.3f, "Probability to spawn particle on mid slopes (category 2)");
     configFlatSpawnProb = Config.Bind("Style", "FlatSpawnProb", 0.0002f, "Probability to spawn particle on flat slopes (category 1)");
+
+    // 如果 ScanFeature 已经存在，立即应用新的样式配置
+    if (activeScanFeature != null) {
+        ApplyStyleConfigNow();
+    }
 
     // subscribe to changes
     configScanColorHead.SettingChanged += ApplyStyleConfig;

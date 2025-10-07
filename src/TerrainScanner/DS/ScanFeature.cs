@@ -20,16 +20,16 @@ namespace TerrainScanner {
             [Header("Static Settings")]
             public Color scanColorHead = Color.blue;
             public Color scanColor = Color.blue;
-            public float outlineWidth = 0.1f;
+            public float outlineWidth = 2.48f;
             public float scanLineWidth = 1f;
             public float scanLineInterval = 1f;
             public float headScanLineWidth = 1f;
 
             [Header("Dynamics Settings(control by code)")]
-            public float scanLineBrightness = 1f;
-            public float scanRange = 1f;
-            public float outlineBrightness = 1f;
-            public float headScanLineDistance = 8f;
+            public float scanLineBrightness = 2.5f;
+            public float scanRange = 5f;
+            public float outlineBrightness = 1.32f;
+            public float headScanLineDistance = 13.2f;
             public Vector3 scanCenterWS = new Vector3(123.05f, 36.3f, 147.86f);
             public float outlineStarDistance = 30f;
 
@@ -55,22 +55,8 @@ namespace TerrainScanner {
         static bool s_reportedMarkState = false;
         static int s_scanCounter = 0;
         static int s_lastReportedScanId = -1;
-        // simple log-once deduper (thread-safe): remember recent keys and only log once per key
-        static class DedupLog {
-            static readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _seen = new System.Collections.Concurrent.ConcurrentDictionary<string, long>();
-            // suppress duplicates for a short window (ms)
-            const long SuppressMs = 2000;
-            public static bool ShouldLog(string key) {
-                var now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-                _seen.AddOrUpdate(key, now, (k, prev) => {
-                    if (now - prev < SuppressMs) return prev; // keep old timestamp to suppress
-                    return now; // update timestamp and allow logging
-                });
-                var ts = _seen[key];
-                return now - ts < SuppressMs ? ts == now : true; // allow when we just updated
-            }
-            public static void Clear(string key) { _seen.TryRemove(key, out _); }
-        }
+
+        // (DedupLog removed) only error logs are kept; lightweight diagnostics remain above.
 
         public static void ExecuteScan(Transform player) {
             StartScan(player).Forget();
@@ -169,19 +155,51 @@ namespace TerrainScanner {
     static readonly float Cos50 = Mathf.Cos(50f * Mathf.Deg2Rad); // ~0.6427876
 
         static void ShootParticle(Vector3 position, Vector3 normal, int index = 3) {
-            float distanceToCamera01 = 1.0f;
-            if (Camera.main != null) distanceToCamera01 = Vector3.Distance(position, Camera.main.transform.position) / 20 + 0.5f;
-            GameObject prefab = index switch { 3 => _instance.settings.markParticle3, 2 => _instance.settings.markParticle2, _ => _instance.settings.markParticle1 };
-            if (prefab == null) { return; }
-            GameObject instance = null;
-            try { instance = GameObject.Instantiate(prefab); } catch { }
-            if (instance == null) { return; }
-            instance.transform.position = position;
-            instance.transform.localScale = Random.Range(0.5f, 1.5f) * Vector3.one * distanceToCamera01;
-            if (instance.transform.childCount > 0) instance.transform.GetChild(0).localScale = Random.Range(2f, 5f) * Vector3.one * distanceToCamera01;
-            var ps = instance.GetComponentInChildren<ParticleSystem>();
-            if (ps != null) {
-                try { ps.Play(); } catch { }
+            try {
+                float distanceToCamera01 = 1.0f;
+                if (Camera.main != null) distanceToCamera01 = Vector3.Distance(position, Camera.main.transform.position) / 20 + 0.5f;
+                GameObject prefab = null;
+                if (_instance != null && _instance.settings != null) {
+                    prefab = index switch { 3 => _instance.settings.markParticle3, 2 => _instance.settings.markParticle2, _ => _instance.settings.markParticle1 };
+                }
+
+                if (prefab == null) {
+                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: prefab for index {index} is null, skipping particle.");
+                    return;
+                }
+
+                GameObject instance = null;
+                try {
+                    instance = GameObject.Instantiate(prefab);
+                } catch (Exception ex) {
+                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: Instantiate failed: {ex.Message}");
+                }
+
+                if (instance == null) {
+                    TerrainScannerPlugin.Logger?.LogWarning("[ScanFeature] ShootParticle: instantiated instance is null, skipping.");
+                    return;
+                }
+
+                instance.transform.position = position;
+                instance.transform.localScale = Random.Range(0.5f, 1.5f) * Vector3.one * distanceToCamera01;
+                if (instance.transform.childCount > 0) {
+                    try { instance.transform.GetChild(0).localScale = Random.Range(2f, 5f) * Vector3.one * distanceToCamera01; } catch { }
+                }
+
+                var ps = instance.GetComponentInChildren<ParticleSystem>();
+                if (ps == null) {
+                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: ParticleSystem not found in prefab '{prefab.name}' (index {index}). Destroying instance.");
+                    try { GameObject.Destroy(instance); } catch { }
+                    return;
+                }
+
+                try {
+                    ps.Play();
+                } catch (Exception ex) {
+                    TerrainScannerPlugin.Logger?.LogWarning($"[ScanFeature] ShootParticle: ParticleSystem.Play() failed: {ex.Message}");
+                }
+            } catch (Exception ex) {
+                TerrainScannerPlugin.Logger?.LogError($"[ScanFeature] ShootParticle: unexpected exception: {ex}");
             }
         }
 

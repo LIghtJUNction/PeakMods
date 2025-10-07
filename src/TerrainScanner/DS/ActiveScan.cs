@@ -39,8 +39,9 @@ public class ActiveScan : MonoBehaviour
         }
         
         if( Input.GetKeyDown( activeKey ) ) {
+            // 使用摄像机的 transform（在第一人称游戏中这就是玩家视角）
             ScanFeature.ExecuteScan( transform );
-            TerrainScannerPlugin.Logger.LogInfo( "TerrainScanner : scan" );
+            TerrainScannerPlugin.Logger.LogInfo( "TerrainScanner : scan executed" );
         }
     }
 }
