@@ -214,22 +214,6 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
             return;
         }
 
-        // Diagnostic: list renderer features (helpful to detect same-named but different-assembly types)
-        try
-        {
-            var features = rendererData.rendererFeatures;
-            Logger.LogDebug($"[DEBUG] rendererFeatures count={features?.Count ?? 0}");
-            if (features != null)
-            {
-                for (int i = 0; i < features.Count; i++)
-                {
-                    var f = features[i];
-                    Logger.LogDebug($"[DEBUG] rendererFeature[{i}] name={(f != null ? f.name : "null")} type={(f != null ? f.GetType().FullName : "null")}");
-                }
-            }
-        }
-        catch (Exception ex) { Logger.LogWarning($"[WARN] Failed to enumerate rendererFeatures: {ex.Message}"); }
-
         // 检查是否已经存在 ScanFeature
         foreach (var feature in rendererData.rendererFeatures)
         {
@@ -266,7 +250,7 @@ public partial class TerrainScannerPlugin : BaseUnityPlugin
 #endif
 
         // 手动调用 Create 方法
-        scanFeature.Create();
+        // scanFeature.Create();
         activeScanFeature = scanFeature;
 
         try

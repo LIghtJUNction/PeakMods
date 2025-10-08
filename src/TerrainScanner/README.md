@@ -1,86 +1,104 @@
 # TerrainScanner
-[![GitHub](https://img.shields.io/badge/GitHub-TerrainScanner-LIghtJUNction?style=for-the-badge&logo=GitHub)](https://github.com/LIghtJUNction/PeakMods)
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/TerrainScanner?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/TerrainScanner/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/TerrainScanner?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/TerrainScanner/)
-Introduction
-Terrain definitions:
 
-0–30°: flat
-30–50°: gentle slope
-50–90°: steep slope (Data source: https://github.com/Tzebruh/Foothold)
-Original angle thresholds:
+![GitHub](https://img.shields.io/badge/GitHub-TerrainScanner-LIghtJUNction?style=for-the-badge&logo=GitHub)
+![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/TerrainScanner?style=for-the-badge&logo=thunderstore&logoColor=white)
 
-0–30° / 30–45° / 45–90°
-平地 / 缓坡 / 陡坡
+TerrainScanner is a lightweight Unity module that visualizes walkable surfaces and slope categories in the world. It was inspired by scanning effects (e.g. Death Stranding) and is designed to be smooth, configurable, and easy to integrate into a Unity project.
 
-θ = acos(0.75) ≈ 0.72273 rad ≈ 41.4096°
-tan ≈ 0.8819 → 88.19%
-θ = acos(0.85) ≈ 0.55480 rad ≈ 31.7880°
-tan ≈ 0.6197 → 61.97%
+This README is user-facing and includes a short introduction, installation/usage instructions, configuration notes, troubleshooting tips, and a roadmap for the next major feature: a smarter, energy-aware terrain scanner.
 
-Adjusted slope classification for Peak:
-调整后的坡度分类：
+---
 
-0–30°: cos ≈ 0.87 (30°)
-30–50°: cos ≈ 0.64 (50°)
+## What it shows
 
-Probability adjustments (configurable):
-概率修正：
-Category 1 (flat): 0.0002 // 平地 -- 特效闪光概率
-Category 2 (gentle slope): 0.3 // 缓坡 -- 特效闪光概率
-Category 3 (steep slope): 0.1 // 陡坡 -- 特效闪光概率
+- Slope classification (example thresholds used by the module):
+  - Flat: 0°–30°
+  - Gentle slope: 30°–50°
+  - Steep: 50°–90°
 
-References:
-https://github.com/FengLvv/Death-stranding-scan
-Q&A:
+These thresholds are configurable via `ScanConfig` (see below).
 
-Is it laggy? // 卡顿吗？
+## Quick install / usage
 
-No, it's very smooth. // 不，会很流畅。
+1. Add the `TerrainScanner` scripts (or compiled DLL) into your Unity project's `Assets/` folder. The source is located in `src/TerrainScanner/` in this repository.
+2. In your scene, attach `ActiveScan` to a GameObject (for example, the Player or Camera). By default the scanner is triggered with the `Q` key (see `ActiveScan.cs`).
+3. Ensure `ScanConfig` is properly populated at runtime with the required materials and particle prefabs:
 
-How to customize styles? // 如何自定义样式？
+   - `scanMaterial` (shader for scan wave)
+   - `markMaterial` (instanced shader for marks)
+   - `markParticle1`/`markParticle2`/`markParticle3` (optional particle prefabs)
 
-You need to use the Unity Editor to recreate the assets contained in the TerrainScanner.peakbundle file. Replace them accordingly.
-Tip:
-// 你需要使用 Unity Editor 重新制作 TerrainScanner.peakbundle 文件内包含的资源，并进行替换。
+If you're using a mod loader (BepInEx) the plugin can populate these for you at startup.
 
-This project pairs with: https://thunderstore.io/c/peak/p/lnkr/PeakStranding/
-// 该项目配合：https://thunderstore.io/c/peak/p/lnkr/PeakStranding/
-It will unlock a new game: Peak Stranding
-// 将解锁一个新游戏：Peak Stranding
-// haha, just kidding.
+## Configuration (important fields)
 
-Whether it should be considered as breaking game balance?
-I personally think it shouldn't, as it's merely a visual effect and doesn't affect gameplay.
-You can easily distinguish whether the ground is standable by judging the ground color.
-If you think this mod affects game balance, you can go to the GITHUB interface ISSUES and cast your vote.
+Most runtime options live in `ScanConfig` (`src/TerrainScanner/Config.cs`). Important values:
 
-// 是否应该被认为是打破游戏平衡？
-// 我个人认为不应该，因为它只是一个视觉效果，并不会影响游戏玩法。
-// 你完全可以通过判断地面颜色，来区分是否可站立。
-// 如果你认为本MOD影响了游戏平衡，你可以前往GITHUB界面ISSUES, 投上你的一票。
+- `horizontalCount`, `verticalCount` — sampling grid size. Larger values increase coverage and precision but cost more CPU.
+- `gridStep` — spacing between samples (meters).
+- `sampling_originHeightOffset` — how far above the camera/player the ray origin starts. Increase this to scan higher terrain.
+- `sampling_maxDistanceShort` / `sampling_maxDistanceLong` — raycast lengths for ground/ledge and long-range tests.
+- `steepSpawnProb`, `midSpawnProb`, `flatSpawnProb` — per-category particle spawn probabilities.
 
-Check out my other mod: https://thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/
+Tune these values via the `ScanConfigManager` or by binding them in your plugin's initialization.
 
-Future planned features:
+## Troubleshooting
 
-Record the paths players walk; show them as circles during scans (same as Death Stranding).
-Add scan sound effects.
+- I see only some marks rendered even though scanning detected many hits:
+  - Make sure the CPU-side `Marks` struct layout matches the HLSL `Marks` StructuredBuffer. Field order and sizes must match.
+  - Ensure `ComputeBuffer` is created with the correct stride (use `Marshal.SizeOf(typeof(Marks))`).
+  - Check the instanced shader does not write depth in the fragment stage (writing `SV_DEPTH` in the fragment can cause depth conflicts and hide instances). Move depth calculation to the vertex stage or remove manual depth writes.
 
-## 引流 / Inspiration
+- Rays don't reach high cliffs:
+  - Increase `sampling_originHeightOffset` and `sampling_maxDistanceShort`.
 
-[![GitHub](https://img.shields.io/badge/GitHub-PeakChatOps-LIghtJUNction?style=for-the-badge&logo=GitHub)](https://github.com/LIghtJUNction/PeakMods)
-[![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
-[![Thunderstore Downloads](https://img.shields.io/thunderstore/dt/LIghtPeak/PeakChatOps?style=for-the-badge&logo=thunderstore&logoColor=white)](https://new.thunderstore.io/c/peak/p/LIghtPeak/PeakChatOps/)
+- Performance concerns:
+  - The sampling runs in slices (uses `UniTask.Yield()` to avoid blocking the main thread). If you increase resolution, consider reducing `horizontalCount/verticalCount` or lowering sample frequency.
+  - Consider limiting how many marks are uploaded to the GPU per frame (e.g. keep only the nearest N marks or prioritize by slope category).
 
-## 未来计划 / Future Plans
-未来将会拓展的内容：
-- 将玩家走过的路径记录下来，扫描时显示为圆圈（和死亡搁浅一致）.
-- 添加扫描音效.
-FUTURE PLANS:
-- Record the paths players walk; show them as circles during scans (same as Death Stranding).
-- Add scan sound effects.
+## Roadmap — Smarter Terrain Scanner (next major feature)
 
+Planned: an "Intelligent Terrain Scanner" that improves scanning quality while staying performant. High-level goals and design notes:
 
-## LICENSE
-[LICENSE](./LICENSE)
+1. Energy-based propagation model
+
+   - Each discovered sample carries an energy budget (kinetic + potential). Propagation to neighbors consumes energy for distance traveled and for climbing.
+   - Branching reduces energy (spawn cost). A cell is revisited only if arriving with strictly more remaining energy (best-energy rule).
+
+2. Priority-driven exploration
+
+   - Replace the plain FIFO propagation queue with a priority queue sorted by remaining energy (prefer uphill, higher-energy fronts) so the algorithm finds viable ascent routes sooner.
+
+3. Quantized, memory-efficient state
+
+   - Store per-cell discovered heights as quantized keys (e.g. 0.1m precision) in HashSets to avoid float equality problems and to reduce duplicates.
+
+4. Safety & termination
+
+   - Global processed-count cap and local energy thresholds to prevent runaway propagation in caves or dense geometry.
+
+5. Runtime tuning and visualization
+
+   - Expose energy parameters and propagation limits in `ScanConfig` so users can tune behavior.
+   - Add an optional debug overlay to visualize propagation fronts, queued items, and per-cell best-energy values.
+
+Why this helps:
+
+- It prevents infinite propagation in complex geometry (caves/overhangs).
+- It prioritizes realistic uphill routes, helping scans find reachable ground rather than flooding every neighboring cell.
+- It keeps performance predictable and tunable.
+
+## Contributing
+
+Contributions, issues, and suggestions are welcome. When opening a PR:
+
+- Explain the problem or feature and include screenshots or logs if relevant.
+- Keep changes focused; large refactors are easier to review if split into smaller PRs.
+
+## License
+
+This project is licensed under the terms in `LICENSE`.
+
+---
+
+If you'd like, I can also prepare a short user-facing changelog entry and a Unity package example demonstrating how to wire `ScanConfig` into a Unity scene. Tell me which you'd prefer next.

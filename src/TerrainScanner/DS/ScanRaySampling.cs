@@ -97,4 +97,28 @@ public static class ScanRaySampling
             TerrainScannerPlugin.Logger?.LogWarning($"[ScanRaySampling] PerformGridSamples failed: {ex}");
         }
     }
+
+    // 梯度上山法采样 -- 搭配 GenerateTerrainMarksPlus 函数使用！
+    // 英文名：Gradient Ascent Sampling
+    public static async UniTask PerformGradientAscentSampling(Transform player, ScanConfig config, int horizCount, int vertCount,
+        float gridStep, int layerMask, int maxRays, Action<RaycastHit, int, int> onHit, int scanId)
+    {
+        // 第一步：初始点：玩家位置附近，高度略高于玩家位置，水平随机误差
+        
+
+
+
+    }
+
+    
+    
+    
+
+
+
+
+
+
+
+
 }

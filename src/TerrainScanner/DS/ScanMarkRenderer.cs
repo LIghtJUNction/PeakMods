@@ -100,6 +100,31 @@ public static class ScanMarkRenderer
         return compact;
     }
 
+
+    // 渲染梯度上山法采样算法结果
+    public static async Cysharp.Threading.Tasks.UniTask<Marks[]> GenerateTerrainMarksPlus(Transform player,
+        ScanConfig config, int horizCount, int vertCount, float gridStep, int scanId)
+    {
+        await Cysharp.Threading.Tasks.UniTask.Delay(1);
+
+        return new Marks[0];
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    #region Helper
+
     public static void CreateResources(ScanConfig settings, int horizontalCount, int verticalCount,
         out Mesh mesh, out ComputeBuffer computeBuffer, out GraphicsBuffer graphicsBuffer,
         out GraphicsBuffer.IndirectDrawIndexedArgs[] commandData)
@@ -146,21 +171,19 @@ public static class ScanMarkRenderer
         // 如果既没有显式显示标记请求，也没有实际的标记数据，则跳过
         if (!showMark && (renderMarks == null || renderMarks.Length == 0))
         {
-            TerrainScannerPlugin.Logger?.LogInfo(
-                "[ScanMarkRenderer] neither showMark nor renderMarks present - skipping mark render");
             return;
         }
 
         if (markMaterial == null)
         {
-            TerrainScannerPlugin.Logger?.LogWarning(
+            TerrainScannerPlugin.Logger?.LogError(
                 "[ScanMarkRenderer] markMaterial is null - cannot render marks");
             return;
         }
 
         if (computeBuffer == null || graphicsBuffer == null || commandData == null || mesh == null)
         {
-            TerrainScannerPlugin.Logger?.LogWarning(
+            TerrainScannerPlugin.Logger?.LogError(
                 "[ScanMarkRenderer] missing GPU resource(s) - computeBuffer/graphicsBuffer/commandData/mesh");
             return;
         }
@@ -176,7 +199,6 @@ public static class ScanMarkRenderer
 
         if (validCount <= 0)
         {
-            TerrainScannerPlugin.Logger?.LogInfo("[ScanMarkRenderer] validCount == 0 - nothing to draw");
             return;
         }
 
@@ -189,14 +211,11 @@ public static class ScanMarkRenderer
 
         try
         {
-            TerrainScannerPlugin.Logger?.LogInfo($"[ScanMarkRenderer] Uploading {compact.Length} marks to compute buffer (count={computeBuffer.count})");
-            if (compact.Length > 0) TerrainScannerPlugin.Logger?.LogInfo($"[ScanMarkRenderer] first mark: pos={compact[0].markPosition}, cat={(int)compact[0].markCategory}");
             computeBuffer.SetData(compact);
-            TerrainScannerPlugin.Logger?.LogInfo("[ScanMarkRenderer] computeBuffer.SetData completed");
         }
         catch (Exception ex)
         {
-            TerrainScannerPlugin.Logger?.LogWarning(
+            TerrainScannerPlugin.Logger?.LogError(
                 $"[ScanMarkRenderer] computeBuffer.SetData failed: {ex.Message}");
             return;
         }
@@ -210,8 +229,6 @@ public static class ScanMarkRenderer
 
         if (commandData[0].instanceCount == 0)
         {
-            TerrainScannerPlugin.Logger?.LogInfo(
-                "[ScanMarkRenderer] instanceCount == 0 after SetData - nothing to draw");
             return;
         }
 
@@ -221,13 +238,11 @@ public static class ScanMarkRenderer
         }
         catch (Exception ex)
         {
-            TerrainScannerPlugin.Logger?.LogWarning($"[ScanMarkRenderer] enableInstancing failed: {ex.Message}");
+            TerrainScannerPlugin.Logger?.LogError($"[ScanMarkRenderer] enableInstancing failed: {ex.Message}");
         }
 
         try
         {
-            TerrainScannerPlugin.Logger?.LogInfo(
-                $"[ScanMarkRenderer] Drawing instanced mesh: instanceCount={commandData[0].instanceCount}");
             cmd.DrawMeshInstancedIndirect(mesh, 0, markMaterial, 0, graphicsBuffer, 0, matProp);
         }
         catch (Exception ex)
@@ -235,4 +250,8 @@ public static class ScanMarkRenderer
             TerrainScannerPlugin.Logger?.LogError($"[ScanMarkRenderer] DrawMeshInstancedIndirect failed: {ex}");
         }
     }
+
+    #endregion
+
+
 }
