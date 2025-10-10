@@ -119,7 +119,7 @@ public class ScanConfig
         cfgHorizontalCount = cfg.Bind("Performance", "HorizontalCount", horizontalCount, "Number of horizontal samples");
         cfgVerticalCount = cfg.Bind("Performance", "VerticalCount", verticalCount, "Number of vertical samples");
         cfgGridStep = cfg.Bind("Performance", "GridStep", gridStep, "Grid step size");
-        cfgActivationKey = cfg.Bind("Keys", "ActivationKey", "Q", "Activation key for the terrain scanner");
+        cfgActivationKey = cfg.Bind("Keys", "configActivationKey", "Q", "Activation key for the terrain scanner");
 
 
         // parse helpers
