@@ -2,7 +2,6 @@ using UnityEngine;
 namespace TerrainScanner.DS;
 public class ActiveScan : MonoBehaviour
 {
-    public static KeyCode activeKey = KeyCode.Q;
 
     // Start is called before the first frame update
     void Start()
@@ -13,7 +12,7 @@ public class ActiveScan : MonoBehaviour
     void Update()
     {
 
-        if (Input.GetKeyDown(activeKey))
+        if (Input.GetKeyDown(ScanConfigManager.Current.activationKey))
         {
             // 使用摄像机的 transform（在第一人称游戏中这就是玩家视角）
             ScanFeature.ExecuteScan(transform);

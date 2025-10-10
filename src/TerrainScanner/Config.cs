@@ -81,6 +81,8 @@ public class ScanConfig
     public ConfigEntry<int> cfgHorizontalCount;
     public ConfigEntry<int> cfgVerticalCount;
     public ConfigEntry<float> cfgGridStep;
+    public ConfigEntry<string> cfgActivationKey;
+    public KeyCode activationKey = KeyCode.Q;
 
     bool _bound = false;
 
@@ -117,6 +119,7 @@ public class ScanConfig
         cfgHorizontalCount = cfg.Bind("Performance", "HorizontalCount", horizontalCount, "Number of horizontal samples");
         cfgVerticalCount = cfg.Bind("Performance", "VerticalCount", verticalCount, "Number of vertical samples");
         cfgGridStep = cfg.Bind("Performance", "GridStep", gridStep, "Grid step size");
+        cfgActivationKey = cfg.Bind("Keys", "ActivationKey", "Q", "Activation key for the terrain scanner");
 
 
         // parse helpers
@@ -174,6 +177,7 @@ public class ScanConfig
                 steepSpawnProb = cfgSteepSpawnProb.Value;
                 midSpawnProb = cfgMidSpawnProb.Value;
                 flatSpawnProb = cfgFlatSpawnProb.Value;
+                activationKey = (KeyCode)System.Enum.Parse(typeof(KeyCode), cfgActivationKey.Value, true);
             }
             catch
             {
@@ -194,6 +198,7 @@ public class ScanConfig
         // subscribe to changes
         try
         {
+            cfgActivationKey.SettingChanged += (s, e) => UpdateFromConfig();
             cfgScanColorHead.SettingChanged += (s, e) => UpdateFromConfig();
             cfgScanColor.SettingChanged += (s, e) => UpdateFromConfig();
             cfgOutlineWidth.SettingChanged += (s, e) => UpdateFromConfig();
