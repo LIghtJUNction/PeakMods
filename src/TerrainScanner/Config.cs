@@ -61,6 +61,9 @@ public class ScanConfig
     public int verticalCount = 50;
     public float gridStep = 0.5f;
 
+    // active scan key (can be changed at runtime)
+    public KeyCode activeKey = KeyCode.Q;
+
     // BepInEx config entries (populated by Bind)
     public ConfigEntry<string> cfgScanColorHead;
     public ConfigEntry<string> cfgScanColor;
@@ -82,6 +85,8 @@ public class ScanConfig
     public ConfigEntry<int> cfgVerticalCount;
     public ConfigEntry<float> cfgGridStep;
 
+    public ConfigEntry<KeyCode> cfgActiveKey;
+
     bool _bound = false;
 
     // Bind this ScanConfig to a BepInEx plugin's Config. onChanged is invoked after initial population and on any setting change.
@@ -91,6 +96,8 @@ public class ScanConfig
         if (_bound) return;
         _bound = true;
         var cfg = plugin.Config;
+        cfgActiveKey = cfg.Bind("Controls", "ActiveScanKey", activeKey,
+            "Key to trigger an active scan");
         cfgScanColorHead = cfg.Bind("Style", "ScanColorHead", scanColorHead.r + "," + scanColorHead.g + "," + scanColorHead.b + "," + scanColorHead.a,
             "Scan head color as r,g,b,a");
         cfgScanColor = cfg.Bind("Style", "ScanColor", scanColor.r + "," + scanColor.g + "," + scanColor.b + "," + scanColor.a,

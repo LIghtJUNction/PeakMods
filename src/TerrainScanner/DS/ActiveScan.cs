@@ -2,7 +2,7 @@ using UnityEngine;
 namespace TerrainScanner.DS;
 public class ActiveScan : MonoBehaviour
 {
-    public static KeyCode activeKey = KeyCode.Q;
+    public static KeyCode activeKey = ScanConfigManager.Current.cfgActiveKey?.Value ?? KeyCode.Q;
 
     // Start is called before the first frame update
     void Start()
