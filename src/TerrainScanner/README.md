@@ -3,9 +3,7 @@
 ![GitHub](https://img.shields.io/badge/GitHub-TerrainScanner-LIghtJUNction?style=for-the-badge&logo=GitHub)
 ![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/TerrainScanner?style=for-the-badge&logo=thunderstore&logoColor=white)
 
-TerrainScanner is a lightweight Unity module that visualizes walkable surfaces and slope categories in the world. It was inspired by scanning effects (e.g. Death Stranding) and is designed to be smooth, configurable, and easy to integrate into a Unity project.
-
-This README is user-facing and includes a short introduction, installation/usage instructions, configuration notes, troubleshooting tips, and a roadmap for the next major feature: a smarter, energy-aware terrain scanner.
+Terrain scanner is based on shader and is rendered by GPU. And asynchronous frame rendering, so it is fast and not stuck.
 
 ---
 
@@ -101,4 +99,3 @@ This project is licensed under the terms in `LICENSE`.
 
 ---
 
-If you'd like, I can also prepare a short user-facing changelog entry and a Unity package example demonstrating how to wire `ScanConfig` into a Unity scene. Tell me which you'd prefer next.
