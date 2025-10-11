@@ -3,6 +3,8 @@
 ![GitHub](https://img.shields.io/badge/GitHub-TerrainScanner-LIghtJUNction?style=for-the-badge&logo=GitHub)
 ![Thunderstore Version](https://img.shields.io/thunderstore/v/LIghtPeak/TerrainScanner?style=for-the-badge&logo=thunderstore&logoColor=white)
 
+![](20251011_144624_TS.jpg)
+
 Terrain scanner is based on shader and is rendered by GPU. And asynchronous frame rendering, so it is fast and not stuck.
 
 ---
@@ -43,14 +45,15 @@ Tune these values via the `ScanConfigManager` or by binding them in your plugin'
 ## Troubleshooting
 
 - I see only some marks rendered even though scanning detected many hits:
+
   - Make sure the CPU-side `Marks` struct layout matches the HLSL `Marks` StructuredBuffer. Field order and sizes must match.
   - Ensure `ComputeBuffer` is created with the correct stride (use `Marshal.SizeOf(typeof(Marks))`).
   - Check the instanced shader does not write depth in the fragment stage (writing `SV_DEPTH` in the fragment can cause depth conflicts and hide instances). Move depth calculation to the vertex stage or remove manual depth writes.
-
 - Rays don't reach high cliffs:
-  - Increase `sampling_originHeightOffset` and `sampling_maxDistanceShort`.
 
+  - Increase `sampling_originHeightOffset` and `sampling_maxDistanceShort`.
 - Performance concerns:
+
   - The sampling runs in slices (uses `UniTask.Yield()` to avoid blocking the main thread). If you increase resolution, consider reducing `horizontalCount/verticalCount` or lowering sample frequency.
   - Consider limiting how many marks are uploaded to the GPU per frame (e.g. keep only the nearest N marks or prioritize by slope category).
 
@@ -62,19 +65,15 @@ Planned: an "Intelligent Terrain Scanner" that improves scanning quality while s
 
    - Each discovered sample carries an energy budget (kinetic + potential). Propagation to neighbors consumes energy for distance traveled and for climbing.
    - Branching reduces energy (spawn cost). A cell is revisited only if arriving with strictly more remaining energy (best-energy rule).
-
 2. Priority-driven exploration
 
    - Replace the plain FIFO propagation queue with a priority queue sorted by remaining energy (prefer uphill, higher-energy fronts) so the algorithm finds viable ascent routes sooner.
-
 3. Quantized, memory-efficient state
 
    - Store per-cell discovered heights as quantized keys (e.g. 0.1m precision) in HashSets to avoid float equality problems and to reduce duplicates.
-
 4. Safety & termination
 
    - Global processed-count cap and local energy thresholds to prevent runaway propagation in caves or dense geometry.
-
 5. Runtime tuning and visualization
 
    - Expose energy parameters and propagation limits in `ScanConfig` so users can tune behavior.
@@ -98,4 +97,3 @@ Contributions, issues, and suggestions are welcome. When opening a PR:
 This project is licensed under the terms in `LICENSE`.
 
 ---
-
